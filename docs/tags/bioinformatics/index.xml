@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bioinformatics on Liripo</title>
+    <link>/tags/bioinformatics/</link>
+    <description>Recent content in Bioinformatics on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Fri, 08 Nov 2019 09:39:24 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/bioinformatics/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Bioinformatics名词,数据文件</title>
+      <link>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</link>
+      <pubDate>Fri, 08 Nov 2019 09:39:24 +0000</pubDate>
+      
+      <guid>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</guid>
+      <description>&lt;p&gt;记录一些生物信息的名词与工具及各种数据库&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

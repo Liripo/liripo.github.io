@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Liripo</title>
+    <link>/tags/</link>
+    <description>Recent content in Tags on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>docker</title>
+      <link>/tags/docker/</link>
+      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/docker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>R</title>
+      <link>/tags/r/</link>
+      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/r/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>linux</title>
+      <link>/tags/linux/</link>
+      <pubDate>Sat, 21 Mar 2020 14:27:47 +0000</pubDate>
+      
+      <guid>/tags/linux/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>word</title>
+      <link>/tags/word/</link>
+      <pubDate>Wed, 04 Mar 2020 22:22:45 +0000</pubDate>
+      
+      <guid>/tags/word/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>数据下载</title>
+      <link>/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
+      <pubDate>Sun, 01 Mar 2020 17:19:55 +0000</pubDate>
+      
+      <guid>/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>python</title>
+      <link>/tags/python/</link>
+      <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
+      
+      <guid>/tags/python/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>annovar</title>
+      <link>/tags/annovar/</link>
+      <pubDate>Mon, 20 Jan 2020 23:58:40 +0000</pubDate>
+      
+      <guid>/tags/annovar/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Rpackage</title>
+      <link>/tags/rpackage/</link>
+      <pubDate>Wed, 15 Jan 2020 23:11:25 +0000</pubDate>
+      
+      <guid>/tags/rpackage/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>UMI</title>
+      <link>/tags/umi/</link>
+      <pubDate>Tue, 07 Jan 2020 23:05:42 +0000</pubDate>
+      
+      <guid>/tags/umi/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>收藏</title>
+      <link>/tags/%E6%94%B6%E8%97%8F/</link>
+      <pubDate>Tue, 07 Jan 2020 21:50:44 +0000</pubDate>
+      
+      <guid>/tags/%E6%94%B6%E8%97%8F/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ssh</title>
+      <link>/tags/ssh/</link>
+      <pubDate>Mon, 06 Jan 2020 23:39:54 +0000</pubDate>
+      
+      <guid>/tags/ssh/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>xming</title>
+      <link>/tags/xming/</link>
+      <pubDate>Mon, 23 Dec 2019 10:59:34 +0000</pubDate>
+      
+      <guid>/tags/xming/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>bioconductor</title>
+      <link>/tags/bioconductor/</link>
+      <pubDate>Sun, 22 Dec 2019 22:27:21 +0000</pubDate>
+      
+      <guid>/tags/bioconductor/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>bioawk</title>
+      <link>/tags/bioawk/</link>
+      <pubDate>Fri, 20 Dec 2019 23:22:55 +0000</pubDate>
+      
+      <guid>/tags/bioawk/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>grep</title>
+      <link>/tags/grep/</link>
+      <pubDate>Thu, 19 Dec 2019 23:34:45 +0000</pubDate>
+      
+      <guid>/tags/grep/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>生信基础工具</title>
+      <link>/tags/%E7%94%9F%E4%BF%A1%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7/</link>
+      <pubDate>Wed, 18 Dec 2019 12:52:21 +0000</pubDate>
+      
+      <guid>/tags/%E7%94%9F%E4%BF%A1%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>markdown</title>
+      <link>/tags/markdown/</link>
+      <pubDate>Tue, 17 Dec 2019 23:42:15 +0000</pubDate>
+      
+      <guid>/tags/markdown/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Git</title>
+      <link>/tags/git/</link>
+      <pubDate>Fri, 13 Dec 2019 10:31:55 +0000</pubDate>
+      
+      <guid>/tags/git/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>统计学</title>
+      <link>/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/</link>
+      <pubDate>Mon, 09 Dec 2019 20:52:23 +0000</pubDate>
+      
+      <guid>/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>software</title>
+      <link>/tags/software/</link>
+      <pubDate>Mon, 25 Nov 2019 20:35:16 +0000</pubDate>
+      
+      <guid>/tags/software/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>sed</title>
+      <link>/tags/sed/</link>
+      <pubDate>Mon, 11 Nov 2019 19:41:39 +0000</pubDate>
+      
+      <guid>/tags/sed/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>awk</title>
+      <link>/tags/awk/</link>
+      <pubDate>Mon, 11 Nov 2019 19:41:23 +0000</pubDate>
+      
+      <guid>/tags/awk/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>bash</title>
+      <link>/tags/bash/</link>
+      <pubDate>Fri, 08 Nov 2019 22:37:49 +0000</pubDate>
+      
+      <guid>/tags/bash/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Bioinformatics</title>
+      <link>/tags/bioinformatics/</link>
+      <pubDate>Fri, 08 Nov 2019 09:39:24 +0000</pubDate>
+      
+      <guid>/tags/bioinformatics/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>统计</title>
+      <link>/tags/%E7%BB%9F%E8%AE%A1/</link>
+      <pubDate>Sun, 03 Nov 2019 19:04:42 +0000</pubDate>
+      
+      <guid>/tags/%E7%BB%9F%E8%AE%A1/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>hexo</title>
+      <link>/tags/hexo/</link>
+      <pubDate>Sat, 02 Nov 2019 13:28:06 +0000</pubDate>
+      
+      <guid>/tags/hexo/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>fiction</title>
+      <link>/tags/fiction/</link>
+      <pubDate>Fri, 01 Nov 2019 21:26:11 +0000</pubDate>
+      
+      <guid>/tags/fiction/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

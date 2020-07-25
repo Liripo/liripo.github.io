@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>gitbash配置文件 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="gitbash配置文件">
+<meta property="og:description" content="gitbash的好处是能在windows下使用bash命令以及自带vim编辑器。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>gitbash配置文件</h1>
+  <h3>
+    , 08 Nov 2019
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p><strong>gitbash的好处是能在windows下使用bash命令以及自带vim编辑器。</strong></p>
+<p>~/.vimrc配置文件代码</p>
+<pre><code>set number
+set vb t_vb=   &quot;关警告声
+set  nohlsearch
+hi Comment ctermfg =blue
+hi String ctermfg =darkyellow
+set showmatch  &quot;自动匹配相应括号
+hi Number ctermfg = green
+&quot;hi MatchParen ctermbg=darkyellow guibg= white
+&quot;自动缩进不好用 set autoindent
+highlight Function cterm=bold
+hi Type ctermfg =blue
+set tabstop =4
+hi Special ctermfg  = red
+hi Identifier cterm = bold &quot; 变量标识符名称。
+hi Statement cterm = bold
+&quot;&quot;编程语言的声明，一般是像“if”或“while”这样的关键字。
+hi PreProc ctermfg = grey cterm=bold &quot;预处理颜色,一般像R的library
+set paste #消除gitbash粘贴出现空格及自动缩进的情况
+</code></pre><p>~/.bashrc配置</p>
+<pre><code>export PATH=/d/R-3.6.1/bin/x64:$PATH
+alias python='winpty python.exe' #windows下打开python别名
+export PS1=&quot;\\liripo@windows:\w\$(__git_ps1 '(%s)')\$ &quot; #使用PS1
+alias lt='ll -th'
+alias le='less -N'
+</code></pre>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

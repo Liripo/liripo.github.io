@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FASTQC使用 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="FASTQC使用">
+<meta property="og:description" content="
+fastqc:一种用于高通量序列数据的质量控制应用程序。
+">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>FASTQC使用</h1>
+  <h3>
+    , 18 Dec 2019
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>fastqc:一种用于高通量序列数据的质量控制应用程序。</p>
+</blockquote>
+<h3 id="heading">安装</h3>
+<ul>
+<li><a href="http://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc">下载源代码网址</a>
+需要</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#下载后解压</span>
+unzip fastqc_*.zip
+cd fastqc_*.zip
+chmod <span style="color:#ae81ff">744</span> fastqc <span style="color:#f92672">||</span> chmod u+x fastqc# 将 fastqc 设置为可执行程序
+<span style="color:#75715e">#chmod中数字4为设置可读，2可写，1可执行，即r,w,x,而数字7为4+2+1</span>
+<span style="color:#75715e">#u 表示该文件的拥有者，g 表示与该文件的拥有者属于同一个群体(group)者，o 表示其他以外的人，a 表示这三者皆是</span>
+</code></pre></div><ul>
+<li>conda 安装就好了，自动帮下jdk.</li>
+</ul>
+<h3 id="--help">&ndash;help</h3>
+<p>fastqc &ndash;help</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># 命令行使用</span>
+fastqc <span style="color:#f92672">[</span>-o output dir<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>--<span style="color:#f92672">(</span>no<span style="color:#f92672">)</span>extract<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>-f fastq|bam|sam<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>-c contaminant file<span style="color:#f92672">]</span> seqfile1 .. seqfileN
+</code></pre></div><p>参数说明</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">-h --help
+-v --version
+-o -output dir
+- casave 文件来自原始 casave 输出
+-nano 文件来自 naopore 序列，采用 fast5 格式
+-extract 如果设置，则压缩输出
+-j --java  java二进制文件完整路径
+-nogroup 禁止读取2500bp以上的碱基组
+-f 跳过正常文件格式检测，强制使用指定格式 bam | sam | bam_mapped | sam_mapped | fastq
+-t --threads 多线程，每个线程 <span style="color:#ae81ff">250</span> M
+-c --contamin 指定包含列表的非默认文件，污染物筛选过多的序列（哈希）
+-a -adapters 指定包含列表的非默认文件，包含一组已经命名的Adapter（哈希）
+-l 指定一个非默认文件，限制将用于确认 warning / Fairure，或者从结果中删除一些模块， cofiguration --&gt; limits.txt
+ -k -kmers 指定要在Kmer中查找的长度，必须在2-10 之间，默认为7
+-q -quiet 安静模式，在标准输出上禁止所有的进度消息，只报错
+-d --dir 一个目录用于写入临时文件当生成图像时， 默认系统临时目录
+</code></pre></div><h3 id="heading-1">生成文件解读</h3>
+<p>当使用1个fastq文件时，使用命令<code>mkdir fastqc &amp;&amp; fastqc -o ./fastqc  ref.fastq.gz</code></p>
+<p>会在目录下生成一个html以及.zip文件，zip文件就是画图的数值以及图片。所以fastqc结果看html即可。</p>
+<ul>
+<li>
+<p>html解读
+<img src="https://liripo-1300901505.cos.ap-guangzhou.myqcloud.com/picgo20191219123711.jpg" alt="R2">
+这一部分中√代表&quot;PASS&rdquo;；!代表&quot;WARN&rdquo;；x代表&quot;FAIL&rdquo;
+1.Basic Statics
+<img src="https://liripo-1300901505.cos.ap-guangzhou.myqcloud.com/picgo20191219133756.jpg" alt="Basic Statics"></p>
+</li>
+<li>
+<p>Encoding为Illumina1.9 就是 Phred+33，很重要，1.8以上即为Phred33编码。</p>
+</li>
+<li>
+<p>Total sequences: reads数量（reads就是高通量测序平台产生的序列标签，翻译为读段）</p>
+</li>
+<li>
+<p>Sequence length: 测序长度</p>
+</li>
+<li>
+<p>%GC: GC含量： 重点关注，可以帮助区别物种，人类细胞42%左右
+2.Per base sequence quality
+<img src="https://liripo-1300901505.cos.ap-guangzhou.myqcloud.com/picgo20191219134034.jpg" alt="">
+画的是boxplot,<del>这个图</del>我看了下数值，前面的绘图数据都是32。
+横轴：测序序列的1-150个碱基；
+纵轴：质量得分，score = -10 * log10（error），例如错误率error为1%，那么算出的score就是20
+蓝色的线将各个碱基的质量平均值连接起来</p>
+</li>
+</ul>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

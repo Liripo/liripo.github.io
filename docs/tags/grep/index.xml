@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>grep on Liripo</title>
+    <link>/tags/grep/</link>
+    <description>Recent content in grep on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Thu, 19 Dec 2019 23:34:45 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/grep/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>grep使用</title>
+      <link>/post/grep%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Thu, 19 Dec 2019 23:34:45 +0000</pubDate>
+      
+      <guid>/post/grep%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;grep ：文本搜索工具。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

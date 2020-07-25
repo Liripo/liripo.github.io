@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Home on Liripo</title>
+    <link>/</link>
+    <description>Recent content in Home on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>docker安装使用</title>
+      <link>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</guid>
+      <description>linux dockor.</description>
+    </item>
+    
+    <item>
+      <title>R包开发</title>
+      <link>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</link>
+      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</guid>
+      <description>一些R包使用问题。</description>
+    </item>
+    
+    <item>
+      <title>windows10安装linux</title>
+      <link>/post/windows10%E5%AE%89%E8%A3%85linux/</link>
+      <pubDate>Sat, 21 Mar 2020 14:27:47 +0000</pubDate>
+      
+      <guid>/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
+      <description>&lt;p&gt;windows10安装ubuntu，以及源码安装python到指定目录，及更多相关配置。&lt;/p&gt;
+&lt;p&gt;温馨提示：目前已有wsl2,推荐安装wsl2。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>ggplot2绘制图收录</title>
+      <link>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</link>
+      <pubDate>Sun, 08 Mar 2020 19:10:29 +0000</pubDate>
+      
+      <guid>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</guid>
+      <description>&lt;p&gt;文章包含一些我绘制过的ggplot2图一些美化方法。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>java更新word文档目录页码</title>
+      <link>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</link>
+      <pubDate>Wed, 04 Mar 2020 22:22:45 +0000</pubDate>
+      
+      <guid>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</guid>
+      <description>&lt;p&gt;使用&lt;a href=&#34;https://products.aspose.com/words/java&#34;&gt;aspose-words java&lt;/a&gt;更新word文档目录页码。正版需要购买。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>数据下载工具</title>
+      <link>/post/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7/</link>
+      <pubDate>Sun, 01 Mar 2020 17:19:55 +0000</pubDate>
+      
+      <guid>/post/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7/</guid>
+      <description>&lt;p&gt;经常性下载速度很慢，纪录一些有用工具。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>python-docx笔记</title>
+      <link>/post/python-docx%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
+      
+      <guid>/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>vcf文件注释</title>
+      <link>/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</link>
+      <pubDate>Mon, 20 Jan 2020 23:58:40 +0000</pubDate>
+      
+      <guid>/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;原始测序文件fq.gz经genome比对，变异检测得到vcf文件，亦即变异位点文件， 只是通过看vcf文件我们是不知道些变异位点到底是位于基因的exon、intron、UTR等的哪些区域的 ，所以需要注释， 常用的vcf注释软件有annovar和snpEff 。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>R包shiny</title>
+      <link>/post/r%E5%8C%85shiny/</link>
+      <pubDate>Wed, 15 Jan 2020 23:11:25 +0000</pubDate>
+      
+      <guid>/post/r%E5%8C%85shiny/</guid>
+      <description>&lt;p&gt;R包shiny 可以构建交互式Web应用程序 。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>fastp&#43;gencore使用</title>
+      <link>/post/fastp-gencore%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Tue, 07 Jan 2020 23:05:42 +0000</pubDate>
+      
+      <guid>/post/fastp-gencore%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;使用以上两个软件+vardict/varscan/outLyzer构建UMI分析流程&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>网址收录</title>
+      <link>/post/%E7%BD%91%E5%9D%80%E6%94%B6%E5%BD%95/</link>
+      <pubDate>Tue, 07 Jan 2020 21:50:44 +0000</pubDate>
+      
+      <guid>/post/%E7%BD%91%E5%9D%80%E6%94%B6%E5%BD%95/</guid>
+      <description>&lt;p&gt;对一些有用的网址进行收录&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>翻墙？自搭！</title>
+      <link>/post/%E7%BF%BB%E5%A2%99%E8%87%AA%E6%90%AD/</link>
+      <pubDate>Mon, 06 Jan 2020 23:39:54 +0000</pubDate>
+      
+      <guid>/post/%E7%BF%BB%E5%A2%99%E8%87%AA%E6%90%AD/</guid>
+      <description>&lt;p&gt;购买海外服务器，选用 &lt;a href=&#34;https://virmach.com/&#34;&gt;virmach&lt;/a&gt;，或者Vultr、Linode、DigitalOcean。&lt;/p&gt;
+&lt;p&gt;xshell进入服务器后创建用户，非必须。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;adduser liripo &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; passwd liripo
+&lt;span style=&#34;color:#75715e&#34;&gt;#添加sudo权限&lt;/span&gt;
+$ vim /etc/sudoers
+&lt;span style=&#34;color:#75715e&#34;&gt;#在root    ALL=(ALL)       ALL下面添加&lt;/span&gt;
+liripo   ALL&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ALL&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;      ALL
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+    </item>
+    
+    <item>
+      <title>xshell 和 xming 联合使用图形界面软件</title>
+      <link>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
+      <pubDate>Mon, 23 Dec 2019 10:59:34 +0000</pubDate>
+      
+      <guid>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
+      <description>&lt;p&gt;xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>bioconductor的学习与使用</title>
+      <link>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Sun, 22 Dec 2019 22:27:21 +0000</pubDate>
+      
+      <guid>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;在生物信息学领域 , bioPerl和bioPython 是使用和研究生物信息学的开发者提供的在线资源库，那么bioR应当就是bioconductor。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>bioawk使用</title>
+      <link>/post/bioawk%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Fri, 20 Dec 2019 23:22:55 +0000</pubDate>
+      
+      <guid>/post/bioawk%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;awk是我很喜欢的处理文本文件的工具，称他为一种语言也不过分了。但是在处理生信文件时还是不方便。另一种选择就是使用bioawk。唯一的短板就是无法使用awk内置变量，无法同时操作多个文件。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>grep使用</title>
+      <link>/post/grep%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Thu, 19 Dec 2019 23:34:45 +0000</pubDate>
+      
+      <guid>/post/grep%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;grep ：文本搜索工具。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>FASTQC使用</title>
+      <link>/post/fastqc%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Wed, 18 Dec 2019 12:52:21 +0000</pubDate>
+      
+      <guid>/post/fastqc%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;fastqc:一种用于高通量序列数据的质量控制应用程序。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>Markdown与Typora,Rmarkdown</title>
+      <link>/post/markdown%E4%B8%8Etyporarmarkdown/</link>
+      <pubDate>Tue, 17 Dec 2019 23:42:15 +0000</pubDate>
+      
+      <guid>/post/markdown%E4%B8%8Etyporarmarkdown/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.markdown.cn/&#34;&gt;在线教程&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>samtools使用</title>
+      <link>/post/samtools%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Tue, 17 Dec 2019 21:19:12 +0000</pubDate>
+      
+      <guid>/post/samtools%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;samtools是一个用于操作sam和bam文件的工具合集。sam为bam文件的十进制文件；bam为二进制文件。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>bamdst使用</title>
+      <link>/post/bamdst%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Tue, 17 Dec 2019 10:56:40 +0000</pubDate>
+      
+      <guid>/post/bamdst%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;p&gt;bamdst:用于计算bam文件测序深度和覆盖度（Sequencing depth and coverage）,有个疑问，应该使用哪个bam呢？？使用bwa及samtools得到的bam测序深度很高。。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Github及Git使用</title>
+      <link>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Fri, 13 Dec 2019 10:31:55 +0000</pubDate>
+      
+      <guid>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://iissnan.com/progit/&#34;&gt;Github在线教程&lt;/a&gt;【第一版】
+&lt;a href=&#34;https://git-scm.com/book/zh/v2&#34;&gt;Github在线教程&lt;/a&gt;【第二版】
+以下为我自己的总结&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>R与生物统计学</title>
+      <link>/post/r%E4%B8%8E%E7%94%9F%E7%89%A9%E7%BB%9F%E8%AE%A1%E5%AD%A6/</link>
+      <pubDate>Mon, 09 Dec 2019 20:52:23 +0000</pubDate>
+      
+      <guid>/post/r%E4%B8%8E%E7%94%9F%E7%89%A9%E7%BB%9F%E8%AE%A1%E5%AD%A6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>conda</title>
+      <link>/post/conda/</link>
+      <pubDate>Mon, 25 Nov 2019 20:35:16 +0000</pubDate>
+      
+      <guid>/post/conda/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>sed使用</title>
+      <link>/post/sed%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Mon, 11 Nov 2019 19:41:39 +0000</pubDate>
+      
+      <guid>/post/sed%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;sed 命令是一个面向行处理的工具，它以“行”为处理单位，针对每一行进行处理。与awk不同，awk是以”列“为处理单位[当然，awk也是一行行进行处理的]。
+&lt;a href=&#34;https://man.linuxde.net/sed%E5%9C%A8%E7%BA%BF%E6%95%99%E7%A8%8B&#34;&gt;在线教程&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>awk使用</title>
+      <link>/post/awk%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Mon, 11 Nov 2019 19:41:23 +0000</pubDate>
+      
+      <guid>/post/awk%E4%BD%BF%E7%94%A8/</guid>
+      <description>&lt;p&gt;awk逐行读入文件，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。
+&lt;a href=&#34;https://github.com/wuzhouhui/awk&#34;&gt;awk书籍github&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>gitbash配置文件</title>
+      <link>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</link>
+      <pubDate>Fri, 08 Nov 2019 22:37:49 +0000</pubDate>
+      
+      <guid>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;gitbash的好处是能在windows下使用bash命令以及自带vim编辑器。&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Bioinformatics名词,数据文件</title>
+      <link>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</link>
+      <pubDate>Fri, 08 Nov 2019 09:39:24 +0000</pubDate>
+      
+      <guid>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</guid>
+      <description>&lt;p&gt;记录一些生物信息的名词与工具及各种数据库&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>概率论与数理统计学习</title>
+      <link>/post/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Sun, 03 Nov 2019 19:04:42 +0000</pubDate>
+      
+      <guid>/post/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Hexo&#43;github搭建blog</title>
+      <link>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</link>
+      <pubDate>Sat, 02 Nov 2019 13:28:06 +0000</pubDate>
+      
+      <guid>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</guid>
+      <description>&lt;p&gt;准备工作：安装node.js,git,hexo,加上github账户即可。
+&lt;a href=&#34;https://hexo.io/zh-cn/docs/&#34;&gt;hexo官方文档&lt;/a&gt;
+&lt;a href=&#34;https://help.github.com/en/github/working-with-github-pages/about-github-pages&#34;&gt;什么是Github Page&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;备注：以下前面为hexo在git for windows的配置安装，前三个标题推荐改为使用WSL&amp;gt;安装，&lt;a href=&#34;https://liripo.github.io/2020/03/21/windows10%E5%AE%89%E8%A3%85linux/#more&#34;&gt;linux子系统安装&lt;/a&gt;后可看这篇章的标题&amp;ndash;在WSL中手动安装node,hexo，之后再按照第三个标题相关配置往下进行。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+    <item>
+      <title>小说</title>
+      <link>/post/%E5%B0%8F%E8%AF%B4/</link>
+      <pubDate>Fri, 01 Nov 2019 21:26:11 +0000</pubDate>
+      
+      <guid>/post/%E5%B0%8F%E8%AF%B4/</guid>
+      <description>&lt;h1 id=&#34;-&#34;&gt;# 第一章&lt;/h1&gt;
+&lt;p&gt;浩瀚的大陆，山峰林立，川流永动。其间万族鼎立，尤以人族昌盛。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>基因芯片差异性分析</title>
+      <link>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</link>
+      <pubDate>Fri, 01 Nov 2019 19:23:22 +0000</pubDate>
+      
+      <guid>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</guid>
+      <description>&lt;p&gt;起初使用的是oligo与limma结合分析，可惜的是rma校正后limma分析的结果不合实际，所以直接使用GEO2R上的代码，并修改成不在线的读取data.frame。但是仍旧得探究limma直接读取cel文件的情况。其中还遇到了读取CDF文件的情况。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/post/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/</guid>
+      <description>&lt;p&gt;Postgresql&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/about/</guid>
+      <description>T。。。</description>
+    </item>
+    
+    <item>
+      <title>jupyter使用</title>
+      <link>/post/jupyter%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/jupyter%E4%BD%BF%E7%94%A8/</guid>
+      <description>jupyter。</description>
+    </item>
+    
+    <item>
+      <title>蒙特卡洛计算Π</title>
+      <link>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</guid>
+      <description>蒙特卡洛估计Π。</description>
+    </item>
+    
+  </channel>
+</rss>

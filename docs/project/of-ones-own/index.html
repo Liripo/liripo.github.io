@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A project of one&#39;s own | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="A project of one&#39;s own">
+<meta property="og:description" content="An example of a project page, creating a simple generative art system in R. There is more code on this page than elsewhere on the example site, which may be useful if you want to see what the syntax highlighting looks like for caladown sites.">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+<div class="article-header">
+  
+  
+    
+  <img src="../../header/banner.png" class="article-banner" itemprop="image" alt="">
+    
+  
+
+  <span class="article-header-caption">A caption</span>
+
+  
+  
+    
+  <img src="../../header/profile.png" class="article-header-profile" itemprop="image" alt="">
+    
+  
+
+
+</div>
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>A project of one's own</h1>
+  <h3>
+    by Danielle Navarro
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        
+
+
+<p>Projects are no different to blog posts in caladown. They’re formatted the same way, generated the same way, and so on. The only difference is that they’re indexed separately. This is sometimes useful for separating casual blog posts from more substantive projects.</p>
+<pre class="r"><code>library(scico)
+## Warning: 程辑包&#39;scico&#39;是用R版本4.0.2 来建造的
+library(tibble)
+library(dplyr)
+library(ggplot2)</code></pre>
+<p>In this post I’ll create a simple generative art system, one that is loosely based on computational model that I use in my everyday research. The main purpose for including it here, however, is to illustrate what the syntax highlighting looks like using the current CSS settings. At the moment it is a little crude, but I’ll aim to refine this. Note that this may look different depending on whether the site is generated in hugodown or blogdown!</p>
+<p>To get started, I’ll define a function that return parameters specifying the art:</p>
+<pre class="r"><code>parameters &lt;- function(seed, samples = 100000, plot_range = 7.5,
+                       train_range = 2, train_size = 3) {
+  list(
+    seed = seed,
+    samples = samples,
+    plot_range = plot_range,
+    train_range = train_range,
+    train_size = train_size
+  )
+}</code></pre>
+<p>The next step is to generate the data to be visualised. In this case the data correspond to a set of rectangles that (in the original cognitive science context) would correspond to a collection of possible hypotheses about the extension of a novel category in a two dimensional stimulus space. Rectangles will be shaded on the basis of their size. To that end I’ll define a <code>generator()</code> function:</p>
+<pre class="r"><code>generator &lt;- function(params) {
+  
+  set.seed(params$seed)
+  
+  train &lt;- with(params, tibble(
+    x = runif(train_size, min = -train_size/2, max = train_size/2),
+    y = runif(train_size, min = -train_size/2, max = train_size/2)
+  ))
+  
+  train_with &lt;- function(hypotheses, train) {
+    n &lt;- nrow(train)
+    for(i in 1:n) {
+      hypotheses &lt;- hypotheses %&gt;% 
+        filter(
+          x_min &lt; train$x[i], x_max &gt; train$x[i], 
+          y_min &lt; train$y[i], y_max &gt; train$y[i]
+        )
+    }
+    return(hypotheses)
+  }
+  
+  hypotheses &lt;- with(params, tibble(
+    mid_x = runif(samples, min = -plot_range, max = plot_range), 
+    mid_y = runif(samples, min = -plot_range, max = plot_range),
+    len_x = rgamma(samples, rate = .5, shape = 1),
+    len_y = rgamma(samples, rate = .5, shape = 1)
+  )) %&gt;%
+    mutate(
+      x_min = mid_x - len_x / 2, 
+      x_max = mid_x + len_x / 2,
+      y_min = mid_y - len_y / 2,
+      y_max = mid_y + len_y / 2
+    ) %&gt;%
+    train_with(train) %&gt;%
+    filter( 
+      x_min &gt; -params$plot_range, 
+      x_max &lt;  params$plot_range,
+      y_min &gt; -params$plot_range, 
+      y_max &lt;  params$plot_range
+    )
+  return(hypotheses)
+}</code></pre>
+<p>Now that we have a function that generates the data we need a function that will make a pretty plot from the data. This can be done in many ways, but I like ggplot2 so I’ll use that:</p>
+<pre class="r"><code>plotter &lt;- function(hypotheses) {
+  
+  pal &lt;- sample(scico_palette_names(), 1)
+  bg &lt;- &quot;#333333&quot;;
+  r &lt;- max(
+    hypotheses$y_max,
+    hypotheses$x_max, 
+    -hypotheses$y_min,
+    -hypotheses$x_min
+  )
+  
+  picture &lt;- ggplot(
+    data = hypotheses, 
+    mapping = aes(xmin = x_min, ymin = y_min, 
+                  xmax = x_max, ymax = y_max)
+  ) + 
+    geom_rect(aes(fill = len_x + len_y), 
+              alpha = .15, color = &quot;white&quot;, 
+              size = .1, show.legend = FALSE) + 
+    
+    geom_rect(fill = NA, color = paste0(bg, &quot;22&quot;), 
+              size = .1, show.legend = FALSE) + 
+    
+    # stylistic
+    theme_void() +
+    theme(plot.background = element_rect(fill = bg, colour = bg)) + 
+    scale_x_continuous(NULL, labels = NULL, limits = c(-r, r)) + 
+    scale_y_continuous(NULL, labels = NULL, limits = c(-r, r)) + 
+    scico::scale_fill_scico(palette = pal) +
+    coord_equal() 
+  
+  return(picture)
+}</code></pre>
+<p>Here are a few images generated from this system, varying only the <code>seed</code> parameter:</p>
+<pre class="r"><code>thematic::thematic_on(bg = &quot;#333333&quot;)
+1 %&gt;% parameters() %&gt;% generator() %&gt;% plotter()</code></pre>
+<p><img src="../../project/of-ones-own/index_files/figure-html/unnamed-chunk-5-1.png" width="480" /></p>
+<pre class="r"><code>2 %&gt;% parameters() %&gt;% generator() %&gt;% plotter()</code></pre>
+<p><img src="../../project/of-ones-own/index_files/figure-html/unnamed-chunk-5-2.png" width="480" /></p>
+<pre class="r"><code>3 %&gt;% parameters() %&gt;% generator() %&gt;% plotter()</code></pre>
+<p><img src="../../project/of-ones-own/index_files/figure-html/unnamed-chunk-5-3.png" width="480" /></p>
+<pre class="r"><code>4 %&gt;% parameters() %&gt;% generator() %&gt;% plotter()</code></pre>
+<p><img src="../../project/of-ones-own/index_files/figure-html/unnamed-chunk-5-4.png" width="480" /></p>
+<pre class="r"><code>5 %&gt;% parameters() %&gt;% generator() %&gt;% plotter()</code></pre>
+<p><img src="../../project/of-ones-own/index_files/figure-html/unnamed-chunk-5-5.png" width="480" /></p>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>数据下载工具 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="数据下载工具">
+<meta property="og:description" content="经常性下载速度很慢，纪录一些有用工具。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>数据下载工具</h1>
+  <h3>
+    , 01 Mar 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>经常性下载速度很慢，纪录一些有用工具。</p>
+<h3 id="wget">wget</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">wget -c 链接 <span style="color:#75715e">#-c参数为断点续传</span>
+<span style="color:#75715e">#倘若失败，还可以使用</span>
+wget --tries<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> -c 恢复下载
+</code></pre></div><h3 id="axel">axel</h3>
+<p>链接：<a href="https://pan.baidu.com/s/1OpDKL-HUTHtvprpNNSU1Hw">https://pan.baidu.com/s/1OpDKL-HUTHtvprpNNSU1Hw</a>
+提取码：<code>khq0</code>
+windows版本，使用方式</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">axel -n <span style="color:#ae81ff">15</span> ftp或者http网址
+</code></pre></div>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

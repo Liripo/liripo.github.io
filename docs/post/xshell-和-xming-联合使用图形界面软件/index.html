@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>xshell 和 xming 联合使用图形界面软件 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="xshell 和 xming 联合使用图形界面软件">
+<meta property="og:description" content="xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>xshell 和 xming 联合使用图形界面软件</h1>
+  <h3>
+    , 23 Dec 2019
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。</p>
+<h1 id="heading">安装</h1>
+<p><a href="https://sourceforge.net/projects/xming/">下载网址</a></p>
+<h1 id="heading-1">配置</h1>
+<ol>
+<li>XMing的配置：打开XLaunch，记住Display Number，现在这里是0，后面配置及XShell中会用到。然后点击启动xming。</li>
+<li>首先打开Xming安装文件夹找到 X*.hosts 文件(*号为上面Display Number 数字），如本例就是找到X0.hosts文件，打开并在localhost下面一行，添加Linux服务器的IP地址。</li>
+<li>配置xshell,连接-》SSH -&gt; 隧道-》
+在x11 转移中设置xdisplay为localhost:0.0</li>
+<li>配置完成后，重新连接服务器，
+启动图形界面软件，如spyder,就可以在xming上启动了。</li>
+</ol>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

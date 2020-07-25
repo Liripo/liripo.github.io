@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>R包shiny | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="R包shiny">
+<meta property="og:description" content="R包shiny 可以构建交互式Web应用程序 。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>R包shiny</h1>
+  <h3>
+    , 15 Jan 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>R包shiny 可以构建交互式Web应用程序 。</p>
+<h1 id="rstudioshiny">Rstudio中初步使用shiny</h1>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(shiny)
+<span style="color:#a6e22e">runExample</span>()
+</code></pre></div><p>可以看到shiny包含11个示例app.R</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Valid examples are <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">01_hello&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">02_text&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">03_reactivity&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">04_mpg&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">05_sliders&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">06_tabsets&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">07_widgets&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">08_html&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">09_upload&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">10_download&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">11_timer&#34;</span>
+</code></pre></div><p>通过查看示例的app.R代码，shiny由三个部分组成</p>
+<ul>
+<li>
+<p>用户界面（<code>ui</code>）对象控制应用程序的布局和外观。前端，用户界面对象。</p>
+</li>
+<li>
+<p><code>server</code>功能包含计算机构建应用程序所需的说明 。后端，服务器功能。</p>
+</li>
+<li>
+<p><code>shinyApp</code>函数创建对象。</p>
+</li>
+</ul>
+<p>shiny包含在一个名为app.R的脚本,位于一个目录中（例如newdir/），该应用可以通过runApp(&ldquo;newdir&rdquo;)运行,建议每个应用程序都位于其自己的唯一目录中。</p>
+<p>app.R基本如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(shiny)
+ui <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">...</span>
+server <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">...</span>
+<span style="color:#a6e22e">shinyApp</span>(ui <span style="color:#f92672">=</span> ui, server <span style="color:#f92672">=</span> server)
+</code></pre></div><h1 id="shinyappsio">shinyapps.io分享你的程序</h1>
+<blockquote>
+<p>在这里尝试web部署，这种东西当然是共享才有意义，试试在shinyapp.io上运行。</p>
+</blockquote>
+<p><a href="http://www.shinyapps.io/">shinyapp.io</a>注册一个账户，配置rsconnect，在R中<code>install.packages('rsconnect')</code>导入这个包，输入你的账户信息，<code>rsconnect::setAccountInfo(name=&quot;&lt;ACCOUNT&gt;&quot;, token=&quot;&lt;TOKEN&gt;&quot;, secret=&quot;&lt;SECRET&gt;&quot;)</code>这些直接在你的shinyapp.io账户中找到。</p>
+<p>Rstudio中即可点击public上传，或者R代码上传</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(rsconnect)
+<span style="color:#a6e22e">deployApp</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">shiny app文件夹的路径&#34;</span>,account <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">你的用户名（如果你一台电脑上只有一个用户配置过，这个可以省略的）&#34;</span>)
+</code></pre></div><h1 id="ui">ui布局</h1>
+<p>shiny的最基本配置如下,运行可以看到一个空白用户界面的应用程序。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(shiny)
+ui <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">fluidPage</span>()
+server <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(input, output) {}
+<span style="color:#a6e22e">shinyApp</span>(ui <span style="color:#f92672">=</span> ui, server <span style="color:#f92672">=</span> server)
+</code></pre></div><p>从空白界面开始，</p>
+<h1 id="r-shiny">R shiny服务器部署</h1>
+<p><a href="https://rstudio.github.io/shiny-server/os/latest/">教程</a></p>
+<p>首先，shiny需要安装R，并且需要包shiny,rmarkdown,digest</p>
+<p>ubuntu安装R可以直接apt-get安装，不过不是最新版，需修改镜像源，十分推荐这种方法。</p>
+<blockquote>
+<p>我使用conda安装，并将R程序软连接到/usr/bin目录下，这样做是为了让shiny能找到你的R，如果只是单纯配置root环境变量，运行shiny-server会找不到R的。</p>
+</blockquote>
+<p>还有一个需要注意的，digest使用以下R命令安装</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">install.packages</span>(<span style="color:#e6db74">&#39;</span><span style="color:#e6db74">digest&#39;</span>, repos<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http://cran.us.r-project.org&#39;</span>)
+</code></pre></div><p>之后按照教程安装shiny-server即可。软件安装在/opt/shiny-server中。</p>
+<p>由于我使用linux子系统，没有systemd，而是直接<code>sudo shiny-server</code>启动。</p>
+<p>遇到错误就看文件log，在<code>/var/log/shiny-server</code>。</p>
+<p>配置文件为：<code>/etc/shiny-server/shiny-server.conf</code></p>
+<h2 id="shiny-server">添加当前用户运行shiny-server</h2>
+<p>暂时未解决。</p>
+<h1 id="shiny">shiny相关资料</h1>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

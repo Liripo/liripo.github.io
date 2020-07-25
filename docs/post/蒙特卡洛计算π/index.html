@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>蒙特卡洛计算Π | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="蒙特卡洛计算Π">
+<meta property="og:description" content="蒙特卡洛估计Π。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>蒙特卡洛计算Π</h1>
+  <h3>
+    by Liripo
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        
+
+
+<div id="π值的计算" class="section level1">
+<h1>π值的计算</h1>
+<p>构造一个单位正方形和一个单位圆的1/4，往整个区域内随机投入点，根据点到原点的距离&gt;1还是&lt;=1判断点是落在1/4的圆内还是在圆外，从而根据落在两个不同区域的点的数目，求出两个区域的比值。这个比值乘以4，即是圆周率π。
+圆的面积：<span class="math inline">\(\frac{1}{4}\pi\)</span>
+正方形面积：<span class="math inline">\(1\)</span>
+概率：<span class="math inline">\(p = \frac{1}{\frac{1}{4}\pi} = \frac{圆内点数}{圆外点个数}\)</span>
+so,<span class="math inline">\(\pi = 4p\)</span></p>
+<pre class="r"><code>library(tidyverse)
+pi_data &lt;- function(n){
+  x0 &lt;- 0
+  y0 &lt;- 0
+  x &lt;- runif(n)
+  y &lt;- runif(n)
+  distances &lt;- sqrt((x-x0)^2+(y-y0)^2)
+  point &lt;- ifelse(distances &lt;= 1, &quot;inside&quot;, &quot;outside&quot;)
+  id &lt;- 1:n
+  pi_predict &lt;- cumsum(point == &quot;inside&quot;)/id * 4
+  data &lt;- data.frame(id, x, y, distances, point, pi_predict)
+}
+data1000 &lt;- pi_data(n = 1000)</code></pre>
+<pre class="r"><code>p1 &lt;- ggplot(data1000) + 
+  geom_rect(aes(xmin = 0,xmax = 1,ymin = 0, ymax = 1),color = &quot;black&quot;,alpha = 0) +
+  ggforce::geom_arc(aes(x0 = 0, y0 = 0,r = 1,
+    start = 0,end = pi/2)) +coord_fixed() +
+  geom_point(data = data1000,aes(x,y,color = point))
+p1</code></pre>
+<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre class="r"><code>p2 &lt;- ggplot(data1000) +
+  geom_line(aes(x = id,y = pi_predict))+
+  geom_hline(yintercept = pi)
+p2</code></pre>
+<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="试下动态图" class="section level1">
+<h1>试下动态图</h1>
+<pre class="r"><code>library(gganimate)
+anim &lt;- ggplot(data1000) + 
+  geom_rect(aes(xmin = 0,xmax = 1,ymin = 0, ymax = 1),color = &quot;black&quot;,alpha = 0) +
+  ggforce::geom_arc0(aes(x0 = 0, y0 = 0,r = 1,
+    start = 0,end = pi/2)) +coord_fixed() +
+  geom_point(data = data1000,aes(x,y,color = point,group = id)) +
+  transition_reveal(along = id) +
+   labs(title = &quot;frame:{frame} of {nframes}&quot;)
+anim2 &lt;-animate(anim, nframes = 100, fps = 10,
+                  width = 550, height = 540, res = 90,
+                  renderer = gifski_renderer(loop = T))
+anim2</code></pre>
+<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-4-1.gif" /><!-- --></p>
+<pre class="r"><code>make_run2 &lt;- function(pi_data){
+  anim &lt;- ggplot(pi_data,aes(id ,pi_predict)) +
+    geom_line() +
+    geom_point(aes(group = seq_along(id)),color = &quot;red&quot;,size = 1)+
+    transition_reveal(id)+
+    geom_hline(yintercept = pi)
+  anim2 &lt;-animate(anim, nframes = 100, fps = 10,
+                  width = 550, height = 540, res = 90,
+                  renderer = gifski_renderer(loop = T))
+}
+last &lt;- make_run2(data1000)
+last</code></pre>
+<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-5-1.gif" /><!-- --></p>
+</div>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

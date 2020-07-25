@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ggplot2绘制图收录 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="ggplot2绘制图收录">
+<meta property="og:description" content="文章包含一些我绘制过的ggplot2图一些美化方法。">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>ggplot2绘制图收录</h1>
+  <h3>
+    , 08 Mar 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>文章包含一些我绘制过的ggplot2图一些美化方法。</p>
+<h3 id="ggplot2">ggplot2修改绘图字体</h3>
+<p>使用extrafont包,</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(extrafont)
+<span style="color:#a6e22e">loadfonts</span>(device <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">win&#34;</span>)
+</code></pre></div><p>这样你就能使用<code>windowsFonts()</code>函数看到的字体
+对于英文字体，我一直选用family = &ldquo;serif&rdquo;，完全能应对大部分图形字体。
+当然，extrafont包支持把所有字体导入到extrafontdb包中。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">font_import</span>() <span style="color:#75715e">#导入字体库</span>
+<span style="color:#a6e22e">fonts</span>() <span style="color:#75715e">#查看导入的字体向量</span>
+</code></pre></div><p>ggplot2的theme函数能用来修改字体family、face、size等text标签参数，或者说是字体属性。</p>
+<p>下图是我绘制散点图的一个函数，可以重点关注theme。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">plotfun <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(df,x,y){
+    <span style="color:#75715e">#x,y为列名字符串,df参数为tibble</span>
+    p <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggplot</span>(df,<span style="color:#a6e22e">aes</span>(<span style="color:#a6e22e">get</span>(x),<span style="color:#a6e22e">get</span>(y))) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_point</span>(size <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+        <span style="color:#a6e22e">labs</span>(title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Point Plot&#34;</span>,x<span style="color:#f92672">=</span>x,y<span style="color:#f92672">=</span>y)<span style="color:#f92672">+</span>
+        <span style="color:#a6e22e">theme</span>(text<span style="color:#f92672">=</span><span style="color:#a6e22e">element_text</span>(family<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">serif&#34;</span>),
+              axis.title<span style="color:#f92672">=</span><span style="color:#a6e22e">element_text</span>(size<span style="color:#f92672">=</span><span style="color:#ae81ff">14</span>,hjust <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>,face <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">bold&#34;</span>),
+              plot.title <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_text</span>(hjust <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>,size <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span> , face <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">bold&#34;</span>),
+              legend.text <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_text</span>(hjust <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>,size <span style="color:#f92672">=</span> <span style="color:#ae81ff">12</span> , face <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">bold&#34;</span>),
+              legend.text.align <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> ,
+              legend.title <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_text</span>(hjust <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span>,size <span style="color:#f92672">=</span> <span style="color:#ae81ff">12</span> , face <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">bold&#34;</span>),
+              axis.line <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_line</span>(linetype <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>),
+              panel.grid.major <span style="color:#f92672">=</span> <span style="color:#a6e22e">element_blank</span>())
+    p1 <span style="color:#f92672">&lt;-</span> p <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_smooth</span>(method<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">lm&#34;</span>,se<span style="color:#f92672">=</span>F) <span style="color:#75715e">#添加lm线性回归直线</span>
+    <span style="color:#a6e22e">return</span>(p1)
+}
+</code></pre></div><h3 id="heading">拼接图形</h3>
+<p>使用包patchwork</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(patchwork)
+</code></pre></div><p>对于上面那个函数，可以使用mapply循环绘制ggplot2对象列表，但是函数需要修改下，似乎不接受作为参数传入,把函数数据框参数去掉，往函数添加形似mtcars的数据框。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">plist <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">mapply</span>(plotfun,x <span style="color:#f92672">=</span> <span style="color:#a6e22e">colnames</span>(mtcars)[3],y <span style="color:#f92672">=</span> <span style="color:#a6e22e">colnames</span>(mtcars)[4<span style="color:#f92672">:</span><span style="color:#ae81ff">7</span>],SIMPLIFY <span style="color:#f92672">=</span> F)
+<span style="color:#75715e">#对列表拼接</span>
+patch <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">wrap_plots</span>(plist,nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>,guides <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">collect&#34;</span>)
+</code></pre></div><h3 id="heading-1">拼图也可以绘制为分面图</h3>
+<p>使用gather函数对形式mtcars数据变形。这里就不放入真实数据了，虽说使用mtcars运行我的代码图毫无意义。</p>
+<p>比如去mtcas的mpg列与其他列绘制散点图</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">ga <span style="color:#f92672">&lt;-</span> mtcars <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">gather</span>(name1,value1,<span style="color:#f92672">-</span>mpg) <span style="color:#f92672">%&gt;%</span>
+	<span style="color:#a6e22e">gather</span>(name2,value2,mpg)<span style="color:#f92672">%&gt;%</span>
+	<span style="color:#a6e22e">ggplot</span>(<span style="color:#a6e22e">aes</span>(value1,value2)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">geom_point</span>(size <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">labs</span>(title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Point Plot&#34;</span>,x<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">name2&#34;</span>,y<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#34;</span>)<span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">facet_wrap</span>(<span style="color:#f92672">~</span>name1,strip.position <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">left&#34;</span>)
+</code></pre></div><h3 id="png">保存高清的png</h3>
+<p>我喜欢使用png去保存图片，当然更清晰的是tiff等</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">png</span>(file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">xx.png&#34;</span>,width <span style="color:#f92672">=</span> <span style="color:#ae81ff">10000</span>,height <span style="color:#f92672">=</span> <span style="color:#ae81ff">4500</span>,res <span style="color:#f92672">=</span> <span style="color:#ae81ff">600</span>)
+p
+<span style="color:#a6e22e">dev.off</span>()
+</code></pre></div><p>这是我经常使用的保存图片方式。</p>
+<h3 id="plotly">plotly包</h3>
+<p>这个包可以绘制交互式点图，但是对于上述拼接的图不能支持，所以我才会去绘制分面图，方便看数据。</p>
+<p>这个图使用很简单，使用<code>ggplotly(p)</code>即可在Rstudio导出一个网页图,p为ggplot绘制。</p>
+<p>当然，这个包有其他函数，只是基本没用过。</p>
+<h3 id="20002000corr">2000*2000的corr相关性图</h3>
+<p>使用ggcor包</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(tidyverse)
+<span style="color:#a6e22e">library</span>(ggcor)
+x <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">matrix</span>(<span style="color:#a6e22e">rnorm</span>(<span style="color:#ae81ff">100</span><span style="color:#f92672">*</span><span style="color:#ae81ff">2000</span>),nrow <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>)
+<span style="color:#75715e">#cor相关性值还未计算</span>
+<span style="color:#75715e">#直接绘制相关性图,由于2000个过多</span>
+plot <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">quickcor</span>(x) <span style="color:#f92672">+</span>geom_raster <span style="color:#f92672">+</span> <span style="color:#a6e22e">remove_axis</span>()
+<span style="color:#75715e">#或者计算好后传入ggcor</span>
+cortbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cor</span>(x)<span style="color:#f92672">%&gt;%</span><span style="color:#a6e22e">cor_tbl</span>(type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">upper&#34;</span>)
+<span style="color:#75715e">#corr值颜色</span>
+cortbl<span style="color:#f92672">$</span>a <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ifelse</span>(cortbl<span style="color:#f92672">$</span>r<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">red&#34;</span>,<span style="color:#a6e22e">ifelse</span>(cortbl<span style="color:#f92672">$</span>r <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span> ,
+<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">green&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">white&#34;</span>))
+<span style="color:#75715e">#绘制及保存</span>
+p <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggcor</span>(cortbl, mapping <span style="color:#f92672">=</span> <span style="color:#a6e22e">aes_string</span>(x <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.col.id&#34;</span>, y <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.row.id&#34;</span>)) <span style="color:#f92672">+</span>
+<span style="color:#a6e22e">geom_tile</span>(mapping <span style="color:#f92672">=</span> <span style="color:#a6e22e">aes</span>(fill <span style="color:#f92672">=</span> a))<span style="color:#f92672">+</span>
+<span style="color:#a6e22e">scale_fill_manual</span>(name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">color&#34;</span>,values <span style="color:#f92672">=</span> <span style="color:#a6e22e">levels</span>(<span style="color:#a6e22e">factor</span>(cortbl<span style="color:#f92672">$</span>a)),
+labels <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">green:corr&lt;0&#34;</span>,
+<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">red:corr&gt;0&#34;</span>,
+<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">white:corr =0&#34;</span>)) <span style="color:#f92672">+</span> <span style="color:#a6e22e">remove_axis</span>()
+<span style="color:#a6e22e">pdf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ggcor.pdf&#34;</span>)
+<span style="color:#a6e22e">print</span>(p)
+<span style="color:#a6e22e">dev.off</span>()
+</code></pre></div>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

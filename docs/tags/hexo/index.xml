@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>hexo on Liripo</title>
+    <link>/tags/hexo/</link>
+    <description>Recent content in hexo on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 02 Nov 2019 13:28:06 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/hexo/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Hexo&#43;github搭建blog</title>
+      <link>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</link>
+      <pubDate>Sat, 02 Nov 2019 13:28:06 +0000</pubDate>
+      
+      <guid>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</guid>
+      <description>&lt;p&gt;准备工作：安装node.js,git,hexo,加上github账户即可。
+&lt;a href=&#34;https://hexo.io/zh-cn/docs/&#34;&gt;hexo官方文档&lt;/a&gt;
+&lt;a href=&#34;https://help.github.com/en/github/working-with-github-pages/about-github-pages&#34;&gt;什么是Github Page&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;备注：以下前面为hexo在git for windows的配置安装，前三个标题推荐改为使用WSL&amp;gt;安装，&lt;a href=&#34;https://liripo.github.io/2020/03/21/windows10%E5%AE%89%E8%A3%85linux/#more&#34;&gt;linux子系统安装&lt;/a&gt;后可看这篇章的标题&amp;ndash;在WSL中手动安装node,hexo，之后再按照第三个标题相关配置往下进行。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

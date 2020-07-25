@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>fastp&#43;gencore使用 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="fastp&#43;gencore使用">
+<meta property="og:description" content="
+使用以上两个软件&#43;vardict/varscan/outLyzer构建UMI分析流程
+">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>fastp+gencore使用</h1>
+  <h3>
+    , 07 Jan 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>使用以上两个软件+vardict/varscan/outLyzer构建UMI分析流程</p>
+</blockquote>
+<h1 id="fastp">fastp</h1>
+<h2 id="heading">安装</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">conda install -c bioconda fastp
+</code></pre></div><h2 id="fastpumi">fastp处理UMI功能</h2>
+<blockquote>
+<p><strong>结果路径</strong>：253：/data3/liaorp/umi/NL190929/fastp+genecore/umi_process</p>
+</blockquote>
+<p>默认情况下fastp启动质量过滤，-q参数来指定合格的 phred 质量值,-u参数来指定最多可以有多少百分比的质量不合格碱基,使用-Q禁用<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>
+默认启动长度过滤，可以使用-L禁用，&ndash;length_required默认15（即低于15的舍弃），&ndash;length_limit限制长度
+默认情况下，适配器修整是启用的，可以通过-A或&ndash;disable_adapter_trimming禁用
+-w, &ndash;thread参数可使用多线程</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir umi_process <span style="color:#f92672">&amp;&amp;</span> cd umi_process
+fastp -i ../NL190929-1C.R1.fastq.gz -o R1.fastq.gz -I ../NL190929-1C.R2.fastq.gz -O R2.fastq.gz <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -U --umi_loc<span style="color:#f92672">=</span>per_read --umi_len<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> --umi_skip<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> --umi_prefix<span style="color:#f92672">=</span>UMI <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -Q -L -A
+</code></pre></div><p>产生的fastq的query names形如，这是gencore接受的query names。</p>
+<pre><code>@ST-E00252:685:H5CLNCCX2:1:1101:27884:2680:UMI_CAG_AGA 1:N:0:TTCGTTGG+TACACACG
+</code></pre><h1 id="bam">生成bam文件</h1>
+<blockquote>
+<p>传入的fasta参考文件以及bed文件只是计算相应区域覆盖率。</p>
+</blockquote>
+<h2 id="bwasamtoolsbam">使用bwa+samtools生成比对的bam文件</h2>
+<p>脚本：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">bwa mem -t <span style="color:#ae81ff">10</span> /data3/liaorp/hg/hg19.fa R1.fastq.gz R2.fastq.gz &gt; bwa.sam
+<span style="color:#75715e">#samtools将sam转bam并排序</span>
+samtools view -Sb bwa.sam |samtools sort -n -o sortquery.bam
+<span style="color:#75715e">#samtools index sortquery.bam</span> 
+</code></pre></div><p>samtools貌似只能对pos位置排序（即默认排序）建立索引，上面选用-n参数进行query排序导致失败了。</p>
+<p>在后面使用gencore时提示我仍旧没有sort</p>
+<p>尝试改用picard进行sort，使用输入文件samtools转bam的输出文件</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">java -jar /data3/liaorp/software/picard.jar SortSam I<span style="color:#f92672">=</span>sam.bam O<span style="color:#f92672">=</span>picardsort.bam SO<span style="color:#f92672">=</span>queryname
+</code></pre></div><p>还是提示未排序
+<strong>使用samtools默认排序即可</strong></p>
+<pre><code>samtools sort -@ 10 -o sortpos.bam sam.bam
+</code></pre><h1 id="gencore">gencore</h1>
+<blockquote>
+<p>具有处理UMIs和报告信息性结果的功能,可以对重复序列进行删除以及降低背景噪音。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup></p>
+</blockquote>
+<h2 id="heading-1">安装</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd ~/gitclone <span style="color:#f92672">&amp;&amp;</span> wget <span style="color:#f92672">[</span>http://opengene.org/gencore/gencore<span style="color:#f92672">]</span><span style="color:#f92672">(</span>http://opengene.org/gencore/gencore<span style="color:#f92672">)</span>
+chmod a+x ./gencore
+<span style="color:#75715e">#~/.soft已在环境变量中，将程序软连接过去，省去配置环境变量的麻烦</span>
+cd ~/.soft <span style="color:#f92672">&amp;&amp;</span> ln -s ~/gitclone/gencore ./
+</code></pre></div><h2 id="heading-2">运行</h2>
+<p>脚本</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir gencore <span style="color:#f92672">&amp;&amp;</span> cd gencore
+gencore -i ../umi_process/sortpos.bam -o gencore.unsort.bam -r /data3/liaorp/hg/hg19.fa <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -b ../snp.probe.bed -u UMI -s <span style="color:#ae81ff">1</span> --high_qual <span style="color:#ae81ff">30</span>
+</code></pre></div><p>结果目录：253：/data3/liaorp/umi/NL190929/fastp+genecore/gencore</p>
+<p>对结果按碱基排序</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">samtools sort -@ <span style="color:#ae81ff">20</span> -o sortgencore.bam gencore.unsort.bam
+</code></pre></div><blockquote>
+<p>需要建立索引后进行vardictjava变异检测！！！</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">samtools index sortgencore.bam
+</code></pre></div><h1 id="vardictjava">vardictjava变体识别</h1>
+<p>脚本</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">java -jar /data3/liaorp/software/VarDictJava-master/build/libs/VarDict-1.7.0.jar <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -G /data3/liaorp/hg/hg19.fa -N NL19332 -f 0.01 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -b sortgencore.bam <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        -z -c <span style="color:#ae81ff">1</span> -S <span style="color:#ae81ff">2</span> -E <span style="color:#ae81ff">3</span> -g <span style="color:#ae81ff">4</span>  <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        ../snp.probe.bed <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        | /data3/liaorp/software/VarDictJava-master/dist/VarDict-1.7.0/bin/teststrandbias.R <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    | /data3/liaorp/software/VarDictJava-master/dist/VarDict-1.7.0/bin/var2vcf_valid.pl -N NL19332 -E -f 0.01 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        |awk <span style="color:#e6db74">&#39;{if ($1 ~ /^#/) print; else if ($4 != $5) print }&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        &gt; tmp.vcf
+
+java -Xmx32g -jar /data3/liaorp/software/picard.jar SortVcf <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>        I<span style="color:#f92672">=</span>tmp.vcf O<span style="color:#f92672">=</span>NL19332.vcf SD<span style="color:#f92672">=</span>/data3/liaorp/hg/picard_CreateSequenceDictionary/hg19.dict
+</code></pre></div><p>参考文献：</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>Chen S, Zhou Y, Chen Y, Gu J. Fastp: an ultra-fast all-in-one FASTQ preprocessor. Bioinformatics. 2018;34:884–90.<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#8617;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>Chen, S., Zhou, Y., Chen, Y. <em>et al.</em> Gencore: an efficient tool to generate consensus reads for error suppressing and duplicate removing of NGS data. <em>BMC Bioinformatics</em> <strong>20,</strong> 606 (2019) doi:10.1186/s12859-019-3280-9<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#8617;</a></p>
+</li>
+</ol>
+</section>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

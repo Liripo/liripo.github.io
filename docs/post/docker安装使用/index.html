@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>docker安装使用 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="docker安装使用">
+<meta property="og:description" content="linux dockor.">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>docker安装使用</h1>
+  <h3>
+    , 28 Mar 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p><a href="https://vuepress.mirror.docker-practice.com/install/ubuntu.html">docker从入门到实践</a></p>
+<h1 id="docker">安装docker</h1>
+<p>linux ubuntu</p>
+<p>1.安装依赖</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo apt-get install <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    apt-transport-https <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    ca-certificates <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    curl <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>    software-properties-common
+</code></pre></div><p>2.为了确认所下载软件包的合法性，需要添加软件源的 <code>GPG</code> 密钥。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+
+<span style="color:#75715e"># 官方源</span>
+<span style="color:#75715e"># $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -</span>
+</code></pre></div><p>3.然后，我们需要向 <code>source.list</code> 中添加 Docker 软件源</p>
+<pre><code class="language-she" data-lang="she">$ sudo add-apt-repository \
+    &quot;deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu \
+    $(lsb_release -cs) \
+    stable&quot;
+
+
+# 官方源
+# $ sudo add-apt-repository \
+#    &quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+#    $(lsb_release -cs) \
+#    stable&quot;
+</code></pre><p>4.安装</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo apt-get install docker-ce
+</code></pre></div><h2 id="heading">另一种方式，使用脚本安装</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl -fsSL get.docker.com -o get-docker.sh
+sudo sh get-docker.sh --mirror Aliyun
+</code></pre></div><h2 id="heading-1">使用</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo service docker start <span style="color:#75715e">#运行</span>
+sudo docker --help
+</code></pre></div><h2 id="docker-1">建立docker用户组，将当前用户加入</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo groupadd docker
+sudo usermod -aG docker $USER
+</code></pre></div><p>退出重连即可无需sudo。</p>
+<h2 id="heading-2">如果网络不行，添加镜像源</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo mkdir /etc/docker
+sudo vim /etc/docker/daemon.json
+<span style="color:#75715e">#添加如下信息</span>
+<span style="color:#f92672">{</span>
+  <span style="color:#e6db74">&#34;registry-mirrors&#34;</span>: <span style="color:#f92672">[</span>
+    <span style="color:#e6db74">&#34;https://dockerhub.azk8s.cn&#34;</span>,
+    <span style="color:#e6db74">&#34;https://hub-mirror.c.163.com&#34;</span>
+  <span style="color:#f92672">]</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>重启即可<code>sudo service docker restart</code></p>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

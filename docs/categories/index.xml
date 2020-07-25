@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Liripo</title>
+    <link>/categories/</link>
+    <description>Recent content in Categories on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sun, 08 Mar 2020 19:10:29 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>ggplot2</title>
+      <link>/categories/ggplot2/</link>
+      <pubDate>Sun, 08 Mar 2020 19:10:29 +0000</pubDate>
+      
+      <guid>/categories/ggplot2/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>java</title>
+      <link>/categories/java/</link>
+      <pubDate>Wed, 04 Mar 2020 22:22:45 +0000</pubDate>
+      
+      <guid>/categories/java/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>数据下载</title>
+      <link>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
+      <pubDate>Sun, 01 Mar 2020 17:19:55 +0000</pubDate>
+      
+      <guid>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>docx模块</title>
+      <link>/categories/docx%E6%A8%A1%E5%9D%97/</link>
+      <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
+      
+      <guid>/categories/docx%E6%A8%A1%E5%9D%97/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>R</title>
+      <link>/categories/r/</link>
+      <pubDate>Wed, 15 Jan 2020 23:11:25 +0000</pubDate>
+      
+      <guid>/categories/r/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>生信软件</title>
+      <link>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</link>
+      <pubDate>Tue, 07 Jan 2020 23:05:42 +0000</pubDate>
+      
+      <guid>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>linux三剑客</title>
+      <link>/categories/linux%E4%B8%89%E5%89%91%E5%AE%A2/</link>
+      <pubDate>Mon, 11 Nov 2019 19:41:23 +0000</pubDate>
+      
+      <guid>/categories/linux%E4%B8%89%E5%89%91%E5%AE%A2/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

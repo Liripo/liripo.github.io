@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>docker on Liripo</title>
+    <link>/categories/docker/</link>
+    <description>Recent content in docker on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 28 Mar 2020 01:08:43 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/docker/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>docker安装使用</title>
+      <link>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Sat, 28 Mar 2020 01:08:43 +0000</pubDate>
+      
+      <guid>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</guid>
+      <description>docker:
+ docker从入门到实践
+安装docker linux ubuntu
+1.安装依赖
+sudo apt-get install \  apt-transport-https \  ca-certificates \  curl \  software-properties-common 2.为了确认所下载软件包的合法性，需要添加软件源的 GPG 密钥。
+$ curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu/gpg | sudo apt-key add - # 官方源 # $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 3.然后，我们需要向 source.list 中添加 Docker 软件源
+$ sudo add-apt-repository \ &amp;quot;deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu \ $(lsb_release -cs) \ stable&amp;quot; # 官方源 # $ sudo add-apt-repository \ # &amp;quot;deb [arch=amd64] https://download.</description>
+    </item>
+    
+  </channel>
+</rss>

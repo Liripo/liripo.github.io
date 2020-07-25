@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>conda | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="conda">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>conda</h1>
+  <h3>
+    , 25 Nov 2019
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <h4 id="spyder3">spyder3</h4>
+<p><a href="https://github.com/spyder-ide/spyder">spyder github网址</a>,其提供的安装方法有多种，官方强推<a href="https://www.anaconda.com/distribution/">anaconda</a>,确实我本人也喜欢使用，anaconda同时还创建了虚拟环境，使得我在linux使用各种软件如R、python等不需要过多的权限。miniconda是缩过之后的anaconda，没有那么多额外的软件，但也是可以使用虚拟环境的。
+windows下简单使用<code>pip install spyder</code>安装即可，打开方式为在命令行中键入：<code>spyder3</code>
+汉化spyder3
+<a href="https://github.com/kingmo888/Spyder_Simplified_Chinese">SpyderSimplifiedChinese-master</a>下载解压后，到根目录使用shift键点击鼠标右键打开命令行窗口或者powershell;运行python main.py 或者python .\main.py;
+重启Spyder,选择Tools&mdash;Preferences&mdash;General&mdash;Advanced Settings&mdash;language&mdash;&ndash;简体中文；</p>
+<h4 id="anaconda">anaconda</h4>
+<p>anaconda有必要同时说下。
+Anaconda可以便捷获取包且对包能够进行管理，同时对环境可以统一管理的发行版本。Anaconda包含了conda、Python在内的超过180个科学包及其依赖项。<strong>推荐</strong>
+不需要那么多可以使用<a href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>。</p>
+<table>
+<thead>
+<tr>
+<th align="center">Anaconda</th>
+<th>其包含的科学包包括：conda, numpy, scipy, ipython notebook等。</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">conda</td>
+<td>包及其依赖项和环境的管理工具,适用于Python, R, Ruby, Lua, Scala, Java, JavaScript, C/C++, FORTRAN</td>
+</tr>
+<tr>
+<td align="center">pip</td>
+<td>pip是用于安装和管理软件包的包管理器</td>
+</tr>
+<tr>
+<td align="center">virtualenv</td>
+<td>用于创建一个<strong>独立的</strong>Python环境的工具。</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://conda.io/docs/">conda</a>:仅需要几条命令，你可以创建一个完全独立的环境来运行不同的Python或者其他语言的版本。
+安装过程中，会有将conda加入环境变量的提示，当然，忘记加入时可以手动添加。conda的位置windows版本是在安装根目录下的scripts目录下。
+<strong>conda命令</strong>
+<code>conda list</code>会显示已经安装的包名和版本号。
+<code>anaconda-navigator</code>启动anaconda图形界面。
+<code>conda update conda</code>更新conda
+创建新环境</p>
+<pre><code>conda creante -n &lt;env_name&gt; &lt;you==版本&gt;
+</code></pre><p><code>&lt;env_name&gt;</code>即创建的环境名。建议以英文命名，且不加空格。名称两边不加尖括号“&lt;&gt;”。
+<code>&lt;you==版本&gt;</code>即安装在环境中的包名或者语言的版本。名称两边不加尖括号“&lt;&gt;”。
+例如：<code>conda creante -n liaorp python==3.7</code>
+<code>conda info --e</code>查看所含有的环境，环境前的*表明当前身处的环境。或者<code>conda info --envs``conda env list</code>
+<strong>切换环境</strong>
+linux下<code>conda activate env_name</code>，gitbash下<code>source activate env_name</code>,windows<code>activate env_name</code>
+<code>conda deactivate</code>退出环境；
+<strong>查找及安装包，模块，语言</strong>
+<code>conda search r</code>或者<code>conda search pysam</code>搜索conda中含有的包或者语言版本
+<code>conda install r=3.6.1</code>即下载</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#精准查找</span>
+conda search --full-name &lt;package_full_name&gt;
+<span style="color:#75715e">#指定环境下载</span>
+conda install --name &lt;env_name&gt; &lt;package_name&gt;
+<span style="color:#75715e">#复制环境</span>
+conda create --name &lt;new_env_name&gt; --clone &lt;copied_env_name&gt;
+<span style="color:#75715e">#删除环境</span>
+conda remove --name &lt;env_name&gt; --all
+</code></pre></div><p><strong>换清华镜像源</strong></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge 
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/msys2/
+<span style="color:#75715e"># 设置搜索时显示通道地址</span>
+conda config --set show_channel_urls yes
+</code></pre></div><p>linux下，可less ~/.condarc</p>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

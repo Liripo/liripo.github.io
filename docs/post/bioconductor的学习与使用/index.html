@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>bioconductor的学习与使用 | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="bioconductor的学习与使用">
+<meta property="og:description" content="
+在生物信息学领域 , bioPerl和bioPython 是使用和研究生物信息学的开发者提供的在线资源库，那么bioR应当就是bioconductor。
+">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>bioconductor的学习与使用</h1>
+  <h3>
+    , 22 Dec 2019
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>在生物信息学领域 , bioPerl和bioPython 是使用和研究生物信息学的开发者提供的在线资源库，那么bioR应当就是bioconductor。</p>
+</blockquote>
+<p><a href="https://bioconductor.org/">官网</a>
+<a href="https://bioconductor.github.io/BiocWorkshops/">2018年bioconductor教程</a></p>
+<h1 id="r">R包安装</h1>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#官网安装</span>
+<span style="color:#a6e22e">if </span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">BiocManager&#34;</span>))
+    <span style="color:#a6e22e">install.packages</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">BiocManager&#34;</span>)
+BiocManager<span style="color:#f92672">::</span><span style="color:#a6e22e">install</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">your-package&#34;</span>)
+</code></pre></div><p>倘若下载速度慢，则更换镜像源</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e"># 先安装BiocManager，它位于CRAN </span>
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">length</span>(<span style="color:#a6e22e">getOption</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">CRAN&#34;</span>))<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">options</span>(CRAN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">https://mirrors.tuna.tsinghua.edu.cn/CRAN/&#34;</span>)
+<span style="color:#a6e22e">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">BiocManager&#34;</span>)) <span style="color:#a6e22e">install.packages</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">BiocManager&#34;</span>,update <span style="color:#f92672">=</span> F,ask <span style="color:#f92672">=</span> F)
+<span style="color:#75715e"># 然后添加BioC的国内源，可以选清华或者中科大</span>
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">length</span>(<span style="color:#a6e22e">getOption</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">BioC_mirror&#34;</span>))<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">options</span>(BioC_mirror<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">https://mirrors.ustc.edu.cn/bioc/&#34;</span>)
+</code></pre></div><p>快速查找包的文档,如<code>browseVignettes(&quot;clusterProfiler&quot;)</code></p>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

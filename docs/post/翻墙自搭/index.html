@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>翻墙？自搭！ | Liripo</title>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="翻墙？自搭！">
+<meta property="og:description" content="购买海外服务器，选用 virmach，或者Vultr、Linode、DigitalOcean。
+xshell进入服务器后创建用户，非必须。
+adduser liripo &amp;&amp; passwd liripo
+#添加sudo权限
+$ vim /etc/sudoers
+#在root    ALL=(ALL)       ALL下面添加
+liripo   ALL=(ALL)      ALL
+">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>翻墙？自搭！</h1>
+  <h3>
+    , 06 Jan 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>购买海外服务器，选用 <a href="https://virmach.com/">virmach</a>，或者Vultr、Linode、DigitalOcean。</p>
+<p>xshell进入服务器后创建用户，非必须。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">adduser liripo <span style="color:#f92672">&amp;&amp;</span> passwd liripo
+<span style="color:#75715e">#添加sudo权限</span>
+$ vim /etc/sudoers
+<span style="color:#75715e">#在root    ALL=(ALL)       ALL下面添加</span>
+liripo   ALL<span style="color:#f92672">=</span><span style="color:#f92672">(</span>ALL<span style="color:#f92672">)</span>      ALL
+</code></pre></div><h1 id="shadowsocksr">使用ShadowsocksR</h1>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo su
+wget -N --no-check-certificate https://makeai.cn/bash/ssrmu.sh <span style="color:#f92672">&amp;&amp;</span> chmod +x ssrmu.sh
+bash ssrmu.sh
+</code></pre></div><p>输入 <strong>1</strong> ，开始安装ShadowsocksR服务端。</p>
+<p>之后会提示输入Shadowsocks的 <strong>端口/密码/加密方式/ 协议/混淆（混淆和协议是通过输入数字选择的）</strong> 等参数来添加第一个用户 。</p>
+<p>之后按着提示走呗。端口号尽量选高点，比如6888，25是不行的。</p>
+<p>得到相关信息如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>
+ 用户 <span style="color:#f92672">[</span>liripo<span style="color:#f92672">]</span> 的配置信息：
+ I  P	    : 45.76.209.91
+ 端口	    : <span style="color:#ae81ff">6888</span>
+ 密码	    : ******
+ 加密	    : aes-256-ctr
+ 协议	    : auth_sha1_v4_compatible
+ 混淆	    : tls1.2_ticket_auth_compatible
+ 设备数限制 : <span style="color:#ae81ff">5</span>
+ 单线程限速 : <span style="color:#ae81ff">0</span> KB/S
+ 用户总限速 : <span style="color:#ae81ff">0</span> KB/S
+ 禁止的端口 : 无限制 
+
+ 已使用流量 : 上传: <span style="color:#ae81ff">0</span> B + 下载: <span style="color:#ae81ff">0</span> B <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> B
+ 剩余的流量 : 819.21 TB 
+ 用户总流量 : 819.21 TB 
+ SS    链接 : ss://YWVzLTI1Ni1jdHI6cnAzMTgwMjA4NTYzQDQ1Ljc2LjIwOS45MToyNQ 
+ SS  二维码 : https://makeai.cn/qr/?m<span style="color:#f92672">=</span>2&amp;e<span style="color:#f92672">=</span>H&amp;p<span style="color:#f92672">=</span>3&amp;url<span style="color:#f92672">=</span>ss://YWVzLTI1Ni1jdHI6cnAzMTgwMjA4NTYzQDQ1Ljc2LjIwOS45MToyNQ
+ SSR   链接 : ssr://NDUuNzYuMjA5LjkxOjI1OmF1dGhfc2hhMV92NDphZXMtMjU2LWN0cjp0bHMxLjJfdGlja2V0X2F1dGg6Y25Bek1UZ3dNakE0TlRZeg 
+ SSR 二维码 : https://makeai.cn/qr/?m<span style="color:#f92672">=</span>2&amp;e<span style="color:#f92672">=</span>H&amp;p<span style="color:#f92672">=</span>3&amp;url<span style="color:#f92672">=</span>ssr://NDUuNzYuMjA5LjkxOjI1OmF1dGhfc2hhMV92NDphZXMtMjU2LWN0cjp0bHMxLjJfdGlja2V0X2F1dGg6Y25Bek1UZ3dNakE0TlRZeg 
+ 
+提示: 
+在浏览器中，打开二维码链接，就可以看到二维码图片。
+协议和混淆后面的<span style="color:#f92672">[</span> _compatible <span style="color:#f92672">]</span>，指的是 兼容原版协议/混淆。
+<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">=</span>
+</code></pre></div><p>由于二维码自动生成功能连接不上，自己安装ShadowsocksR的安卓或者windows版本</p>
+<h1 id="windowsandroid">安装windows或android客户端</h1>
+<p>配置相关信息即可使用。</p>
+<p>安卓apk可在<a href="https://github.com/shadowsocksr-backup/shadowsocksr-android/releases">Githubshadowsocksr-android</a>下载</p>
+<p>由于百度网盘分享不了，windowns版本可在我的<a href="https://liripo-1300901505.cos.ap-guangzhou.myqcloud.com/%E8%BD%AF%E4%BB%B6/ShadowsocksR-4.7.0.zip">腾讯云下载</a></p>
+<p>倘若电脑端网速太慢，可右键点击程序的那个小飞机，选择代理规则：绕过局域网和大陆。</p>
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

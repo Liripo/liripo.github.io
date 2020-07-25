@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>/tags/docker/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/r/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/linux/</loc>
+    <lastmod>2020-03-21T14:27:47+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/windows10%E5%AE%89%E8%A3%85linux/</loc>
+    <lastmod>2020-03-21T14:27:47+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
+    <lastmod>2020-03-08T19:10:29+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/ggplot2/</loc>
+    <lastmod>2020-03-08T19:10:29+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</loc>
+    <lastmod>2020-03-08T19:10:29+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/java/</loc>
+    <lastmod>2020-03-04T22:22:45+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</loc>
+    <lastmod>2020-03-04T22:22:45+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/word/</loc>
+    <lastmod>2020-03-04T22:22:45+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <lastmod>2020-03-01T17:19:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <lastmod>2020-03-01T17:19:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7/</loc>
+    <lastmod>2020-03-01T17:19:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/docx%E6%A8%A1%E5%9D%97/</loc>
+    <lastmod>2020-02-12T13:19:22+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/python/</loc>
+    <lastmod>2020-02-12T13:19:22+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/python-docx%E7%AC%94%E8%AE%B0/</loc>
+    <lastmod>2020-02-12T13:19:22+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/annovar/</loc>
+    <lastmod>2020-01-20T23:58:40+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</loc>
+    <lastmod>2020-01-20T23:58:40+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/r/</loc>
+    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/rpackage/</loc>
+    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/r%E5%8C%85shiny/</loc>
+    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/fastp-gencore%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2020-01-07T23:05:42+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/umi/</loc>
+    <lastmod>2020-01-07T23:05:42+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</loc>
+    <lastmod>2020-01-07T23:05:42+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/%E6%94%B6%E8%97%8F/</loc>
+    <lastmod>2020-01-07T21:50:44+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E7%BD%91%E5%9D%80%E6%94%B6%E5%BD%95/</loc>
+    <lastmod>2020-01-07T21:50:44+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/ssh/</loc>
+    <lastmod>2020-01-06T23:39:54+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E7%BF%BB%E5%A2%99%E8%87%AA%E6%90%AD/</loc>
+    <lastmod>2020-01-06T23:39:54+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/xming/</loc>
+    <lastmod>2019-12-23T10:59:34+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</loc>
+    <lastmod>2019-12-23T10:59:34+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/bioconductor/</loc>
+    <lastmod>2019-12-22T22:27:21+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-22T22:27:21+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/bioawk/</loc>
+    <lastmod>2019-12-20T23:22:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/bioawk%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-20T23:22:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/grep/</loc>
+    <lastmod>2019-12-19T23:34:45+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/grep%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-19T23:34:45+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/fastqc%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-18T12:52:21+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/%E7%94%9F%E4%BF%A1%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7/</loc>
+    <lastmod>2019-12-18T12:52:21+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/markdown/</loc>
+    <lastmod>2019-12-17T23:42:15+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/markdown%E4%B8%8Etyporarmarkdown/</loc>
+    <lastmod>2019-12-17T23:42:15+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/samtools%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-17T21:19:12+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/bamdst%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-17T10:56:40+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/git/</loc>
+    <lastmod>2019-12-13T10:31:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-12-13T10:31:55+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/r%E4%B8%8E%E7%94%9F%E7%89%A9%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
+    <lastmod>2019-12-09T20:52:23+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
+    <lastmod>2019-12-09T20:52:23+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/conda/</loc>
+    <lastmod>2019-11-25T20:35:16+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/software/</loc>
+    <lastmod>2019-11-25T20:35:16+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/sed/</loc>
+    <lastmod>2019-11-11T19:41:39+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/sed%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-11-11T19:41:39+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/awk/</loc>
+    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/awk%E4%BD%BF%E7%94%A8/</loc>
+    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/categories/linux%E4%B8%89%E5%89%91%E5%AE%A2/</loc>
+    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/bash/</loc>
+    <lastmod>2019-11-08T22:37:49+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</loc>
+    <lastmod>2019-11-08T22:37:49+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/bioinformatics/</loc>
+    <lastmod>2019-11-08T09:39:24+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</loc>
+    <lastmod>2019-11-08T09:39:24+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0/</loc>
+    <lastmod>2019-11-03T19:04:42+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/%E7%BB%9F%E8%AE%A1/</loc>
+    <lastmod>2019-11-03T19:04:42+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/hexo/</loc>
+    <lastmod>2019-11-02T13:28:06+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</loc>
+    <lastmod>2019-11-02T13:28:06+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/fiction/</loc>
+    <lastmod>2019-11-01T21:26:11+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E5%B0%8F%E8%AF%B4/</loc>
+    <lastmod>2019-11-01T21:26:11+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</loc>
+    <lastmod>2019-11-01T19:23:22+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
+  </url>
+  
+  <url>
+    <loc>/post/jupyter%E4%BD%BF%E7%94%A8/</loc>
+  </url>
+  
+  <url>
+    <loc>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</loc>
+  </url>
+  
+</urlset>
