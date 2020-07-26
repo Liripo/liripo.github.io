@@ -5,6 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>R包开发 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
 
   <style>
   	:root {
@@ -95,7 +97,7 @@
         <p><strong><a href="https://r-pkgs.org/">R包开发书籍</a></strong></p>
 <p><strong><a href="https://cran.r-project.org/doc/manuals/r-release/R-exts.html">Writing R Extensions</a></strong></p>
 <p><a href="https://qianjiye.de/2015/04/r-packages">https://qianjiye.de/2015/04/r-packages</a></p>
-<h1 id="r">R包开发</h1>
+<h1 id="r-package">R package</h1>
 <p>使用devtools+Rtools进行R包开发，而Linux可以使用dockor+Rstudio开发版本。</p>
 <h3 id="create-package">create_package()</h3>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(devtools)
@@ -169,7 +171,7 @@ Loading liripo.R
 Writing NAMESPACE
 Writing NAMESPACE
 Writing scale.Rd
-</code></pre></div><h1 id="r-1">R包中文</h1>
+</code></pre></div><h1 id="r">R包中文</h1>
 <p>目前来说，不要使用中文。必须使用的可以看看函数<code>?stringi::stri_escape_unicode()</code>使用生成的unicode替代。ps:不过我使用后还是提示我使用ASCII字符编码。</p>
 <h1 id="install">install()</h1>
 <p>install()将包载入到<code>.libpath()</code>路径。看下是否安装上了：</p>
@@ -178,7 +180,7 @@ Writing scale.Rd
 </code></pre></div><h3 id="check-builtbuild">check_built()和build()</h3>
 <p><code>check_built()</code>检查tar.gz包。</p>
 <p><code>build()</code>生成tar.gz包，便于分享。</p>
-<h1 id="r-2">R包加入数据集</h1>
+<h1 id="r-1">R包加入数据集</h1>
 <p><code>use_data()</code>函数可以对R对象生成/data/*.rda文件，之后使用<code>use_r(&quot;R包名-package&quot;)</code>，在这个新生成的文件加入skeleon，例子：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @name Rliripo</span>
 <span style="color:#75715e">#&#39; @docType package</span>

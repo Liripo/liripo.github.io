@@ -1,9 +1,9 @@
 ---
 title: About
 type: "generic_page"
-summary: "T。。。"
+summary: ""
 ---
 
->>>.。。。。。。。。。
+我毕业于[南方医科大学](http://www.smu.edu.cn/)
 
-
+比较擅长R语言，熟悉python,SQL等。

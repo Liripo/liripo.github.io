@@ -2,20 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>ggplot2 on Liripo</title>
-    <link>https://liripo.netlify.app/categories/ggplot2/</link>
+    <link>/categories/ggplot2/</link>
     <description>Recent content in ggplot2 on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Sun, 08 Mar 2020 19:10:29 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.netlify.app/categories/ggplot2/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/ggplot2/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>ggplot2绘制图收录</title>
-      <link>https://liripo.netlify.app/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</link>
+      <link>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</link>
       <pubDate>Sun, 08 Mar 2020 19:10:29 +0000</pubDate>
       
-      <guid>https://liripo.netlify.app/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</guid>
+      <guid>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</guid>
       <description>&lt;p&gt;文章包含一些我绘制过的ggplot2图一些美化方法。&lt;/p&gt;</description>
     </item>
     

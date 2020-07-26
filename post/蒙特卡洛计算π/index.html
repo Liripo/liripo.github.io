@@ -5,6 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>蒙特卡洛计算Π | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
 
   <style>
   	:root {
@@ -51,7 +53,7 @@
       <div>
   <h1>蒙特卡洛计算Π</h1>
   <h3>
-    by Liripo
+    by Liripo, 20 Jul 2020
   </h3>
   <br><br>
 </div>
@@ -89,12 +91,12 @@ data1000 &lt;- pi_data(n = 1000)</code></pre>
     start = 0,end = pi/2)) +coord_fixed() +
   geom_point(data = data1000,aes(x,y,color = point))
 p1</code></pre>
-<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="../../post/rmd/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <pre class="r"><code>p2 &lt;- ggplot(data1000) +
   geom_line(aes(x = id,y = pi_predict))+
   geom_hline(yintercept = pi)
 p2</code></pre>
-<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="../../post/rmd/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 </div>
 <div id="试下动态图" class="section level1">
 <h1>试下动态图</h1>
@@ -110,7 +112,7 @@ anim2 &lt;-animate(anim, nframes = 100, fps = 10,
                   width = 550, height = 540, res = 90,
                   renderer = gifski_renderer(loop = T))
 anim2</code></pre>
-<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-4-1.gif" /><!-- --></p>
+<p><img src="../../post/rmd/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-4-1.gif" /><!-- --></p>
 <pre class="r"><code>make_run2 &lt;- function(pi_data){
   anim &lt;- ggplot(pi_data,aes(id ,pi_predict)) +
     geom_line() +
@@ -123,7 +125,7 @@ anim2</code></pre>
 }
 last &lt;- make_run2(data1000)
 last</code></pre>
-<p><img src="../../post/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-5-1.gif" /><!-- --></p>
+<p><img src="../../post/rmd/蒙特卡洛计算Π_files/figure-html/unnamed-chunk-5-1.gif" /><!-- --></p>
 </div>
 
       </main>

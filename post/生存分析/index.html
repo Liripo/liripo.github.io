@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>生存分析 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="生存分析">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>生存分析</h1>
+  <h3>
+    , 28 Mar 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>生存分析是研究生存时间的分布规律，以及生存时间和相关因素之间关系的一种统计分析方法</p>
+</blockquote>
+<p>经常用于：</p>
+<ul>
+<li>Cancer studies for patients survival time analyses（临床癌症上病人生存分析）</li>
+</ul>
+<p>生存分析使用的方法：</p>
+<ul>
+<li>Kaplan-Meier plots to visualize survival curves（根据生存时间分布，估计生存率以及中位生存时间，以生存曲线方式展示，从而分析生存特征，一般用Kaplan-Meier法，还有寿命法）</li>
+<li>Log-rank test to compare the survival curves of two or more groups（通过比较两组或者多组之间的的生存曲线，一般是生存率及其标准误，从而研究之间的差异，一般用log rank检验）</li>
+<li>Cox proportional hazards regression to describe the effect of variables on survival（用Cox风险比例模型来分析变量对生存的影响，可以两个及两个以上的因素，很常用）</li>
+</ul>
+<p><strong>一般做生存分析，可以用KM（Kaplan-Meier）方法估计生存率，做生存曲线，然后可以根据分组检验一下多组间生存曲线是否有显著的差异，最后用Cox风险比例模型来研究下某个因素对生存的影响。</strong></p>
+<p>生存曲线（survival curve）则是将每个时间点的生存率连接在一起的曲线，一般随访时间为X轴，生存率为Y轴；曲线平滑则说明高生存率，反之则低生存率；中位生存率（median survival time）越长，则说明预后较好</p>
+<p>Kaplan-Meier方法计算：</p>
+<blockquote>
+<p>S(ti)=S(ti−1)(1−di/ni)
+S(ti−1)指在ti−1年还存活的概率
+ni指在在ti年之前还存活的人数
+di指在事件发生的人数
+t0=0，S(0)=1
+Kaplan-Meier曲线为我们描画了患者生存率随时间变化的特征。他完美的将时间因素考虑在内，各个时间点的生存率值也被称为时点生存率。</p>
+</blockquote>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  <script src="//yihui.name/js/math-code.js"></script>
+<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script async src="//yihui.name/js/center-img.js"></script>
+
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

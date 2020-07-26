@@ -2,20 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>python on Liripo</title>
-    <link>https://liripo.netlify.app/tags/python/</link>
+    <link>/tags/python/</link>
     <description>Recent content in python on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Wed, 12 Feb 2020 13:19:22 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.netlify.app/tags/python/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/python/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>python-docx笔记</title>
-      <link>https://liripo.netlify.app/post/python-docx%E7%AC%94%E8%AE%B0/</link>
+      <link>/post/python-docx%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
       
-      <guid>https://liripo.netlify.app/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
+      <guid>/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。&lt;/p&gt;
 &lt;/blockquote&gt;</description>

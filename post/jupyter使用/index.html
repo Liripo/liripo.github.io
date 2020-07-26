@@ -5,14 +5,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>jupyter使用 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
 
   <style>
   	:root {
-  		--pagecolour: #eeeeee;
-  		--maintext: #111111;
-  		--faded: #999999;
-  		--highlight: #0000dd;
-  		--lowlight: #8a2be2;
+  		--pagecolour: #252D3E;
+  		--maintext: #FFFFFF;
+  		--faded: #888888;
+  		--highlight: #4A5570;
+  		--lowlight: #FFCACA;
 	}
   </style>
 
@@ -39,7 +41,7 @@
     
   
 
-  <span class="article-header-caption">A customised header</span>
+  <span class="article-header-caption">jupyter</span>
 
   
   
@@ -71,7 +73,7 @@
       <div>
   <h1>jupyter使用</h1>
   <h3>
-    by Liripo
+    by Liripo, 20 Jul 2020
   </h3>
   <br><br>
 </div>
@@ -79,41 +81,47 @@
 
       <main>
         
-<aside>
-    <div align="center">Table of Contents</div>
-    <nav id="TableOfContents"></nav>
-</aside>
+
+        
 
 
-        <h1 id="heading">安装</h1>
+<div id="安装" class="section level1">
+<h1>安装</h1>
 <p>可以查看<a href="https://jupyter.org/">官网</a>
 之后使用<code>jupyter notebook</code>即可运行</p>
-<h1 id="heading-1">修改工作目录</h1>
+</div>
+<div id="修改工作目录" class="section level1">
+<h1>修改工作目录</h1>
 <p>没有jupyter配置文件需要生成一个初始的配置文件</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"> jupyter notebook <span style="color:#f92672">-</span><span style="color:#f92672">-</span>generate<span style="color:#f92672">-</span>config
-</code></pre></div><p>之后会在命令行生成一个配置文件：<code>&quot;C:\Users\Administrator\.jupyter\jupyter_notebook_config.py&quot;</code></p>
+<pre class="r"><code> jupyter notebook --generate-config</code></pre>
+<p>之后会在命令行生成一个配置文件：<code>"C:\Users\Administrator\.jupyter\jupyter_notebook_config.py"</code></p>
 <p>查找<code>The directory to use for notebooks and kernels</code>字样
 修改#c.NotebookApp.notebook_dir = “”为所要的工作目录，记得去掉“#”号。</p>
-<h1 id="heading-2">快捷键</h1>
-<p>jupyter的快捷键帮助是中文的，可以直接看Help.</p>
-<h1 id="jupyterr">jupyter使用R</h1>
+<p># 快捷键
+jupyter的快捷键帮助是中文的，可以直接看Help.</p>
+</div>
+<div id="jupyter使用r" class="section level1">
+<h1>jupyter使用R</h1>
 <p>网址<a href="https://github.com/IRkernel/IRkernel">github</a></p>
-<h1 id="python">使用多个python版本</h1>
+</div>
+<div id="使用多个python版本" class="section level1">
+<h1>使用多个python版本</h1>
 <p>在其他python路径中安装ipykernel,第一个是你的其他python版本的具体路径</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7.</span>exe <span style="color:#f92672">-</span>m pip install ipykernel
-</code></pre></div><p>然后运行</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7.</span>exe <span style="color:#f92672">-</span>m ipykernel install <span style="color:#f92672">-</span>h
-</code></pre></div><p>查看帮助，发现有个&ndash;user 和&ndash;name &ndash;display-name参数可以使用
+<pre class="python"><code>python3.7.exe -m pip install ipykernel</code></pre>
+<p>然后运行</p>
+<pre class="python"><code>python3.7.exe -m ipykernel install -h</code></pre>
+<p>查看帮助，发现有个–user 和–name –display-name参数可以使用
 所以接着运行</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7.</span>exe <span style="color:#f92672">-</span>m ipykernel install <span style="color:#f92672">-</span><span style="color:#f92672">-</span>user <span style="color:#f92672">-</span><span style="color:#f92672">-</span>name python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7</span> <span style="color:#f92672">-</span><span style="color:#f92672">-</span>display<span style="color:#f92672">-</span>name python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7</span>
-</code></pre></div><p>之后运行</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">jupyter kernelspec list
-</code></pre></div><p>应该会看到你的用户目录多了个文件夹,比如我的,因为我还装了R，所以有个ir</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">Available kernels:
+<pre class="python"><code>python3.7.exe -m ipykernel install --user --name python3.7 --display-name python3.7</code></pre>
+<p>之后运行</p>
+<pre class="python"><code>jupyter kernelspec list</code></pre>
+<p>应该会看到你的用户目录多了个文件夹,比如我的,因为我还装了R，所以有个ir</p>
+<pre class="python"><code>Available kernels:
   python3      C:\Users\Liripo\AppData\Roaming\jupyter\kernels\python3
-  python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7</span>    C:\Users\Liripo\AppData\Roaming\jupyter\kernels\python3<span style="color:#f92672">.</span><span style="color:#ae81ff">7</span>
-  ir           C:\ProgramData\jupyter\kernels\ir
-</code></pre></div>
+  python3.7    C:\Users\Liripo\AppData\Roaming\jupyter\kernels\python3.7
+  ir           C:\ProgramData\jupyter\kernels\ir</code></pre>
+</div>
+
       </main>
 
       <footer>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>analysis on Liripo</title>
+    <link>/tags/analysis/</link>
+    <description>Recent content in analysis on Liripo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Tue, 28 Apr 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/analysis/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>ROC与AUC理解</title>
+      <link>/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</link>
+      <pubDate>Tue, 28 Apr 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>生存分析</title>
+      <link>/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</link>
+      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

@@ -2,20 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>java on Liripo</title>
-    <link>https://liripo.netlify.app/categories/java/</link>
+    <link>/categories/java/</link>
     <description>Recent content in java on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Wed, 04 Mar 2020 22:22:45 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.netlify.app/categories/java/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/java/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>java更新word文档目录页码</title>
-      <link>https://liripo.netlify.app/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</link>
+      <link>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</link>
       <pubDate>Wed, 04 Mar 2020 22:22:45 +0000</pubDate>
       
-      <guid>https://liripo.netlify.app/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</guid>
+      <guid>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</guid>
       <description>&lt;p&gt;使用&lt;a href=&#34;https://products.aspose.com/words/java&#34;&gt;aspose-words java&lt;/a&gt;更新word文档目录页码。正版需要购买。&lt;/p&gt;</description>
     </item>
     
