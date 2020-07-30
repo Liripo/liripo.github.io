@@ -5,10 +5,20 @@
     <link>/tags/r/</link>
     <description>Recent content in R on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Mon, 20 Jul 2020 00:00:00 +0000</lastBuildDate>
+    <language>Zh-cn</language>
+    <lastBuildDate>Tue, 28 Jul 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>flametree学习</title>
+      <link>/post/flametree%E5%AD%A6%E4%B9%A0/</link>
+      <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/flametree%E5%AD%A6%E4%B9%A0/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>蒙特卡洛计算Π</title>
@@ -16,7 +26,7 @@
       <pubDate>Mon, 20 Jul 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</guid>
-      <description>蒙特卡洛估计Π。</description>
+      <description></description>
     </item>
     
     <item>

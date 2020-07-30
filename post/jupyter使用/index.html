@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="Zh-cn">
 
   <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>jupyter使用 | Liripo</title>
     <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
-  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
 
   <style>
   	:root {
@@ -24,8 +24,9 @@
   
 <meta name="twitter:card" content="summary">
 <meta property="og:title" content="jupyter使用">
-<meta property="og:description" content="jupyter。">
+
 <meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
 
 </head>
 
@@ -83,6 +84,70 @@
         
 
         
+<style type="text/css">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
 
 
 <div id="安装" class="section level1">
@@ -93,7 +158,7 @@
 <div id="修改工作目录" class="section level1">
 <h1>修改工作目录</h1>
 <p>没有jupyter配置文件需要生成一个初始的配置文件</p>
-<pre class="r"><code> jupyter notebook --generate-config</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a> jupyter notebook <span class="op">--</span>generate<span class="op">-</span>config</span></code></pre></div>
 <p>之后会在命令行生成一个配置文件：<code>"C:\Users\Administrator\.jupyter\jupyter_notebook_config.py"</code></p>
 <p>查找<code>The directory to use for notebooks and kernels</code>字样
 修改#c.NotebookApp.notebook_dir = “”为所要的工作目录，记得去掉“#”号。</p>
@@ -107,38 +172,40 @@ jupyter的快捷键帮助是中文的，可以直接看Help.</p>
 <div id="使用多个python版本" class="section level1">
 <h1>使用多个python版本</h1>
 <p>在其他python路径中安装ipykernel,第一个是你的其他python版本的具体路径</p>
-<pre class="python"><code>python3.7.exe -m pip install ipykernel</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m pip install ipykernel</span></code></pre></div>
 <p>然后运行</p>
-<pre class="python"><code>python3.7.exe -m ipykernel install -h</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m ipykernel install <span class="op">-</span>h</span></code></pre></div>
 <p>查看帮助，发现有个–user 和–name –display-name参数可以使用
 所以接着运行</p>
-<pre class="python"><code>python3.7.exe -m ipykernel install --user --name python3.7 --display-name python3.7</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m ipykernel install <span class="op">--</span>user <span class="op">--</span>name python3<span class="fl">.7</span> <span class="op">--</span>display<span class="op">-</span>name python3<span class="fl">.7</span></span></code></pre></div>
 <p>之后运行</p>
-<pre class="python"><code>jupyter kernelspec list</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a>jupyter kernelspec <span class="bu">list</span></span></code></pre></div>
 <p>应该会看到你的用户目录多了个文件夹,比如我的,因为我还装了R，所以有个ir</p>
-<pre class="python"><code>Available kernels:
-  python3      C:\Users\Liripo\AppData\Roaming\jupyter\kernels\python3
-  python3.7    C:\Users\Liripo\AppData\Roaming\jupyter\kernels\python3.7
-  ir           C:\ProgramData\jupyter\kernels\ir</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a>Available kernels:</span>
+<span id="cb6-2"><a href="#cb6-2"></a>  python3      C:<span class="op">\</span>Users<span class="op">\</span>Liripo<span class="op">\</span>AppData<span class="op">\</span>Roaming<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>python3</span>
+<span id="cb6-3"><a href="#cb6-3"></a>  python3<span class="fl">.7</span>    C:<span class="op">\</span>Users<span class="op">\</span>Liripo<span class="op">\</span>AppData<span class="op">\</span>Roaming<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>python3<span class="fl">.7</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a>  ir           C:<span class="op">\</span>ProgramData<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>ir</span></code></pre></div>
 </div>
 
       </main>
 
       <footer>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
 
   <script>
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   </script>
 
-  <script src="//yihui.name/js/math-code.js"></script>
-<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-
-<script async src="//yihui.name/js/center-img.js"></script>
-
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
   
   <br/><br/>
   Build by blogdown and the theme of calade.

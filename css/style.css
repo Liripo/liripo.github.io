@@ -1,6 +1,6 @@
 
 /* font size and family */
-html {font-size: 15px;}
+html {font-size: 22px;}
 body {font-family: et-book, Palatino, "Palatino Linotype", serif;}
 code {font-family: Monaco, monospace;}
 
@@ -111,7 +111,7 @@ pre {
   overflow-x: auto;
   border-width: 1px;
   border-color: var(--lowlight);
-  border-style: dotted;
+  /*border-style: ridge;*/
 }
 code {
   font-size: 1.2rem;

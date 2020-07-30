@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="Zh-cn">
 
   <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>基因芯片差异性分析 | Liripo</title>
     <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
-  <script src="https://kit.fontawesome.com/913d8a29e8.js" crossorigin="anonymous"></script>
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
 
   <style>
   	:root {
@@ -24,8 +24,9 @@
   
 <meta name="twitter:card" content="summary">
 <meta property="og:title" content="基因芯片差异性分析">
-<meta property="og:description" content="起初使用的是oligo与limma结合分析，可惜的是rma校正后limma分析的结果不合实际，所以直接使用GEO2R上的代码，并修改成不在线的读取data.frame。但是仍旧得探究limma直接读取cel文件的情况。其中还遇到了读取CDF文件的情况。">
+
 <meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
 
 </head>
 
@@ -272,19 +273,21 @@ i)ORA(Over Representation Analysis)：过表达分析
 
       <footer>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
 
   <script>
   hljs.configure({languages: []});
   hljs.initHighlightingOnLoad();
   </script>
 
-  <script src="//yihui.name/js/math-code.js"></script>
-<script async src="//mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-
-<script async src="//yihui.name/js/center-img.js"></script>
-
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
   
   <br/><br/>
   Build by blogdown and the theme of calade.
