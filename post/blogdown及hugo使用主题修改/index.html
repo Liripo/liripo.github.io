@@ -56,7 +56,7 @@
   <h3>
     16 Aug 2020
   </h3>
-   <h5 id="wc">1357 Words|Read in about 3       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">1548 Words|Read in about 4       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -179,7 +179,56 @@ hasCJKLanguage = true
 <p>参考文章：<a href="https://mogeko.me/2020/079/">https://mogeko.me/2020/079/</a></p>
 <h2 id="heading">插入音乐</h2>
 <p><a href="http://tool.liumingye.cn/music/">http://tool.liumingye.cn/music/</a>这网站下歌不错。</p>
-
+<h2 id="heading-1">修改表格样式</h2>
+<p>修改主题hugo-calade\static\css下的style.css文件</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css"><span style="color:#75715e">/* table formatting
+</span><span style="color:#75715e">table {
+</span><span style="color:#75715e">  margin: auto;
+</span><span style="color:#75715e">  border-top: 1px solid #666;
+</span><span style="color:#75715e">  border-bottom: 1px solid #666;
+</span><span style="color:#75715e">}
+</span><span style="color:#75715e">table thead th { border-bottom: 1px solid #ddd; }
+</span><span style="color:#75715e">th, td { padding: 5px; }
+</span><span style="color:#75715e">thead, tfoot, tr:nth-child(even) { background: #eee; }
+</span><span style="color:#75715e">*/</span>
+<span style="color:#f92672">table</span> {
+  <span style="color:#66d9ef">border</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#000000</span>;
+  <span style="color:#66d9ef">margin</span>: <span style="color:#66d9ef">auto</span>;
+  <span style="color:#75715e">/*width: 100%;*/</span>
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">left</span>;
+  <span style="color:#66d9ef">border-collapse</span>: <span style="color:#66d9ef">collapse</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">td</span><span style="color:#f92672">,</span> <span style="color:#f92672">table</span> <span style="color:#f92672">th</span> {
+  <span style="color:#66d9ef">border</span>: <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#000000</span>;
+  <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">8</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">6</span><span style="color:#66d9ef">px</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">tbody</span> <span style="color:#f92672">td</span> {
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">18</span><span style="color:#66d9ef">px</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">thead</span> {
+  <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#CFCFCF</span>;
+  <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">-moz-</span>linear-gradient(<span style="color:#66d9ef">top</span>, <span style="color:#ae81ff">#dbdbdb</span> <span style="color:#ae81ff">0</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#d3d3d3</span> <span style="color:#ae81ff">66</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#CFCFCF</span> <span style="color:#ae81ff">100</span><span style="color:#66d9ef">%</span>);
+  <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">-webkit-</span>linear-gradient(<span style="color:#66d9ef">top</span>, <span style="color:#ae81ff">#dbdbdb</span> <span style="color:#ae81ff">0</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#d3d3d3</span> <span style="color:#ae81ff">66</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#CFCFCF</span> <span style="color:#ae81ff">100</span><span style="color:#66d9ef">%</span>);
+  <span style="color:#66d9ef">background</span>: linear-gradient(<span style="color:#66d9ef">to</span> <span style="color:#66d9ef">bottom</span>, <span style="color:#ae81ff">#dbdbdb</span> <span style="color:#ae81ff">0</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#d3d3d3</span> <span style="color:#ae81ff">66</span><span style="color:#66d9ef">%</span>, <span style="color:#ae81ff">#CFCFCF</span> <span style="color:#ae81ff">100</span><span style="color:#66d9ef">%</span>);
+  <span style="color:#66d9ef">border-bottom</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#000000</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">thead</span> <span style="color:#f92672">th</span> {
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">20</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+  <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#000000</span>;
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">left</span>;
+  <span style="color:#66d9ef">font-family</span>: <span style="color:#e6db74">&#34;Arial Black&#34;</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">tfoot</span> {
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">14</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+  <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#000000</span>;
+  <span style="color:#66d9ef">border-top</span>: <span style="color:#ae81ff">3</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#000000</span>;
+}
+<span style="color:#f92672">table</span> <span style="color:#f92672">tfoot</span> <span style="color:#f92672">td</span> {
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">14</span><span style="color:#66d9ef">px</span>;
+}
+</code></pre></div>
       </main>
 
       <footer>
