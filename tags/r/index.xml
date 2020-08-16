@@ -2,111 +2,111 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>R on Liripo</title>
-    <link>/tags/r/</link>
+    <link>https://liripo.github.io/tags/r/</link>
     <description>Recent content in R on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sun, 16 Aug 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/r/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/r/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>blogdown及hugo使用主题修改</title>
-      <link>/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</link>
+      <link>https://liripo.github.io/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</link>
       <pubDate>Sun, 16 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</guid>
+      <guid>https://liripo.github.io/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</guid>
       <description>blogdown https://github.com/rstudio/blogdown在bookdown上有书，所以安装使用基本看下文档就知道了。 当然，你</description>
     </item>
     
     <item>
       <title>flametree学习</title>
-      <link>/post/flametree%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://liripo.github.io/post/flametree%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/flametree%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://liripo.github.io/post/flametree%E5%AD%A6%E4%B9%A0/</guid>
       <description></description>
     </item>
     
     <item>
       <title>ggplot2 facet分面及宽度</title>
-      <link>/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</link>
+      <link>https://liripo.github.io/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</link>
       <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</guid>
+      <guid>https://liripo.github.io/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</guid>
       <description>code.sourceCode span { display: inline-block; line-height: 1.25; } code.sourceCode span { color: inherit; text-decoration: inherit; } code.sourceCode span:empty { height: 1.2em; } .sourceCode { overflow: visible; } code.sourceCode { white-space: pre; position: relative; } div.sourceCode { margin: 1em 0; } pre.sourceCode { margin: 0; } @media screen { div.sourceCode { overflow: auto; } } @media print { code.sourceCode { white-space: pre-wrap; } code.sourceCode span { text-indent: -5em; padding-left: 5em; }</description>
     </item>
     
     <item>
       <title>蒙特卡洛计算Π</title>
-      <link>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</link>
+      <link>https://liripo.github.io/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</link>
       <pubDate>Mon, 20 Jul 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</guid>
+      <guid>https://liripo.github.io/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Rcpp</title>
-      <link>/post/rcpp/</link>
+      <link>https://liripo.github.io/post/rcpp/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/rcpp/</guid>
+      <guid>https://liripo.github.io/post/rcpp/</guid>
       <description>RCpp与R包 首先在生成R骨架的时候，比一般没调用C++多执行一下Rscript -e &#39;usethis::use_rcpp()&#39;。然后在.git</description>
     </item>
     
     <item>
       <title>R包开发</title>
-      <link>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</link>
+      <link>https://liripo.github.io/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</guid>
+      <guid>https://liripo.github.io/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</guid>
       <description>一些R包使用问题。</description>
     </item>
     
     <item>
       <title>R爬虫</title>
-      <link>/post/r%E7%88%AC%E8%99%AB/</link>
+      <link>https://liripo.github.io/post/r%E7%88%AC%E8%99%AB/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/r%E7%88%AC%E8%99%AB/</guid>
+      <guid>https://liripo.github.io/post/r%E7%88%AC%E8%99%AB/</guid>
       <description>R selenium</description>
     </item>
     
     <item>
       <title>富集分析超几何分布</title>
-      <link>/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</link>
+      <link>https://liripo.github.io/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</guid>
+      <guid>https://liripo.github.io/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</guid>
       <description></description>
     </item>
     
     <item>
       <title>shiny学习</title>
-      <link>/post/shiny%E5%AD%A6%E4%B9%A0/</link>
+      <link>https://liripo.github.io/post/shiny%E5%AD%A6%E4%B9%A0/</link>
       <pubDate>Fri, 27 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/shiny%E5%AD%A6%E4%B9%A0/</guid>
+      <guid>https://liripo.github.io/post/shiny%E5%AD%A6%E4%B9%A0/</guid>
       <description></description>
     </item>
     
     <item>
       <title>ggplot2绘制图收录</title>
-      <link>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</link>
+      <link>https://liripo.github.io/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</link>
       <pubDate>Sun, 08 Mar 2020 19:10:29 +0000</pubDate>
       
-      <guid>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</guid>
+      <guid>https://liripo.github.io/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</guid>
       <description>&lt;p&gt;文章包含一些我绘制过的ggplot2图一些美化方法。&lt;/p&gt;</description>
     </item>
     
     <item>
       <title>基因芯片差异性分析</title>
-      <link>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</link>
+      <link>https://liripo.github.io/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</link>
       <pubDate>Fri, 01 Nov 2019 19:23:22 +0000</pubDate>
       
-      <guid>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</guid>
+      <guid>https://liripo.github.io/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</guid>
       <description>&lt;p&gt;起初使用的是oligo与limma结合分析，可惜的是rma校正后limma分析的结果不合实际，所以直接使用GEO2R上的代码，并修改成不在线的读取data.frame。但是仍旧得探究limma直接读取cel文件的情况。其中还遇到了读取CDF文件的情况。&lt;/p&gt;</description>
     </item>
     

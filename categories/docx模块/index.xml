@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>docx模块 on Liripo</title>
-    <link>/categories/docx%E6%A8%A1%E5%9D%97/</link>
+    <link>https://liripo.github.io/categories/docx%E6%A8%A1%E5%9D%97/</link>
     <description>Recent content in docx模块 on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Wed, 12 Feb 2020 13:19:22 +0000</lastBuildDate>
     
-	<atom:link href="/categories/docx%E6%A8%A1%E5%9D%97/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/categories/docx%E6%A8%A1%E5%9D%97/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>python-docx笔记</title>
-      <link>/post/python-docx%E7%AC%94%E8%AE%B0/</link>
+      <link>https://liripo.github.io/post/python-docx%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
       
-      <guid>/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
+      <guid>https://liripo.github.io/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。&lt;/p&gt;
 &lt;/blockquote&gt;</description>

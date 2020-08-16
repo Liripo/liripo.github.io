@@ -20,6 +20,8 @@
 
   <link rel="stylesheet" href="../../css/et_book.css" />
   <link rel="stylesheet" href="../../css/style.css" />
+  
+  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
 
   
 <meta name="twitter:card" content="summary">
@@ -56,7 +58,7 @@
   <h3>
     16 Aug 2020
   </h3>
-   <h5 id="wc">1548 Words|Read in about 4       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">1924 Words|Read in about 4       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -177,6 +179,7 @@ hasCJKLanguage = true
 </code></pre></div><p>等配置前面，才能识别。</p>
 <h2 id="b">嵌入B站视频</h2>
 <p>参考文章：<a href="https://mogeko.me/2020/079/">https://mogeko.me/2020/079/</a></p>
+<p>更多的，可以看这篇文章:<a href="https://www.xiangyunhuang.com.cn/2019/05/another-hello-markdown/">https://www.xiangyunhuang.com.cn/2019/05/another-hello-markdown/</a></p>
 <h2 id="heading">插入音乐</h2>
 <p><a href="http://tool.liumingye.cn/music/">http://tool.liumingye.cn/music/</a>这网站下歌不错。</p>
 <h2 id="heading-1">修改表格样式</h2>
@@ -227,6 +230,24 @@ hasCJKLanguage = true
 }
 <span style="color:#f92672">table</span> <span style="color:#f92672">tfoot</span> <span style="color:#f92672">td</span> {
   <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">14</span><span style="color:#66d9ef">px</span>;
+}
+</code></pre></div><h2 id="hugo-markdown">hugo markdown</h2>
+<p>hugo markdown是小于pandoc markdown的，所以想加入突出显示得改用html的mark标签。</p>
+<p>为了hugo能够解析markdown文件中的html标签，可以在config.toml文件加入</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">[markup.goldmark.renderer]
+unsafe = true
+</code></pre></div><p>这样就可以增加mark等突出显示的标签了。具体详见：<a href="https://gohugo.io/news/0.60.0-relnotes/">https://gohugo.io/news/0.60.0-relnotes/</a></p>
+<h2 id="heading-2">引入谷歌字体</h2>
+<p>在主题的footer.html中加入</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://fonts.loli.net/css?family=Tangerine&#34;</span>&gt;
+</code></pre></div><p>具体参考<a href="https://sb.sb/blog/css-cdn/">https://sb.sb/blog/css-cdn/</a>,将谷歌字体api，改为使用loli.net,<a href="https://developers.google.com/fonts/docs/getting_started">谷歌api</a>。</p>
+<p>之后引入这个字体作为mark的css。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css"><span style="color:#75715e">/*加入突出高亮*/</span>
+<span style="color:#f92672">mark</span> {
+  <span style="color:#66d9ef">font-family</span>: Tangerine;
+  <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+  <span style="color:#66d9ef">background-color</span>: <span style="color:#ae81ff">#333333</span>;
+  <span style="color:#66d9ef">text-shadow</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">#aaa</span>;
 }
 </code></pre></div>
       </main>

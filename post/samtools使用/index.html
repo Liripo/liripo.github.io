@@ -20,6 +20,8 @@
 
   <link rel="stylesheet" href="../../css/et_book.css" />
   <link rel="stylesheet" href="../../css/style.css" />
+  
+  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
 
   
 <meta name="twitter:card" content="summary">
@@ -85,7 +87,7 @@ samtools view -bF12 abc.bam&gt;abc.F12.bam
 </code></pre></div><p>反之-f，就是提取指定flag的序列.当然还有其它参数，详情请&ndash;help</p>
 <h1 id="sort">sort</h1>
 <p>作用：对bam进行排序，一些软件需要使用排序后的bam，拿到bam先按照比对位置的顺序排一下，百利无一害。
-Usage: samtools sort [-n] [-m <!-- raw HTML omitted -->] &lt;in.bam&gt; &lt;out.prefix&gt; 
+Usage: samtools sort [-n] [-m <maxMem>] &lt;in.bam&gt; &lt;out.prefix&gt; 
 -m 参数默认下是 500,000,000 即500M。每个线程运行内存大小。
 -n 设定排序方式按short reads的ID排序。默认下是按序列在fasta文件中的顺序（即header）和序列从左往右的位点排序。
 -@：设置排序和压缩的线程数，默认单线程

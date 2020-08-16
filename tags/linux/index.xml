@@ -2,49 +2,49 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>linux on Liripo</title>
-    <link>/tags/linux/</link>
+    <link>https://liripo.github.io/tags/linux/</link>
     <description>Recent content in linux on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>unbuntu</title>
-      <link>/post/unbuntu/</link>
+      <link>https://liripo.github.io/post/unbuntu/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/unbuntu/</guid>
+      <guid>https://liripo.github.io/post/unbuntu/</guid>
       <description></description>
     </item>
     
     <item>
       <title>vim</title>
-      <link>/post/vim/</link>
+      <link>https://liripo.github.io/post/vim/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/vim/</guid>
+      <guid>https://liripo.github.io/post/vim/</guid>
       <description>vim 配置 bundle安装在~/.vim/bundle 如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。</description>
     </item>
     
     <item>
       <title>windows10安装linux</title>
-      <link>/post/windows10%E5%AE%89%E8%A3%85linux/</link>
+      <link>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</link>
       <pubDate>Sat, 21 Mar 2020 14:27:47 +0000</pubDate>
       
-      <guid>/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
+      <guid>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
       <description>&lt;p&gt;windows10安装ubuntu，以及源码安装python到指定目录，及更多相关配置。&lt;/p&gt;
 &lt;p&gt;温馨提示：目前已有wsl2,推荐安装wsl2。&lt;/p&gt;</description>
     </item>
     
     <item>
       <title>xshell 和 xming 联合使用图形界面软件</title>
-      <link>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
+      <link>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
       <pubDate>Mon, 23 Dec 2019 10:59:34 +0000</pubDate>
       
-      <guid>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
+      <guid>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
       <description>&lt;p&gt;xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。&lt;/p&gt;</description>
     </item>
     

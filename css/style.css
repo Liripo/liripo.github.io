@@ -316,3 +316,10 @@ aside {
     }
 }
 
+/*加入突出高亮*/
+mark {
+  font-family: Tangerine;
+  font-weight: bold;
+  background-color: #333333;
+  text-shadow: 4px 4px 4px #aaa;
+}
