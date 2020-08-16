@@ -3,417 +3,407 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/post/flametree%E5%AD%A6%E4%B9%A0/</loc>
+    <loc>https://liripo.github.io/tags/analysis/</loc>
+    <lastmod>2020-08-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/</loc>
+    <lastmod>2020-08-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E8%BF%9B%E5%8C%96%E6%A0%91/</loc>
+    <lastmod>2020-08-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/</loc>
+    <lastmod>2020-08-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/tags/</loc>
+    <lastmod>2020-08-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/%E5%8E%BB%E6%89%B9%E6%AC%A1%E6%95%88%E5%BA%94/</loc>
+    <lastmod>2020-08-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/tags/bio/</loc>
+    <lastmod>2020-08-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/ncbi/</loc>
+    <lastmod>2020-08-02T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/flametree%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2020-07-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/</loc>
+    <loc>https://liripo.github.io/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</loc>
     <lastmod>2020-07-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/</loc>
+    <loc>https://liripo.github.io/tags/r/</loc>
     <lastmod>2020-07-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/r/</loc>
-    <lastmod>2020-07-28T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
-    <lastmod>2020-07-28T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/post/jupyter%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/jupyter%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2020-07-20T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</loc>
+    <loc>https://liripo.github.io/post/%E8%92%99%E7%89%B9%E5%8D%A1%E6%B4%9B%E8%AE%A1%E7%AE%97%CF%80/</loc>
     <lastmod>2020-07-20T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/analysis/</loc>
+    <loc>https://liripo.github.io/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</loc>
     <lastmod>2020-04-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</loc>
-    <lastmod>2020-04-28T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/bio/</loc>
+    <loc>https://liripo.github.io/tags/docker/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/docker/</loc>
+    <loc>https://liripo.github.io/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/tags/linux/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/linux/</loc>
+    <loc>https://liripo.github.io/post/rcpp/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/rcpp/</loc>
+    <loc>https://liripo.github.io/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/r%E5%8C%85%E5%BC%80%E5%8F%91/</loc>
+    <loc>https://liripo.github.io/post/r%E7%88%AC%E8%99%AB/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/r%E7%88%AC%E8%99%AB/</loc>
+    <loc>https://liripo.github.io/post/tcga/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/tcga/</loc>
+    <loc>https://liripo.github.io/post/unbuntu/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/unbuntu/</loc>
+    <loc>https://liripo.github.io/post/vim/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/vim/</loc>
+    <loc>https://liripo.github.io/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/</loc>
+    <loc>https://liripo.github.io/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</loc>
     <lastmod>2020-03-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</loc>
-    <lastmod>2020-03-28T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/post/shiny%E5%AD%A6%E4%B9%A0/</loc>
+    <loc>https://liripo.github.io/post/shiny%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2020-03-27T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/windows10%E5%AE%89%E8%A3%85linux/</loc>
+    <loc>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</loc>
     <lastmod>2020-03-21T14:27:47+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>https://liripo.github.io/categories/</loc>
     <lastmod>2020-03-08T19:10:29+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/ggplot2/</loc>
+    <loc>https://liripo.github.io/categories/ggplot2/</loc>
     <lastmod>2020-03-08T19:10:29+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</loc>
+    <loc>https://liripo.github.io/post/ggplot2%E7%BB%98%E5%88%B6%E5%9B%BE%E6%94%B6%E5%BD%95/</loc>
     <lastmod>2020-03-08T19:10:29+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/java/</loc>
+    <loc>https://liripo.github.io/categories/java/</loc>
     <lastmod>2020-03-04T22:22:45+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</loc>
+    <loc>https://liripo.github.io/post/java%E6%9B%B4%E6%96%B0word%E6%96%87%E6%A1%A3%E7%9B%AE%E5%BD%95%E9%A1%B5%E7%A0%81/</loc>
     <lastmod>2020-03-04T22:22:45+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/word/</loc>
+    <loc>https://liripo.github.io/tags/word/</loc>
     <lastmod>2020-03-04T22:22:45+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <loc>https://liripo.github.io/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
     <lastmod>2020-03-01T17:19:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <loc>https://liripo.github.io/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
     <lastmod>2020-03-01T17:19:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7/</loc>
+    <loc>https://liripo.github.io/post/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD%E5%B7%A5%E5%85%B7/</loc>
     <lastmod>2020-03-01T17:19:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/docx%E6%A8%A1%E5%9D%97/</loc>
+    <loc>https://liripo.github.io/categories/docx%E6%A8%A1%E5%9D%97/</loc>
     <lastmod>2020-02-12T13:19:22+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/python/</loc>
+    <loc>https://liripo.github.io/tags/python/</loc>
     <lastmod>2020-02-12T13:19:22+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/python-docx%E7%AC%94%E8%AE%B0/</loc>
+    <loc>https://liripo.github.io/post/python-docx%E7%AC%94%E8%AE%B0/</loc>
     <lastmod>2020-02-12T13:19:22+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/annovar/</loc>
+    <loc>https://liripo.github.io/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</loc>
     <lastmod>2020-01-20T23:58:40+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</loc>
-    <lastmod>2020-01-20T23:58:40+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/categories/r/</loc>
-    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/rpackage/</loc>
-    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/post/r%E5%8C%85shiny/</loc>
-    <lastmod>2020-01-15T23:11:25+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/post/fastp-gencore%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/fastp-gencore%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2020-01-07T23:05:42+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/umi/</loc>
+    <loc>https://liripo.github.io/tags/umi/</loc>
     <lastmod>2020-01-07T23:05:42+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</loc>
+    <loc>https://liripo.github.io/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</loc>
     <lastmod>2020-01-07T23:05:42+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/ssh/</loc>
+    <loc>https://liripo.github.io/tags/ssh/</loc>
     <lastmod>2020-01-06T23:39:54+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E7%BF%BB%E5%A2%99%E8%87%AA%E6%90%AD/</loc>
+    <loc>https://liripo.github.io/post/%E7%BF%BB%E5%A2%99%E8%87%AA%E6%90%AD/</loc>
     <lastmod>2020-01-06T23:39:54+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/xming/</loc>
+    <loc>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</loc>
     <lastmod>2019-12-23T10:59:34+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</loc>
-    <lastmod>2019-12-23T10:59:34+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/bioconductor/</loc>
+    <loc>https://liripo.github.io/tags/bioconductor/</loc>
     <lastmod>2019-12-22T22:27:21+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-22T22:27:21+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/bioawk/</loc>
+    <loc>https://liripo.github.io/tags/bioawk/</loc>
     <lastmod>2019-12-20T23:22:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/bioawk%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/bioawk%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-20T23:22:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/grep/</loc>
+    <loc>https://liripo.github.io/tags/grep/</loc>
     <lastmod>2019-12-19T23:34:45+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/grep%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/grep%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-19T23:34:45+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/fastqc%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/fastqc%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-18T12:52:21+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/%E7%94%9F%E4%BF%A1%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7/</loc>
+    <loc>https://liripo.github.io/tags/%E7%94%9F%E4%BF%A1%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7/</loc>
     <lastmod>2019-12-18T12:52:21+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/markdown/</loc>
+    <loc>https://liripo.github.io/tags/markdown/</loc>
     <lastmod>2019-12-17T23:42:15+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/markdown%E4%B8%8Etyporarmarkdown/</loc>
+    <loc>https://liripo.github.io/post/markdown%E4%B8%8Etyporarmarkdown/</loc>
     <lastmod>2019-12-17T23:42:15+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/samtools%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/samtools%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-17T21:19:12+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/bamdst%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/bamdst%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-17T10:56:40+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/git/</loc>
+    <loc>https://liripo.github.io/tags/git/</loc>
     <lastmod>2019-12-13T10:31:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-12-13T10:31:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/r%E4%B8%8E%E7%94%9F%E7%89%A9%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
+    <loc>https://liripo.github.io/post/r%E4%B8%8E%E7%94%9F%E7%89%A9%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
     <lastmod>2019-12-09T20:52:23+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
+    <loc>https://liripo.github.io/tags/%E7%BB%9F%E8%AE%A1%E5%AD%A6/</loc>
     <lastmod>2019-12-09T20:52:23+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/conda/</loc>
+    <loc>https://liripo.github.io/post/conda/</loc>
     <lastmod>2019-11-25T20:35:16+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/software/</loc>
+    <loc>https://liripo.github.io/tags/software/</loc>
     <lastmod>2019-11-25T20:35:16+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/sed/</loc>
+    <loc>https://liripo.github.io/tags/sed/</loc>
     <lastmod>2019-11-11T19:41:39+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/sed%E4%BD%BF%E7%94%A8/</loc>
+    <loc>https://liripo.github.io/post/sed%E4%BD%BF%E7%94%A8/</loc>
     <lastmod>2019-11-11T19:41:39+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/awk/</loc>
-    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
+    <loc>https://liripo.github.io/tags/awk/</loc>
+    <lastmod>2019-11-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/awk%E4%BD%BF%E7%94%A8/</loc>
-    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
+    <loc>https://liripo.github.io/post/awk/</loc>
+    <lastmod>2019-11-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/linux%E4%B8%89%E5%89%91%E5%AE%A2/</loc>
-    <lastmod>2019-11-11T19:41:23+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/bash/</loc>
+    <loc>https://liripo.github.io/tags/bash/</loc>
     <lastmod>2019-11-08T22:37:49+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</loc>
+    <loc>https://liripo.github.io/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</loc>
     <lastmod>2019-11-08T22:37:49+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/bioinformatics/</loc>
+    <loc>https://liripo.github.io/tags/bioinformatics/</loc>
     <lastmod>2019-11-08T09:39:24+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</loc>
+    <loc>https://liripo.github.io/post/bioinformatics%E5%90%8D%E8%AF%8D%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6/</loc>
     <lastmod>2019-11-08T09:39:24+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0/</loc>
+    <loc>https://liripo.github.io/post/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0/</loc>
     <lastmod>2019-11-03T19:04:42+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/%E7%BB%9F%E8%AE%A1/</loc>
+    <loc>https://liripo.github.io/tags/%E7%BB%9F%E8%AE%A1/</loc>
     <lastmod>2019-11-03T19:04:42+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/hexo/</loc>
+    <loc>https://liripo.github.io/tags/hexo/</loc>
     <lastmod>2019-11-02T13:28:06+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/hexo-github%E6%90%AD%E5%BB%BAblog/</loc>
+    <loc>https://liripo.github.io/post/hexo-github%E6%90%AD%E5%BB%BAblog/</loc>
     <lastmod>2019-11-02T13:28:06+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/fiction/</loc>
+    <loc>https://liripo.github.io/tags/fiction/</loc>
     <lastmod>2019-11-01T21:26:11+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E5%B0%8F%E8%AF%B4/</loc>
+    <loc>https://liripo.github.io/post/%E5%B0%8F%E8%AF%B4/</loc>
     <lastmod>2019-11-01T21:26:11+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</loc>
+    <loc>https://liripo.github.io/post/%E5%9F%BA%E5%9B%A0%E8%8A%AF%E7%89%87%E5%B7%AE%E5%BC%82%E6%80%A7%E5%88%86%E6%9E%90/</loc>
     <lastmod>2019-11-01T19:23:22+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/</loc>
+    <loc>https://liripo.github.io/post/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/about/</loc>
+    <loc>https://liripo.github.io/about/</loc>
   </url>
   
 </urlset>

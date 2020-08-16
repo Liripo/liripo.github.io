@@ -64,6 +64,7 @@
         
 
         
+<script src="../../rmarkdown-libs/accessible-code-block/empty-anchor.js"></script>
 <style type="text/css">
 code.sourceCode > span { display: inline-block; line-height: 1.25; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -165,31 +166,32 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="试下动态图" class="section level1">
 <h1>试下动态图</h1>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">library</span>(gganimate)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>anim &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data1000) <span class="op">+</span><span class="st"> </span></span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="st">  </span><span class="kw">geom_rect</span>(<span class="kw">aes</span>(<span class="dt">xmin =</span> <span class="dv">0</span>,<span class="dt">xmax =</span> <span class="dv">1</span>,<span class="dt">ymin =</span> <span class="dv">0</span>, <span class="dt">ymax =</span> <span class="dv">1</span>),<span class="dt">color =</span> <span class="st">&quot;black&quot;</span>,<span class="dt">alpha =</span> <span class="dv">0</span>) <span class="op">+</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="st">  </span>ggforce<span class="op">::</span><span class="kw">geom_arc0</span>(<span class="kw">aes</span>(<span class="dt">x0 =</span> <span class="dv">0</span>, <span class="dt">y0 =</span> <span class="dv">0</span>,<span class="dt">r =</span> <span class="dv">1</span>,</span>
-<span id="cb4-5"><a href="#cb4-5"></a>    <span class="dt">start =</span> <span class="dv">0</span>,<span class="dt">end =</span> pi<span class="op">/</span><span class="dv">2</span>)) <span class="op">+</span><span class="kw">coord_fixed</span>() <span class="op">+</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> data1000,<span class="kw">aes</span>(x,y,<span class="dt">color =</span> point,<span class="dt">group =</span> id)) <span class="op">+</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="st">  </span><span class="kw">transition_reveal</span>(<span class="dt">along =</span> id) <span class="op">+</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="st">   </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;frame:{frame} of {nframes}&quot;</span>)</span>
-<span id="cb4-9"><a href="#cb4-9"></a>anim2 &lt;-<span class="kw">animate</span>(anim, <span class="dt">nframes =</span> <span class="dv">100</span>, <span class="dt">fps =</span> <span class="dv">10</span>,</span>
-<span id="cb4-10"><a href="#cb4-10"></a>                  <span class="dt">width =</span> <span class="dv">550</span>, <span class="dt">height =</span> <span class="dv">540</span>, <span class="dt">res =</span> <span class="dv">90</span>,</span>
-<span id="cb4-11"><a href="#cb4-11"></a>                  <span class="dt">renderer =</span> <span class="kw">gifski_renderer</span>(<span class="dt">loop =</span> T))</span>
-<span id="cb4-12"><a href="#cb4-12"></a>anim2</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">library</span>(gganimate)</span></code></pre></div>
+<pre><code>## Warning: 程辑包&#39;gganimate&#39;是用R版本4.0.2 来建造的</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>anim &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data1000) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="st">  </span><span class="kw">geom_rect</span>(<span class="kw">aes</span>(<span class="dt">xmin =</span> <span class="dv">0</span>,<span class="dt">xmax =</span> <span class="dv">1</span>,<span class="dt">ymin =</span> <span class="dv">0</span>, <span class="dt">ymax =</span> <span class="dv">1</span>),<span class="dt">color =</span> <span class="st">&quot;black&quot;</span>,<span class="dt">alpha =</span> <span class="dv">0</span>) <span class="op">+</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="st">  </span>ggforce<span class="op">::</span><span class="kw">geom_arc0</span>(<span class="kw">aes</span>(<span class="dt">x0 =</span> <span class="dv">0</span>, <span class="dt">y0 =</span> <span class="dv">0</span>,<span class="dt">r =</span> <span class="dv">1</span>,</span>
+<span id="cb6-4"><a href="#cb6-4"></a>    <span class="dt">start =</span> <span class="dv">0</span>,<span class="dt">end =</span> pi<span class="op">/</span><span class="dv">2</span>)) <span class="op">+</span><span class="kw">coord_fixed</span>() <span class="op">+</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> data1000,<span class="kw">aes</span>(x,y,<span class="dt">color =</span> point,<span class="dt">group =</span> id)) <span class="op">+</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="st">  </span><span class="kw">transition_reveal</span>(<span class="dt">along =</span> id) <span class="op">+</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="st">   </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;frame:{frame} of {nframes}&quot;</span>)</span>
+<span id="cb6-8"><a href="#cb6-8"></a>anim2 &lt;-<span class="kw">animate</span>(anim, <span class="dt">nframes =</span> <span class="dv">100</span>, <span class="dt">fps =</span> <span class="dv">10</span>,</span>
+<span id="cb6-9"><a href="#cb6-9"></a>                  <span class="dt">width =</span> <span class="dv">550</span>, <span class="dt">height =</span> <span class="dv">540</span>, <span class="dt">res =</span> <span class="dv">90</span>,</span>
+<span id="cb6-10"><a href="#cb6-10"></a>                  <span class="dt">renderer =</span> <span class="kw">gifski_renderer</span>(<span class="dt">loop =</span> T))</span>
+<span id="cb6-11"><a href="#cb6-11"></a>anim2</span></code></pre></div>
 <p><img src="../../post/R/2020-07-26-蒙特卡洛计算π_files/figure-html/unnamed-chunk-4-1.gif" /><!-- --></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>make_run2 &lt;-<span class="st"> </span><span class="cf">function</span>(pi_data){</span>
-<span id="cb5-2"><a href="#cb5-2"></a>  anim &lt;-<span class="st"> </span><span class="kw">ggplot</span>(pi_data,<span class="kw">aes</span>(id ,pi_predict)) <span class="op">+</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="st">    </span><span class="kw">geom_line</span>() <span class="op">+</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="st">    </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">group =</span> <span class="kw">seq_along</span>(id)),<span class="dt">color =</span> <span class="st">&quot;red&quot;</span>,<span class="dt">size =</span> <span class="dv">1</span>)<span class="op">+</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="st">    </span><span class="kw">transition_reveal</span>(id)<span class="op">+</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a><span class="st">    </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> pi)</span>
-<span id="cb5-7"><a href="#cb5-7"></a>  anim2 &lt;-<span class="kw">animate</span>(anim, <span class="dt">nframes =</span> <span class="dv">100</span>, <span class="dt">fps =</span> <span class="dv">10</span>,</span>
-<span id="cb5-8"><a href="#cb5-8"></a>                  <span class="dt">width =</span> <span class="dv">550</span>, <span class="dt">height =</span> <span class="dv">540</span>, <span class="dt">res =</span> <span class="dv">90</span>,</span>
-<span id="cb5-9"><a href="#cb5-9"></a>                  <span class="dt">renderer =</span> <span class="kw">gifski_renderer</span>(<span class="dt">loop =</span> T))</span>
-<span id="cb5-10"><a href="#cb5-10"></a>}</span>
-<span id="cb5-11"><a href="#cb5-11"></a>last &lt;-<span class="st"> </span><span class="kw">make_run2</span>(data1000)</span>
-<span id="cb5-12"><a href="#cb5-12"></a>last</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>make_run2 &lt;-<span class="st"> </span><span class="cf">function</span>(pi_data){</span>
+<span id="cb7-2"><a href="#cb7-2"></a>  anim &lt;-<span class="st"> </span><span class="kw">ggplot</span>(pi_data,<span class="kw">aes</span>(id ,pi_predict)) <span class="op">+</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="st">    </span><span class="kw">geom_line</span>() <span class="op">+</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="st">    </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">group =</span> <span class="kw">seq_along</span>(id)),<span class="dt">color =</span> <span class="st">&quot;red&quot;</span>,<span class="dt">size =</span> <span class="dv">1</span>)<span class="op">+</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">    </span><span class="kw">transition_reveal</span>(id)<span class="op">+</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="st">    </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> pi)</span>
+<span id="cb7-7"><a href="#cb7-7"></a>  anim2 &lt;-<span class="kw">animate</span>(anim, <span class="dt">nframes =</span> <span class="dv">100</span>, <span class="dt">fps =</span> <span class="dv">10</span>,</span>
+<span id="cb7-8"><a href="#cb7-8"></a>                  <span class="dt">width =</span> <span class="dv">550</span>, <span class="dt">height =</span> <span class="dv">540</span>, <span class="dt">res =</span> <span class="dv">90</span>,</span>
+<span id="cb7-9"><a href="#cb7-9"></a>                  <span class="dt">renderer =</span> <span class="kw">gifski_renderer</span>(<span class="dt">loop =</span> T))</span>
+<span id="cb7-10"><a href="#cb7-10"></a>}</span>
+<span id="cb7-11"><a href="#cb7-11"></a>last &lt;-<span class="st"> </span><span class="kw">make_run2</span>(data1000)</span>
+<span id="cb7-12"><a href="#cb7-12"></a>last</span></code></pre></div>
 <p><img src="../../post/R/2020-07-26-蒙特卡洛计算π_files/figure-html/unnamed-chunk-5-1.gif" /><!-- --></p>
 </div>
 

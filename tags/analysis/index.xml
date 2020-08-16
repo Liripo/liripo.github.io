@@ -2,31 +2,79 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>analysis on Liripo</title>
-    <link>/tags/analysis/</link>
+    <link>https://liripo.github.io/tags/analysis/</link>
     <description>Recent content in analysis on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
-    <lastBuildDate>Tue, 28 Apr 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 15 Aug 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/analysis/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/analysis/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Mega使用及进化树</title>
+      <link>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E8%BF%9B%E5%8C%96%E6%A0%91/</link>
+      <pubDate>Sat, 15 Aug 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E8%BF%9B%E5%8C%96%E6%A0%91/</guid>
+      <description>安装 https://www.megasoftware.net/，下载windows的GUI版本，要使用CC（命令行）版本&amp;ndash;配置好环境变量即可。然后如果觉得windows配置不好，也可以安装linux版本（服务器），这里我选择ubantu CC（在官网中你可以直接下载能使用的二进制文件，也可以使用*.deb文件进行安装）。
+使用  分子进化的研究是核酸及氨基酸序列，究竟选择哪个？序列的选取要遵循以下原则：1）如果DNA序列的两两间的一致度≥70%，选用DNA序列。因为，如果DNA序列都如此相似，它的蛋白质会相似到看不出区别，这对构建系统发生树是不利的。所以这种情况下应该选用DNA序列，而不选蛋白质序列。2）如果DNA序列的两两间的一致度≤70%，DNA序列和蛋白质序列都可以选用。
+ 首先需要一个fasta文件，这在官网示例点击hsp20.meg,有一个四个物种没有比对好的fas文件（就是fasta文件）。
+由于需要使用图片，这里我使用pdf文件分享，懒得把图片保存在云床上或者放在网站中了，虽然pdf也是放网站里，但是只需要操作一遍呀。（果然有图片什么的最烦了！）
+==pdf路径：pdf，看后面内容直接使用pdf吧。==
+可以看到一个DNA seq跟翻译的蛋白序列，然后还有个Display的栏可以更改序列的查看方式，比如换成没有背景颜色等等。具体可以自行试试。
+这里我们点击Alignment栏，可以看到
+有两种比对方法：ClustalW跟MUSCLE（貌似还有一个叫T-coffee）
+ ClustalW是现在用的最广和最经典的多序列比对，是目前使用最广泛的多序列比对程序。（而且也可以用于双序列比对）它采用的是一种渐进的比对方法(progressive methods)，先将多个序列两两比对构建距离矩阵，反映序列之间两两关系；然后根据距离矩阵计算产生系统进化指导树，对关系密切的序列进行加权；然后从最紧密的两条序列开始，逐步引入临近的序列并不断重新构建比对，直到所有序列都被加入为止。 Muscle的速度比较快，比clustalw的速度快几个数量级,而且序列数越多速度的差别越大。不过只能用于多序列，之所以比clustalw快一方面是因为没有进行两两序列比对。  当然，也可以单独安装这几款软件进行使用。（或者使用在线工具之类的，比如https://www.ebi.ac.uk/Tools/msa/clustalw2/）
+对于示例文件这种小文件，我们使用ClustalW是不错的选择。T-coffee相比似乎更慢更精确。（不过当文件相似度&amp;gt;80%时，三个程序精确度都在90%以上）
+ 比对结束后可以保存好比对后的fas文件，或者保存成meg文件之类的，或者每种格式都保存一次。毕竟运行一次多序列比对文件大挺耗时。
+fas文件保存的是比对后文件，meg文件可以进行下一步的进化树分析。
+ 这里我们就可以点击PHYLOGENY进行进化树分析了，有多种方法根据距离矩阵构建进化树，之后就可以看进化树了。
+linux CC 首先在GUI界面选择
+之后即可进行设置生成*.mao文件了。
+参数深入理解    方法名 方法名     ML，Maximum likelihood 最大似然法   NJ，Neighbor-Joining 邻接法   MP，Maximum parsimony 最大简约法   ME，Minimum Evolution 最小进化法   Bayesian 贝叶斯推断   UPGMA 不常用    进化树分析目前相对常用的方法是NJ，一篇综述（Hall BG. Mol Biol Evol 2005, 22(3):792-802）认为贝叶斯的方法最好，其次是ML，然后是MP。</description>
+    </item>
+    
+    <item>
+      <title>去批次效应</title>
+      <link>https://liripo.github.io/post/%E5%8E%BB%E6%89%B9%E6%AC%A1%E6%95%88%E5%BA%94/</link>
+      <pubDate>Fri, 14 Aug 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/%E5%8E%BB%E6%89%B9%E6%AC%A1%E6%95%88%E5%BA%94/</guid>
+      <description>文章：基因表达数据批次效应去除方法的研究进展
+limma::removeBatchEffect  limma 包中的removeBatchEffect 是构建了一个线性模型,然后进行QR分解从而去除批次效应
+ n = 20a1 = rnorm(n,mean = 5,sd =1)a2 = rnorm(n,mean = 5,sd =1)a3 = rnorm(n,mean = 500,sd =100)a4 = rnorm(n,mean = 500,sd =100)a1[1] = 200a4[2] = 1dat = data.frame(a1,a2,a3,a4)batch = c(1,1,2,2)df = limma::removeBatchEffect(dat,batch = batch)df上面的代码第6、7行加入异常值，这导致了去批次后出现负值的情况，当然，那个负值所在的列的值(基因表达量)不一定是存在异常值，在同一批次中的某一个基因异常高表达,会导致其他基因因为表达谱相对论从而变成异常低表达。
+异常值的处理方法
+ 使用 3σ或者 1.5IQR原则过滤异常值 log转换(这个方法可以把偏态数据进行拉回来) sigmoid函数对数据进行压缩(这个方法适用于除了异常值后方差较小的数据) 如果这个基因你压根就不关心直接删掉  </description>
+    </item>
+    
+    <item>
       <title>ROC与AUC理解</title>
-      <link>/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</link>
+      <link>https://liripo.github.io/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</link>
       <pubDate>Tue, 28 Apr 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</guid>
-      <description></description>
+      <guid>https://liripo.github.io/post/roc%E4%B8%8Eauc%E7%90%86%E8%A7%A3/</guid>
+      <description>参考网址：https://zhwhong.cn/2017/04/14/ROC-AUC-Precision-Recall-analysis/</description>
     </item>
     
     <item>
       <title>生存分析</title>
-      <link>/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</link>
+      <link>https://liripo.github.io/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</guid>
+      <guid>https://liripo.github.io/post/%E7%94%9F%E5%AD%98%E5%88%86%E6%9E%90/</guid>
       <description></description>
+    </item>
+    
+    <item>
+      <title>vcf文件注释</title>
+      <link>https://liripo.github.io/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</link>
+      <pubDate>Mon, 20 Jan 2020 23:58:40 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/vcf%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;原始测序文件fq.gz经genome比对，变异检测得到vcf文件，亦即变异位点文件， 只是通过看vcf文件我们是不知道些变异位点到底是位于基因的exon、intron、UTR等的哪些区域的 ，所以需要注释， 常用的vcf注释软件有annovar和snpEff 。&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     
   </channel>

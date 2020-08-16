@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>去批次效应 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="去批次效应">
+
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>去批次效应</h1>
+  <h3>
+    , 14 Aug 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>文章：<a href="http://html.rhhz.net/njnydxxb/201903001.htm"><strong>基因表达数据批次效应去除方法的研究进展</strong></a></p>
+<h1 id="limmaremovebatcheffect">limma::removeBatchEffect</h1>
+<blockquote>
+<p>limma 包中的removeBatchEffect 是构建了一个线性模型,然后进行QR分解从而去除批次效应</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">n <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>
+a1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">rnorm</span>(n,mean <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>,sd <span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+a2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">rnorm</span>(n,mean <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>,sd <span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>)
+a3 <span style="color:#f92672">=</span> <span style="color:#a6e22e">rnorm</span>(n,mean <span style="color:#f92672">=</span> <span style="color:#ae81ff">500</span>,sd <span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+a4 <span style="color:#f92672">=</span> <span style="color:#a6e22e">rnorm</span>(n,mean <span style="color:#f92672">=</span> <span style="color:#ae81ff">500</span>,sd <span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+a1[1] <span style="color:#f92672">=</span> <span style="color:#ae81ff">200</span>
+a4[2] <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+dat <span style="color:#f92672">=</span> <span style="color:#a6e22e">data.frame</span>(a1,a2,a3,a4)
+batch <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2</span>)
+df <span style="color:#f92672">=</span> limma<span style="color:#f92672">::</span><span style="color:#a6e22e">removeBatchEffect</span>(dat,
+                       batch <span style="color:#f92672">=</span> batch)
+df
+</code></pre></div><p>上面的代码第6、7行加入异常值，这导致了去批次后出现负值的情况，当然，那个负值所在的列的值(基因表达量)不一定是存在异常值，在同一批次中的某一个基因异常高表达,会导致其他基因因为表达谱相对论从而变成异常低表达。</p>
+<p><strong>异常值的处理方法</strong></p>
+<ol>
+<li>使用 3σ或者 1.5IQR原则过滤异常值</li>
+<li>log转换(这个方法可以把偏态数据进行拉回来)</li>
+<li>sigmoid函数对数据进行压缩(这个方法适用于除了异常值后方差较小的数据)</li>
+<li>如果这个基因你压根就不关心直接删掉</li>
+</ol>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

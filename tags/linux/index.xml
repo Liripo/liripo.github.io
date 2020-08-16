@@ -2,41 +2,57 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>linux on Liripo</title>
-    <link>/tags/linux/</link>
+    <link>https://liripo.github.io/tags/linux/</link>
     <description>Recent content in linux on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>unbuntu</title>
-      <link>/post/unbuntu/</link>
+      <link>https://liripo.github.io/post/unbuntu/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/unbuntu/</guid>
+      <guid>https://liripo.github.io/post/unbuntu/</guid>
       <description></description>
     </item>
     
     <item>
       <title>vim</title>
-      <link>/post/vim/</link>
+      <link>https://liripo.github.io/post/vim/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/vim/</guid>
-      <description></description>
+      <guid>https://liripo.github.io/post/vim/</guid>
+      <description>vim 配置
+bundle安装在~/.vim/bundle
+如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。
+依赖包安装 确保环境中有cmake , python-dev , python3-dev ,没有的话需要事先安装
+sudo apt-get install cmake python-dev python3-dev clangYouCompleteMe 及其依赖包下载 #在~/.vim/bundle/文件夹下git clone https://github.com/ycm-core/YouCompleteMe.gitcd YouCompleteMe# 下载依赖库，这一步与网速有关，可能会断掉报错，重新运行可以了。git submodule update --init --recursive编译YouCompleteMe 下载好YouCompleteMe 及其依赖包后，打开vi 发现仍然会报错，是因为其核心包ycmd 还没有被编译好，需要我们手动编译。
+cd /opt/vimbundle/bundle/YouCompleteMe/# 具体是支持哪个python版本看自己情况，我这边指支持python，所以用python编译。要不要支持c语言也看自己需要，不需要的话就去掉`--clang-completer`。python install.py --clang-completer可能的报错 如果编译好ycmd_core 后仍然报错，那很可能就是一些python module 没有安装，通过下面方法检测出来再安装即可。
+cd /opt/vimbundle/bundle/YouCompleteMe/third_party/ycmd/cp ycmd/default_settings.json .# 通过下面查看是不是出现python的某些模块没有安装，如果是，那就安装上就好了。python ycmd --options_file default_settings.json一个示例配置
+syntax onset guifont=Monaco:h13&amp;#34;set tabstop=4set hlsearchset nocompatibleset nofoldenableset history=1000set backspace=indent,eol,start&amp;#34; prompt when existing from an unsaved fileset confirmset t_Co=256set titleset autoreadset spellset cursorlineset cursorcolumnset fenc=utf-8set encoding=utf-8set langmenu=zh_CN.</description>
     </item>
     
     <item>
       <title>windows10安装linux</title>
-      <link>/post/windows10%E5%AE%89%E8%A3%85linux/</link>
+      <link>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</link>
       <pubDate>Sat, 21 Mar 2020 14:27:47 +0000</pubDate>
       
-      <guid>/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
+      <guid>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
       <description>&lt;p&gt;windows10安装ubuntu，以及源码安装python到指定目录，及更多相关配置。&lt;/p&gt;
 &lt;p&gt;温馨提示：目前已有wsl2,推荐安装wsl2。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>xshell 和 xming 联合使用图形界面软件</title>
+      <link>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
+      <pubDate>Mon, 23 Dec 2019 10:59:34 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
+      <description>&lt;p&gt;xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。&lt;/p&gt;</description>
     </item>
     
   </channel>

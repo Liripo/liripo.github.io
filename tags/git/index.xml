@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Git on Liripo</title>
-    <link>/tags/git/</link>
+    <link>https://liripo.github.io/tags/git/</link>
     <description>Recent content in Git on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Fri, 13 Dec 2019 10:31:55 +0000</lastBuildDate>
     
-	<atom:link href="/tags/git/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/git/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Github及Git使用</title>
-      <link>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</link>
+      <link>https://liripo.github.io/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Fri, 13 Dec 2019 10:31:55 +0000</pubDate>
       
-      <guid>/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</guid>
+      <guid>https://liripo.github.io/post/github%E5%8F%8Agit%E4%BD%BF%E7%94%A8/</guid>
       <description>&lt;p&gt;&lt;a href=&#34;http://iissnan.com/progit/&#34;&gt;Github在线教程&lt;/a&gt;【第一版】
 &lt;a href=&#34;https://git-scm.com/book/zh/v2&#34;&gt;Github在线教程&lt;/a&gt;【第二版】
 以下为我自己的总结&lt;/p&gt;</description>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ggplot2 facet分面及宽度 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #ff69b4;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="ggplot2 facet分面及宽度">
+
+<meta property="og:image" content="https://djnavarro.github.io/hugo-calade/header/caladown.png">
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>ggplot2 facet分面及宽度</h1>
+  <h3>
+    by Liripo, 28 Jul 2020
+  </h3>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        
+<script src="../../rmarkdown-libs/accessible-code-block/empty-anchor.js"></script>
+<style type="text/css">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
+
+
+<blockquote>
+<p>最初,我在工作的时候绘制柱状图分面时遇到了柱子不等长的情况，然后使用ggtree::facet_widths解决了。之后谷歌搜索<strong>ggplot2 facet width</strong>发现ggplot2 facet_grid已经支持可以改变分面宽度的参数。</p>
+</blockquote>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tidyverse)</span></code></pre></div>
+<pre><code>## Warning: 程辑包&#39;tidyverse&#39;是用R版本4.0.2 来建造的</code></pre>
+<pre><code>## -- Attaching packages -------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## √ ggplot2 3.3.2     √ purrr   0.3.4
+## √ tibble  3.0.3     √ dplyr   1.0.1
+## √ tidyr   1.1.1     √ stringr 1.4.0
+## √ readr   1.3.1     √ forcats 0.5.0</code></pre>
+<pre><code>## Warning: 程辑包&#39;ggplot2&#39;是用R版本4.0.2 来建造的</code></pre>
+<pre><code>## Warning: 程辑包&#39;tibble&#39;是用R版本4.0.2 来建造的</code></pre>
+<pre><code>## Warning: 程辑包&#39;tidyr&#39;是用R版本4.0.2 来建造的</code></pre>
+<pre><code>## Warning: 程辑包&#39;dplyr&#39;是用R版本4.0.2 来建造的</code></pre>
+<pre><code>## -- Conflicts ----------------------------------------- tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">set.seed</span>(<span class="dv">2020</span>)</span>
+<span id="cb10-2"><a href="#cb10-2"></a>iris_n &lt;-<span class="st"> </span><span class="kw">slice_sample</span>(iris,<span class="dt">n =</span> <span class="dv">50</span>)</span>
+<span id="cb10-3"><a href="#cb10-3"></a>iris_long &lt;-<span class="st"> </span>iris_n <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>Species,<span class="dt">names_to =</span> <span class="st">&quot;x&quot;</span>,<span class="dt">values_to =</span> <span class="st">&quot;y&quot;</span>)</span>
+<span id="cb10-5"><a href="#cb10-5"></a>iris_long &lt;-<span class="st"> </span>iris_long <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="st">  </span><span class="kw">filter</span>(Species <span class="op">!=</span><span class="st"> &quot;versicolor&quot;</span> <span class="op">|</span><span class="st"> </span>x <span class="op">!=</span><span class="st"> &quot;Sepal.Length&quot;</span>)</span>
+<span id="cb10-7"><a href="#cb10-7"></a>p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(iris_long,<span class="kw">aes</span>(x,y)) <span class="op">+</span><span class="st"> </span><span class="kw">geom_col</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="st">  </span><span class="kw">facet_grid</span>(<span class="dt">cols =</span> <span class="kw">vars</span>(Species),<span class="dt">scales =</span> <span class="st">&quot;free_x&quot;</span>)</span>
+<span id="cb10-9"><a href="#cb10-9"></a>p</span></code></pre></div>
+<p><img src="../../post/R/2020-08-01-facet分面及宽度_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>可以看到这样有一个柱子宽度不等的情况,因为默认分面等宽，现在ggplot2可以通过添加参数<code>space = "free_x</code>,你可以看看<a href="https://mattherman.info/blog/fix-facet-width/">这篇博客</a>举得例子（之前也弄过一样的，所以链接过去作个记录），或者</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>ggtree<span class="op">::</span><span class="kw">facet_widths</span>(p,<span class="dt">widths =</span> <span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">3</span>,<span class="dv">4</span>))</span></code></pre></div>
+<pre><code>## Registered S3 method overwritten by &#39;treeio&#39;:
+##   method     from
+##   root.phylo ape</code></pre>
+<p><img src="../../post/R/2020-08-01-facet分面及宽度_files/figure-html/unnamed-chunk-2-1.png" width="672" />
+而这个函数源如下</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>ggtree<span class="op">::</span>facet_widths</span></code></pre></div>
+<pre><code>## function (p, widths) 
+## {
+##     if (!is.null(names(widths))) {
+##         .panel &lt;- panel_col_levels(p)
+##         w &lt;- rep(1, length = length(.panel))
+##         names(w) &lt;- .panel
+##         w[names(widths)] &lt;- widths
+##         widths &lt;- w
+##     }
+##     gt &lt;- ggplot_gtable(ggplot_build(p))
+##     j &lt;- gt$layout$l[grep(&quot;panel-&quot;, gt$layout$name)]
+##     gt$widths[j] &lt;- gt$widths[j] * widths
+##     return(ggplotify::as.ggplot(gt))
+## }
+## &lt;bytecode: 0x000000002074d4c0&gt;
+## &lt;environment: namespace:ggtree&gt;</code></pre>
+<p>类似于<a href="https://stackoverflow.com/questions/49110877/how-to-adjust-facet-size-manually">stackoverflow</a>上的解决方案，不过多了<code>as.ggplot</code>。</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">library</span>(grid)</span>
+<span id="cb15-2"><a href="#cb15-2"></a>gt =<span class="st"> </span><span class="kw">ggplot_gtable</span>(<span class="kw">ggplot_build</span>(p))</span>
+<span id="cb15-3"><a href="#cb15-3"></a>gt<span class="op">$</span>layout</span></code></pre></div>
+<pre><code>##     t  l  b  r  z clip       name
+## 23  1  1 13 13  0   on background
+## 1   8  5  8  5  1   on  panel-1-1
+## 2   8  7  8  7  1   on  panel-1-2
+## 3   8  9  8  9  1   on  panel-1-3
+## 4   6  5  6  5  3  off   axis-t-1
+## 5   6  7  6  7  3  off   axis-t-2
+## 6   6  9  6  9  3  off   axis-t-3
+## 7   9  5  9  5  3  off   axis-b-1
+## 8   9  7  9  7  3  off   axis-b-2
+## 9   9  9  9  9  3  off   axis-b-3
+## 10  8  4  8  4  3  off   axis-l-1
+## 11  8 10  8 10  3  off   axis-r-1
+## 12  7  5  7  5  2   on  strip-t-1
+## 13  7  7  7  7  2   on  strip-t-2
+## 14  7  9  7  9  2   on  strip-t-3
+## 15  5  5  5  9  4  off     xlab-t
+## 16 10  5 10  9  5  off     xlab-b
+## 17  8  3  8  3  6  off     ylab-l
+## 18  8 11  8 11  7  off     ylab-r
+## 19  4  5  4  9  8  off   subtitle
+## 20  3  5  3  9  9  off      title
+## 21 11  5 11  9 10  off    caption
+## 22  2  2  2  2 11  off        tag</code></pre>
+<p>可以看到name列panel开头的有三个，对应于p的三个分面，对应的l列分别为5，7，9</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>gt<span class="op">$</span>widths[<span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">9</span>)] &lt;-<span class="st"> </span>gt<span class="op">$</span>widths[<span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">7</span>,<span class="dv">9</span>)]<span class="op">*</span><span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">3</span>,<span class="dv">4</span>)</span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="kw">grid.draw</span>(gt)</span></code></pre></div>
+<p><img src="../../post/R/2020-08-01-facet分面及宽度_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+  
+  <br/><br/>
+  Build by blogdown and the theme of calade.
+  <br/><br/>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>
