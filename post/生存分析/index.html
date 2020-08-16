@@ -54,8 +54,10 @@
       <div>
   <h1>生存分析</h1>
   <h3>
-    , 28 Mar 2020
+    28 Mar 2020
   </h3>
+   <h5 id="wc">100 Words|Read in about 1       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+    </h5>
   <br><br>
 </div>
 
@@ -104,16 +106,38 @@ Kaplan-Meier曲线为我们描画了患者生存率随时间变化的特征。�
   
   <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
   <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
+  <span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
   
   
 <script async src="../../js/center-image.js"></script>
 <script type="text/javascript" id="MathJax-script" async
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
-  
-  <br/><br/>
-  Build by blogdown and the theme of calade.
-  <br/><br/>
+<center>
+Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
+<SCRIPT language=javascript>
+function show_date_time(){
+window.setTimeout("show_date_time()", 1000);
+BirthDay=new Date("7/8/2019 00:00:00");
+today=new Date();
+timeold=(today.getTime()-BirthDay.getTime());
+sectimeold=timeold/1000
+secondsold=Math.floor(sectimeold);
+msPerDay=24*60*60*1000
+e_daysold=timeold/msPerDay
+daysold=Math.floor(e_daysold);
+e_hrsold=(e_daysold-daysold)*24;
+hrsold=Math.floor(e_hrsold);
+e_minsold=(e_hrsold-hrsold)*60;
+minsold=Math.floor((e_hrsold-hrsold)*60);
+seconds=Math.floor((e_minsold-minsold)*60);
+span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+}
+show_date_time();
+</SCRIPT>
+</center>
   
 </footer>
 

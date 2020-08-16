@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bioconductor on Liripo</title>
-    <link>https://liripo.github.io/tags/bioconductor/</link>
+    <link>/tags/bioconductor/</link>
     <description>Recent content in bioconductor on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sun, 22 Dec 2019 22:27:21 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.github.io/tags/bioconductor/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/bioconductor/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>bioconductor的学习与使用</title>
-      <link>https://liripo.github.io/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</link>
+      <link>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Sun, 22 Dec 2019 22:27:21 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</guid>
+      <guid>/post/bioconductor%E7%9A%84%E5%AD%A6%E4%B9%A0%E4%B8%8E%E4%BD%BF%E7%94%A8/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;在生物信息学领域 , bioPerl和bioPython 是使用和研究生物信息学的开发者提供的在线资源库，那么bioR应当就是bioconductor。&lt;/p&gt;
 &lt;/blockquote&gt;</description>

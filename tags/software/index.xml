@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>software on Liripo</title>
-    <link>https://liripo.github.io/tags/software/</link>
+    <link>/tags/software/</link>
     <description>Recent content in software on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Mon, 25 Nov 2019 20:35:16 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.github.io/tags/software/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/software/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>conda</title>
-      <link>https://liripo.github.io/post/conda/</link>
+      <link>/post/conda/</link>
       <pubDate>Mon, 25 Nov 2019 20:35:16 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/conda/</guid>
+      <guid>/post/conda/</guid>
       <description></description>
     </item>
     
