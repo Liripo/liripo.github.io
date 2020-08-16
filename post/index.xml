@@ -17,22 +17,7 @@
       <pubDate>Sat, 15 Aug 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E8%BF%9B%E5%8C%96%E6%A0%91/</guid>
-      <description>安装 https://www.megasoftware.net/，下载windows的GUI版本，要使用CC（命令行）版本&amp;ndash;配置好环境变量即可。然后如果觉得windows配置不好，也可以安装linux版本（服务器），这里我选择ubantu CC（在官网中你可以直接下载能使用的二进制文件，也可以使用*.deb文件进行安装）。
-使用  分子进化的研究是核酸及氨基酸序列，究竟选择哪个？序列的选取要遵循以下原则：1）如果DNA序列的两两间的一致度≥70%，选用DNA序列。因为，如果DNA序列都如此相似，它的蛋白质会相似到看不出区别，这对构建系统发生树是不利的。所以这种情况下应该选用DNA序列，而不选蛋白质序列。2）如果DNA序列的两两间的一致度≤70%，DNA序列和蛋白质序列都可以选用。
- 首先需要一个fasta文件，这在官网示例点击hsp20.meg,有一个四个物种没有比对好的fas文件（就是fasta文件）。
-由于需要使用图片，这里我使用pdf文件分享，懒得把图片保存在云床上或者放在网站中了，虽然pdf也是放网站里，但是只需要操作一遍呀。（果然有图片什么的最烦了！）
-==pdf路径：pdf，看后面内容直接使用pdf吧。==
-可以看到一个DNA seq跟翻译的蛋白序列，然后还有个Display的栏可以更改序列的查看方式，比如换成没有背景颜色等等。具体可以自行试试。
-这里我们点击Alignment栏，可以看到
-有两种比对方法：ClustalW跟MUSCLE（貌似还有一个叫T-coffee）
- ClustalW是现在用的最广和最经典的多序列比对，是目前使用最广泛的多序列比对程序。（而且也可以用于双序列比对）它采用的是一种渐进的比对方法(progressive methods)，先将多个序列两两比对构建距离矩阵，反映序列之间两两关系；然后根据距离矩阵计算产生系统进化指导树，对关系密切的序列进行加权；然后从最紧密的两条序列开始，逐步引入临近的序列并不断重新构建比对，直到所有序列都被加入为止。 Muscle的速度比较快，比clustalw的速度快几个数量级,而且序列数越多速度的差别越大。不过只能用于多序列，之所以比clustalw快一方面是因为没有进行两两序列比对。  当然，也可以单独安装这几款软件进行使用。（或者使用在线工具之类的，比如https://www.ebi.ac.uk/Tools/msa/clustalw2/）
-对于示例文件这种小文件，我们使用ClustalW是不错的选择。T-coffee相比似乎更慢更精确。（不过当文件相似度&amp;gt;80%时，三个程序精确度都在90%以上）
- 比对结束后可以保存好比对后的fas文件，或者保存成meg文件之类的，或者每种格式都保存一次。毕竟运行一次多序列比对文件大挺耗时。
-fas文件保存的是比对后文件，meg文件可以进行下一步的进化树分析。
- 这里我们就可以点击PHYLOGENY进行进化树分析了，有多种方法根据距离矩阵构建进化树，之后就可以看进化树了。
-linux CC 首先在GUI界面选择
-之后即可进行设置生成*.mao文件了。
-参数深入理解    方法名 方法名     ML，Maximum likelihood 最大似然法   NJ，Neighbor-Joining 邻接法   MP，Maximum parsimony 最大简约法   ME，Minimum Evolution 最小进化法   Bayesian 贝叶斯推断   UPGMA 不常用    进化树分析目前相对常用的方法是NJ，一篇综述（Hall BG. Mol Biol Evol 2005, 22(3):792-802）认为贝叶斯的方法最好，其次是ML，然后是MP。</description>
+      <description>安装 https://www.megasoftware.net/，下载windows的GUI版本，要使用CC（命令行）版本&amp;ndash;配置好</description>
     </item>
     
     <item>
@@ -41,11 +26,7 @@ linux CC 首先在GUI界面选择
       <pubDate>Fri, 14 Aug 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/%E5%8E%BB%E6%89%B9%E6%AC%A1%E6%95%88%E5%BA%94/</guid>
-      <description>文章：基因表达数据批次效应去除方法的研究进展
-limma::removeBatchEffect  limma 包中的removeBatchEffect 是构建了一个线性模型,然后进行QR分解从而去除批次效应
- n = 20a1 = rnorm(n,mean = 5,sd =1)a2 = rnorm(n,mean = 5,sd =1)a3 = rnorm(n,mean = 500,sd =100)a4 = rnorm(n,mean = 500,sd =100)a1[1] = 200a4[2] = 1dat = data.frame(a1,a2,a3,a4)batch = c(1,1,2,2)df = limma::removeBatchEffect(dat,batch = batch)df上面的代码第6、7行加入异常值，这导致了去批次后出现负值的情况，当然，那个负值所在的列的值(基因表达量)不一定是存在异常值，在同一批次中的某一个基因异常高表达,会导致其他基因因为表达谱相对论从而变成异常低表达。
-异常值的处理方法
- 使用 3σ或者 1.5IQR原则过滤异常值 log转换(这个方法可以把偏态数据进行拉回来) sigmoid函数对数据进行压缩(这个方法适用于除了异常值后方差较小的数据) 如果这个基因你压根就不关心直接删掉  </description>
+      <description>文章：基因表达数据批次效应去除方法的研究进展 limma::removeBatchEffect limma 包中的removeBatchEffect 是构建了一个线性模型,然后进行QR分解从而去除批次效</description>
     </item>
     
     <item>
@@ -72,7 +53,7 @@ limma::removeBatchEffect  limma 包中的removeBatchEffect 是构建了一个线
       <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</guid>
-      <description>code.sourceCode  span { display: inline-block; line-height: 1.25; }code.sourceCode  span { color: inherit; text-decoration: inherit; }code.sourceCode  span:empty { height: 1.2em; }.sourceCode { overflow: visible; }code.sourceCode { white-space: pre; position: relative; }div.sourceCode { margin: 1em 0; }pre.sourceCode { margin: 0; }@media screen {div.sourceCode { overflow: auto; }}@media print {code.sourceCode { white-space: pre-wrap; }code.sourceCode  span { text-indent: -5em; padding-left: 5em; }}pre.</description>
+      <description>code.sourceCode span { display: inline-block; line-height: 1.25; } code.sourceCode span { color: inherit; text-decoration: inherit; } code.sourceCode span:empty { height: 1.2em; } .sourceCode { overflow: visible; } code.sourceCode { white-space: pre; position: relative; } div.sourceCode { margin: 1em 0; } pre.sourceCode { margin: 0; } @media screen { div.sourceCode { overflow: auto; } } @media print { code.sourceCode { white-space: pre-wrap; } code.sourceCode span { text-indent: -5em; padding-left: 5em; }</description>
     </item>
     
     <item>
@@ -117,9 +98,7 @@ limma::removeBatchEffect  limma 包中的removeBatchEffect 是构建了一个线
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/rcpp/</guid>
-      <description>RCpp与R包 首先在生成R骨架的时候，比一般没调用C++多执行一下Rscript -e &#39;usethis::use_rcpp()&#39;。然后在.gitignore文件中添加src/*.o,src/*.so,src/*.dll防止编译文件导入到git中。并且在DESCRIPTION文件中必须添加LinkingTo: Rcpp, Imports: Rcpp才能识别Rcpp库。
-接着就是添加两个roxygen到代码中即可。参考如下：
-#&#39; @useDynLib Rcpp文件名#&#39; @importFrom Rcpp sourceCppNULL计算矩阵欧式距离 Rcpp::cppFunction(&amp;#34;NumericMatrix dist_crpp (NumericMatrix x){int row = x.nrow();double d;NumericMatrix out (row,row);for (int i = 0;i &amp;lt; row;i++){for (int j = i+1;j &amp;lt; row;j++){NumericVector v1 = x.row(i);NumericVector v2 = x.row(j);NumericVector v3 = v2 - v1;d = sqrt(sum(pow(v3,2)));out(j,i) = d;//out(i,j) = d;}}return (out);} &amp;#34;)</description>
+      <description>RCpp与R包 首先在生成R骨架的时候，比一般没调用C++多执行一下Rscript -e &#39;usethis::use_rcpp()&#39;。然后在.git</description>
     </item>
     
     <item>
@@ -164,14 +143,7 @@ limma::removeBatchEffect  limma 包中的removeBatchEffect 是构建了一个线
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/vim/</guid>
-      <description>vim 配置
-bundle安装在~/.vim/bundle
-如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。
-依赖包安装 确保环境中有cmake , python-dev , python3-dev ,没有的话需要事先安装
-sudo apt-get install cmake python-dev python3-dev clangYouCompleteMe 及其依赖包下载 #在~/.vim/bundle/文件夹下git clone https://github.com/ycm-core/YouCompleteMe.gitcd YouCompleteMe# 下载依赖库，这一步与网速有关，可能会断掉报错，重新运行可以了。git submodule update --init --recursive编译YouCompleteMe 下载好YouCompleteMe 及其依赖包后，打开vi 发现仍然会报错，是因为其核心包ycmd 还没有被编译好，需要我们手动编译。
-cd /opt/vimbundle/bundle/YouCompleteMe/# 具体是支持哪个python版本看自己情况，我这边指支持python，所以用python编译。要不要支持c语言也看自己需要，不需要的话就去掉`--clang-completer`。python install.py --clang-completer可能的报错 如果编译好ycmd_core 后仍然报错，那很可能就是一些python module 没有安装，通过下面方法检测出来再安装即可。
-cd /opt/vimbundle/bundle/YouCompleteMe/third_party/ycmd/cp ycmd/default_settings.json .# 通过下面查看是不是出现python的某些模块没有安装，如果是，那就安装上就好了。python ycmd --options_file default_settings.json一个示例配置
-syntax onset guifont=Monaco:h13&amp;#34;set tabstop=4set hlsearchset nocompatibleset nofoldenableset history=1000set backspace=indent,eol,start&amp;#34; prompt when existing from an unsaved fileset confirmset t_Co=256set titleset autoreadset spellset cursorlineset cursorcolumnset fenc=utf-8set encoding=utf-8set langmenu=zh_CN.</description>
+      <description>vim 配置 bundle安装在~/.vim/bundle 如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。</description>
     </item>
     
     <item>

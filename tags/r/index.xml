@@ -26,7 +26,7 @@
       <pubDate>Tue, 28 Jul 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/ggplot2-facet%E5%88%86%E9%9D%A2%E5%8F%8A%E5%AE%BD%E5%BA%A6/</guid>
-      <description>code.sourceCode  span { display: inline-block; line-height: 1.25; }code.sourceCode  span { color: inherit; text-decoration: inherit; }code.sourceCode  span:empty { height: 1.2em; }.sourceCode { overflow: visible; }code.sourceCode { white-space: pre; position: relative; }div.sourceCode { margin: 1em 0; }pre.sourceCode { margin: 0; }@media screen {div.sourceCode { overflow: auto; }}@media print {code.sourceCode { white-space: pre-wrap; }code.sourceCode  span { text-indent: -5em; padding-left: 5em; }}pre.</description>
+      <description>code.sourceCode span { display: inline-block; line-height: 1.25; } code.sourceCode span { color: inherit; text-decoration: inherit; } code.sourceCode span:empty { height: 1.2em; } .sourceCode { overflow: visible; } code.sourceCode { white-space: pre; position: relative; } div.sourceCode { margin: 1em 0; } pre.sourceCode { margin: 0; } @media screen { div.sourceCode { overflow: auto; } } @media print { code.sourceCode { white-space: pre-wrap; } code.sourceCode span { text-indent: -5em; padding-left: 5em; }</description>
     </item>
     
     <item>
@@ -44,9 +44,7 @@
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/rcpp/</guid>
-      <description>RCpp与R包 首先在生成R骨架的时候，比一般没调用C++多执行一下Rscript -e &#39;usethis::use_rcpp()&#39;。然后在.gitignore文件中添加src/*.o,src/*.so,src/*.dll防止编译文件导入到git中。并且在DESCRIPTION文件中必须添加LinkingTo: Rcpp, Imports: Rcpp才能识别Rcpp库。
-接着就是添加两个roxygen到代码中即可。参考如下：
-#&#39; @useDynLib Rcpp文件名#&#39; @importFrom Rcpp sourceCppNULL计算矩阵欧式距离 Rcpp::cppFunction(&amp;#34;NumericMatrix dist_crpp (NumericMatrix x){int row = x.nrow();double d;NumericMatrix out (row,row);for (int i = 0;i &amp;lt; row;i++){for (int j = i+1;j &amp;lt; row;j++){NumericVector v1 = x.row(i);NumericVector v2 = x.row(j);NumericVector v3 = v2 - v1;d = sqrt(sum(pow(v3,2)));out(j,i) = d;//out(i,j) = d;}}return (out);} &amp;#34;)</description>
+      <description>RCpp与R包 首先在生成R骨架的时候，比一般没调用C++多执行一下Rscript -e &#39;usethis::use_rcpp()&#39;。然后在.git</description>
     </item>
     
     <item>
