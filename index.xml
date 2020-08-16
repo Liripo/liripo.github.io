@@ -6,10 +6,19 @@
     <description>Recent content in Home on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
-    <lastBuildDate>Sat, 15 Aug 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 16 Aug 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>blogdown及hugo使用主题修改</title>
+      <link>/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</link>
+      <pubDate>Sun, 16 Aug 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/blogdown%E5%8F%8Ahugo%E4%BD%BF%E7%94%A8%E4%B8%BB%E9%A2%98%E4%BF%AE%E6%94%B9/</guid>
+      <description>blogdown https://github.com/rstudio/blogdown在bookdown上有书，所以安装使用基本看下文档就知道了。 当然，你</description>
+    </item>
     
     <item>
       <title>Mega使用及进化树</title>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>blogdown及hugo使用主题修改 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #6BB0DF;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="blogdown及hugo使用主题修改">
+
+
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>blogdown及hugo使用主题修改</h1>
+  <h3>
+    16 Aug 2020
+  </h3>
+   <h5 id="wc">1357 Words|Read in about 3       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+    </h5>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <h1 id="blogdown">blogdown</h1>
+<p><a href="https://github.com/rstudio/blogdown">https://github.com/rstudio/blogdown</a>在bookdown上有书，所以安装使用基本看下文档就知道了。</p>
+<p>当然，你也可以选择hugodown。</p>
+<h1 id="calade-theme">calade theme</h1>
+<p>我使用的是<a href="https://github.com/djnavarro/hugo-calade">https://github.com/djnavarro/hugo-calade</a>这个主题。</p>
+<p>hugo以及这个主题，一些默认的设置，比如数学公式，使用rstuio服务，中国比较难以加载。</p>
+<h2 id="mathjaxcdn">mathjax改成cdn服务</h2>
+<p>在网站根目录下，\layouts\partials\foot_custom.html配置如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"><span style="color:#75715e">&lt;!--</span><span style="color:#75715e">
+</span><span style="color:#75715e">&lt;script src=&#34;//yihui.name/js/math</span><span style="color:#75715e">-</span><span style="color:#75715e">code.js&#34;&gt;&lt;/script&gt;
+</span><span style="color:#75715e">&lt;script async src=&#34;//mathjax.rstudio.com/latest/MathJax.js?config=TeX</span><span style="color:#75715e">-</span><span style="color:#75715e">MML</span><span style="color:#75715e">-</span><span style="color:#75715e">AM_CHTML&#34;&gt;&lt;/script&gt;
+</span><span style="color:#75715e"></span><span style="color:#75715e">--&gt;</span>
+&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ &#34;</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">js</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">center-image</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#a6e22e">js</span><span style="color:#960050;background-color:#1e0010">&#34;</span> <span style="color:#960050;background-color:#1e0010">|</span> <span style="color:#a6e22e">relURL</span> <span style="color:#960050;background-color:#1e0010">}</span><span style="color:#960050;background-color:#1e0010">}</span><span style="color:#960050;background-color:#1e0010">&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/javascript&#34;</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;MathJax-script&#34;</span> <span style="color:#a6e22e">async</span>
+  <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js&#34;</span>&gt;
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">center</span>&gt;
+<span style="color:#75715e">&lt;!--</span><span style="color:#75715e">
+</span><span style="color:#75715e">用户名自己修改，加入网站运行时间。
+</span><span style="color:#75715e"></span><span style="color:#75715e">--&gt;</span>
+Liripo &lt;<span style="color:#f92672">SPAN</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">span_dt_dt</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;color: #0196e3;&#34;</span>&gt;&lt;/<span style="color:#f92672">SPAN</span>&gt;
+&lt;<span style="color:#f92672">SCRIPT</span> <span style="color:#a6e22e">language</span><span style="color:#f92672">=</span><span style="color:#e6db74">javascript</span>&gt;
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">show_date_time</span>(){
+window.<span style="color:#a6e22e">setTimeout</span>(<span style="color:#e6db74">&#34;show_date_time()&#34;</span>, <span style="color:#ae81ff">1000</span>);
+<span style="color:#a6e22e">BirthDay</span><span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Date(<span style="color:#e6db74">&#34;7/8/2019 00:00:00&#34;</span>);<span style="color:#75715e">//日期自己修改
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">today</span><span style="color:#f92672">=</span><span style="color:#66d9ef">new</span> Date();
+<span style="color:#a6e22e">timeold</span><span style="color:#f92672">=</span>(<span style="color:#a6e22e">today</span>.<span style="color:#a6e22e">getTime</span>()<span style="color:#f92672">-</span><span style="color:#a6e22e">BirthDay</span>.<span style="color:#a6e22e">getTime</span>());
+<span style="color:#a6e22e">sectimeold</span><span style="color:#f92672">=</span><span style="color:#a6e22e">timeold</span><span style="color:#f92672">/</span><span style="color:#ae81ff">1000</span>
+<span style="color:#a6e22e">secondsold</span><span style="color:#f92672">=</span>Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">sectimeold</span>);
+<span style="color:#a6e22e">msPerDay</span><span style="color:#f92672">=</span><span style="color:#ae81ff">24</span><span style="color:#f92672">*</span><span style="color:#ae81ff">60</span><span style="color:#f92672">*</span><span style="color:#ae81ff">60</span><span style="color:#f92672">*</span><span style="color:#ae81ff">1000</span>
+<span style="color:#a6e22e">e_daysold</span><span style="color:#f92672">=</span><span style="color:#a6e22e">timeold</span><span style="color:#f92672">/</span><span style="color:#a6e22e">msPerDay</span>
+<span style="color:#a6e22e">daysold</span><span style="color:#f92672">=</span>Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">e_daysold</span>);
+<span style="color:#a6e22e">e_hrsold</span><span style="color:#f92672">=</span>(<span style="color:#a6e22e">e_daysold</span><span style="color:#f92672">-</span><span style="color:#a6e22e">daysold</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">24</span>;
+<span style="color:#a6e22e">hrsold</span><span style="color:#f92672">=</span>Math.<span style="color:#a6e22e">floor</span>(<span style="color:#a6e22e">e_hrsold</span>);
+<span style="color:#a6e22e">e_minsold</span><span style="color:#f92672">=</span>(<span style="color:#a6e22e">e_hrsold</span><span style="color:#f92672">-</span><span style="color:#a6e22e">hrsold</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">60</span>;
+<span style="color:#a6e22e">minsold</span><span style="color:#f92672">=</span>Math.<span style="color:#a6e22e">floor</span>((<span style="color:#a6e22e">e_hrsold</span><span style="color:#f92672">-</span><span style="color:#a6e22e">hrsold</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">60</span>);
+<span style="color:#a6e22e">seconds</span><span style="color:#f92672">=</span>Math.<span style="color:#a6e22e">floor</span>((<span style="color:#a6e22e">e_minsold</span><span style="color:#f92672">-</span><span style="color:#a6e22e">minsold</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">60</span>);
+<span style="color:#a6e22e">span_dt_dt</span>.<span style="color:#a6e22e">innerHTML</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">daysold</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;天&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">hrsold</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;小时&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">minsold</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;分&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">seconds</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;秒&#34;</span>;
+}
+<span style="color:#a6e22e">show_date_time</span>();
+&lt;/<span style="color:#f92672">SCRIPT</span>&gt;
+&lt;/<span style="color:#f92672">center</span>&gt;
+</code></pre></div><h2 id="url">添加不蒜子统计url访问数</h2>
+<p><a href="http://busuanzi.ibruce.info/">不蒜子</a>是 Bruce 开发的一款轻量级的网页计数器,轻量。</p>
+<p>可以看下文章:<a href="https://fuckcloudnative.io/posts/hugo-add-busuanzi/">https://fuckcloudnative.io/posts/hugo-add-busuanzi/</a>有说hugo怎么添加不蒜子，并修改初始访问人数，不过我没用。</p>
+<p>我在hugo-calade\layouts\partials\footer.html改成如下配置：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">footer</span>&gt;
+  <span style="color:#75715e">&lt;!--</span><span style="color:#75715e"> highlight.js </span><span style="color:#75715e">--&gt;</span>
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+  <span style="color:#75715e">&lt;!--</span><span style="color:#75715e"> and it&#39;s easy to individually load additional languages </span><span style="color:#75715e">--&gt;</span>
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+
+  &lt;<span style="color:#f92672">script</span>&gt;
+  <span style="color:#a6e22e">hljs</span>.<span style="color:#a6e22e">configure</span>({<span style="color:#a6e22e">languages</span><span style="color:#f92672">:</span> []});
+  <span style="color:#a6e22e">hljs</span>.<span style="color:#a6e22e">initHighlightingOnLoad</span>();
+  &lt;/<span style="color:#f92672">script</span>&gt;
+  <span style="color:#75715e">&lt;!--</span><span style="color:#75715e">添加不蒜子</span><span style="color:#75715e">--&gt;</span>
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+  &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;busuanzi_container_site_pv&#34;</span>&gt;本站总访问量&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">id       </span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;busuanzi_value_site_pv&#34;</span>&gt;&lt;/<span style="color:#f92672">span</span>&gt;次&lt;/<span style="color:#f92672">span</span>&gt;
+  &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;busuanzi_container_site_uv&#34;</span>&gt;
+    本站访客数&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;busuanzi_value_site_uv&#34;</span>&gt;&lt;/<span style="color:#f92672">span</span>&gt;人次
+&lt;/<span style="color:#f92672">span</span>&gt;
+  <span style="color:#75715e">&lt;!--</span><span style="color:#75715e">--&gt;</span>
+  {{ partial &#34;foot_custom.html&#34; . }}
+  {{ with .Site.Params.footer }}
+  &lt;<span style="color:#f92672">br</span>/&gt;&lt;<span style="color:#f92672">br</span>/&gt;
+  {{ . | markdownify }}
+  &lt;<span style="color:#f92672">br</span>/&gt;&lt;<span style="color:#f92672">br</span>/&gt;
+  {{ end }}
+&lt;/<span style="color:#f92672">footer</span>&gt;
+</code></pre></div><p>在主题目录下，hugo-calade\layouts_default中的single.html(这个文件用于修改文章的html)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"><span style="color:#75715e">&lt;!DOCTYPE html&gt;</span>
+&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ .Site.LanguageCode }}&#34;</span>&gt;
+
+  {{ partial &#34;header.html&#34; . }}
+
+  &lt;<span style="color:#f92672">body</span>&gt;
+    {{ partial &#34;header_image.html&#34; . }}
+
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main-content&#34;</span>&gt;
+      {{ partial &#34;menu_strip.html&#34; . }}
+      {{ partial &#34;post_title.html&#34; . }}
+
+      &lt;<span style="color:#f92672">main</span>&gt;
+        {{ partial &#34;toc.html&#34; . }}
+        {{ .Content }}
+      &lt;/<span style="color:#f92672">main</span>&gt;
+
+      {{ partial &#34;footer.html&#34; . }}
+
+    &lt;/<span style="color:#f92672">div</span>&gt;
+  &lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><p>可以看到这个文件在body中引入了partial文件夹下的post_title.html等文件，我们修改post_title.html这文件如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">div</span>&gt;
+  &lt;<span style="color:#f92672">h1</span>&gt;{{ .Title | markdownify }}&lt;/<span style="color:#f92672">h1</span>&gt;
+  &lt;<span style="color:#f92672">h3</span>&gt;
+    {{ if (gt .Params.date 0) }}{{ .Date.Format &#34;02 Jan 2006&#34; }}{{ end }}
+  &lt;/<span style="color:#f92672">h3</span>&gt;
+   &lt;<span style="color:#f92672">h5</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;wc&#34;</span>&gt;{{ .WordCount }} Words|Read in about {{ .ReadingTime }}       Min|本文总阅读量&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;busuanzi_value_page_pv&#34;</span>&gt;&lt;/<span style="color:#f92672">span</span>&gt;次&lt;/<span style="color:#f92672">h5</span>&gt;
+    &lt;/<span style="color:#f92672">h5</span>&gt;
+  &lt;<span style="color:#f92672">br</span>&gt;&lt;<span style="color:#f92672">br</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+</code></pre></div><p>这样就加入了文章的字数。不过hugo默认不统计中文，所以还需要在站点文件config.toml加入</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">#添加中文计数
+hasCJKLanguage = true 
+</code></pre></div><p>还有个注意点，就是那些没有缩进的配置应该放在</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">[permalinks]
+</code></pre></div><p>等配置前面，才能识别。</p>
+<h2 id="b">嵌入B站视频</h2>
+<p>参考文章：<a href="https://mogeko.me/2020/079/">https://mogeko.me/2020/079/</a></p>
+<h2 id="heading">插入音乐</h2>
+<p><a href="http://tool.liumingye.cn/music/">http://tool.liumingye.cn/music/</a>这网站下歌不错。</p>
+
+      </main>
+
+      <footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+  
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
+  <span id="busuanzi_container_site_uv">
+    本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+  
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<center>
+Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
+<SCRIPT language=javascript>
+function show_date_time(){
+window.setTimeout("show_date_time()", 1000);
+BirthDay=new Date("7/8/2019 00:00:00");
+today=new Date();
+timeold=(today.getTime()-BirthDay.getTime());
+sectimeold=timeold/1000
+secondsold=Math.floor(sectimeold);
+msPerDay=24*60*60*1000
+e_daysold=timeold/msPerDay
+daysold=Math.floor(e_daysold);
+e_hrsold=(e_daysold-daysold)*24;
+hrsold=Math.floor(e_hrsold);
+e_minsold=(e_hrsold-hrsold)*60;
+minsold=Math.floor((e_hrsold-hrsold)*60);
+seconds=Math.floor((e_minsold-minsold)*60);
+span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+}
+show_date_time();
+</SCRIPT>
+</center>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>
