@@ -17,7 +17,6 @@
   		--lowlight: #ba68c8;
 	}
   </style>
-
   <link rel="stylesheet" href="../../css/et_book.css" />
   <link rel="stylesheet" href="../../css/style.css" />
   
@@ -58,7 +57,7 @@
   <h3>
     16 Aug 2020
   </h3>
-   <h5 id="wc">1924 Words|Read in about 4       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">2204 Words|Read in about 5       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -66,6 +65,27 @@
 
       <main>
         
+<aside>
+    <div align="center">Table of Contents</div>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#blogdown">blogdown</a></li>
+    <li><a href="#calade-theme">calade theme</a>
+      <ul>
+        <li><a href="#mathjaxcdn">mathjax改成cdn服务</a></li>
+        <li><a href="#url">添加不蒜子统计url访问数</a></li>
+        <li><a href="#b">嵌入B站视频</a></li>
+        <li><a href="#heading">插入音乐</a></li>
+        <li><a href="#heading-1">修改表格样式</a></li>
+        <li><a href="#hugo-markdown">hugo markdown</a></li>
+        <li><a href="#heading-2">引入谷歌字体</a></li>
+        <li><a href="#heading-3">引入行内公式</a></li>
+        <li><a href="#table">修改table目录</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+</aside>
 
         <h1 id="blogdown">blogdown</h1>
 <p><a href="https://github.com/rstudio/blogdown">https://github.com/rstudio/blogdown</a>在bookdown上有书，所以安装使用基本看下文档就知道了。</p>
@@ -249,7 +269,19 @@ unsafe = true
   <span style="color:#66d9ef">background-color</span>: <span style="color:#ae81ff">#333333</span>;
   <span style="color:#66d9ef">text-shadow</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">#aaa</span>;
 }
-</code></pre></div>
+</code></pre></div><h2 id="heading-3">引入行内公式</h2>
+<p>我通常会用符号$作为一个行内数学公式的标识符。但是貌似现在除了Pandoc会解析外，其他都没有这个支持。</p>
+<p><a href="https://yihui.org/cn/2017/04/mathjax-markdown/">https://yihui.org/cn/2017/04/mathjax-markdown/</a>提到了怎么修改。</p>
+<p><a href="https://gohugo.io/getting-started/configuration-markup/#goldmark">https://gohugo.io/getting-started/configuration-markup/#goldmark</a>hugo配置文件教程。</p>
+<p>目前默认使用goldmark渲染markdown。（注：没弄好。）</p>
+<h2 id="table">修改table目录</h2>
+<p>正如上面goldmark配置链接，默认</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"> [markup.tableOfContents]
+    endLevel = 3
+    ordered = false
+    startLevel = 2
+</code></pre></div><p>开始解析是从标题head2 开始，改成1开始。</p>
+
       </main>
 
       <footer>

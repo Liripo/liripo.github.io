@@ -2,30 +2,30 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bio on Liripo</title>
-    <link>https://liripo.github.io/tags/bio/</link>
+    <link>/tags/bio/</link>
     <description>Recent content in bio on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sun, 02 Aug 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.github.io/tags/bio/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/bio/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>NCBI学习</title>
-      <link>https://liripo.github.io/post/ncbi/</link>
+      <link>/post/ncbi/</link>
       <pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/ncbi/</guid>
+      <guid>/post/ncbi/</guid>
       <description>最新的blast可以在页面ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/找到。</description>
     </item>
     
     <item>
       <title>TCGA</title>
-      <link>https://liripo.github.io/post/tcga/</link>
+      <link>/post/tcga/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/tcga/</guid>
+      <guid>/post/tcga/</guid>
       <description></description>
     </item>
     

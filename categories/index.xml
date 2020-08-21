@@ -2,57 +2,57 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on Liripo</title>
-    <link>https://liripo.github.io/categories/</link>
+    <link>/categories/</link>
     <description>Recent content in Categories on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <lastBuildDate>Sun, 08 Mar 2020 19:10:29 +0000</lastBuildDate>
     
-	<atom:link href="https://liripo.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>ggplot2</title>
-      <link>https://liripo.github.io/categories/ggplot2/</link>
+      <link>/categories/ggplot2/</link>
       <pubDate>Sun, 08 Mar 2020 19:10:29 +0000</pubDate>
       
-      <guid>https://liripo.github.io/categories/ggplot2/</guid>
+      <guid>/categories/ggplot2/</guid>
       <description></description>
     </item>
     
     <item>
       <title>java</title>
-      <link>https://liripo.github.io/categories/java/</link>
+      <link>/categories/java/</link>
       <pubDate>Wed, 04 Mar 2020 22:22:45 +0000</pubDate>
       
-      <guid>https://liripo.github.io/categories/java/</guid>
+      <guid>/categories/java/</guid>
       <description></description>
     </item>
     
     <item>
       <title>数据下载</title>
-      <link>https://liripo.github.io/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
+      <link>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
       <pubDate>Sun, 01 Mar 2020 17:19:55 +0000</pubDate>
       
-      <guid>https://liripo.github.io/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
+      <guid>/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
       <description></description>
     </item>
     
     <item>
       <title>docx模块</title>
-      <link>https://liripo.github.io/categories/docx%E6%A8%A1%E5%9D%97/</link>
+      <link>/categories/docx%E6%A8%A1%E5%9D%97/</link>
       <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
       
-      <guid>https://liripo.github.io/categories/docx%E6%A8%A1%E5%9D%97/</guid>
+      <guid>/categories/docx%E6%A8%A1%E5%9D%97/</guid>
       <description></description>
     </item>
     
     <item>
       <title>生信软件</title>
-      <link>https://liripo.github.io/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</link>
+      <link>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</link>
       <pubDate>Tue, 07 Jan 2020 23:05:42 +0000</pubDate>
       
-      <guid>https://liripo.github.io/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</guid>
+      <guid>/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/</guid>
       <description></description>
     </item>
     

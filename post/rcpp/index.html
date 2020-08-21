@@ -17,7 +17,6 @@
   		--lowlight: #ba68c8;
 	}
   </style>
-
   <link rel="stylesheet" href="../../css/et_book.css" />
   <link rel="stylesheet" href="../../css/style.css" />
   
@@ -66,7 +65,6 @@
 
       <main>
         
-
         <h1 id="rcppr">RCpp与R包</h1>
 <p>首先在生成<code>R</code>骨架的时候，比一般没调用<code>C++</code>多执行一下<code>Rscript -e 'usethis::use_rcpp()'</code>。然后在<code>.gitignore</code>文件中添加<code>src/*.o</code>,<code>src/*.so</code>,<code>src/*.dll</code>防止编译文件导入到<code>git</code>中。并且在<code>DESCRIPTION</code>文件中必须添加<code>LinkingTo: Rcpp</code>, <code>Imports: Rcpp</code>才能识别<code>Rcpp</code>库。</p>
 <p>接着就是添加两个<code>roxygen</code>到代码中即可。参考如下：</p>
