@@ -150,9 +150,13 @@ code {
 /* links */
 a:link, a:visited {
   color: var(--highlight);
-  text-decoration: underline;
+  text-decoration:none;
+  text-transform: full-width;
 }
-
+a:hover {
+  color:#ff69b4;
+  cursor: pointer;
+}
 
 
 
@@ -291,17 +295,15 @@ table tfoot td {
 
 /* formatting table of contents */
 #TableOfContents {
-    background: var(--pagecolour);
+    background: #333399;
     display: table;
     font-size: 75%;
     margin-bottom: 1em;
     padding: 0px;
     width: auto;
-    color: #3D5AFE;
-    font color:green;
 }
 
-aside {
+/*aside {
   width: 30%;
   border: 1px dotted var(--faded);
   padding-left: 15px;
@@ -309,19 +311,129 @@ aside {
   padding-top: 15px;
   margin-left: 15px;
   float: right;
-  font-style: italic;
+  font-family: ;
 }
 
 @media only screen and (max-width: 800px) {
     aside {
         display: none;
     }
+}*/
+/*.tocify {
+  width: 30%;
+  border: 1px dotted var(--faded);
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 15px;
+  margin-left: 15px;
+  float: right;
+  font-family: ;
+}*/
+#anchors-navbar {
+    /*border: 1px solid;*/
+    /*border-radius: 1px;*/
+    -webkit-box-shadow: 10px 20px 30px 10px teal;
+    /*box-shadow: 0 6px 12px #333333;*/
+    background-clip: padding-box;
+    padding: 6px 6px;
+    position: fixed;
+    right: 50px;
+    top: 68px;
+    font-size: 14px;
+    /*white-space: nowrap;*/
+    z-index: 999;
+    cursor: pointer;
+    text-align: left;
+    max-height: 50%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /*display: table;*/
+    width: auto;
+    max-width: 300px;
+    background: #333399;
 }
 
+#anchors-navbar ul{
+    display: none;
+    text-align: left;
+    padding-right: 10px;
+    padding-left: 18px;
+    padding-top: 5px;
+    list-style-type: lower-greek;
+    margin-left: 10px;
+}
+
+#anchors-navbar:hover ul{
+    display: block;
+}
+
+#anchors-navbar ul li a {
+    text-decoration: none;
+    border-bottom: none;
+    font-size: 18px;
+    color: #ff69b4;
+    background: 0 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    font-weight: bold;
+}
+
+#anchors-navbar ul li a:hover {
+    text-decoration: underline;
+    font-weight: bold;
+    color: #CCCCCC;
+}
+
+#anchors-navbar ul li .title-icon {
+    padding-right: 4px;
+}
+.fa-anchor {
+    color:#FF6600;
+    /*background-color: #333333;*/
+    text-shadow: 1px 1px 1px #ccc;
+    font-size: 2em;
+}
+/*
+#GoTop {
+    position: fixed;
+    right: 50px;
+    bottom: 68px;
+    background-color: #fafafa;
+    border: 1px solid rgba(0, 0, 0, .07);
+    border-radius: 1px;
+    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    background-clip: padding-box;
+    z-index: 999;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
+    color: #364149;
+}*/
 /*加入突出高亮*/
 mark {
   font-family: Tangerine;
   font-weight: bold;
   background-color: #333333;
   text-shadow: 4px 4px 4px #aaa;
+}
+
+/*增加文章分页css*/
+.pagination {
+   margin-top: 20px
+}
+
+.pagination__item {
+  display: inline-block;
+  padding: 10px 15px;
+   font-weight: 700;
+   color: #333333;
+   background: #336633
+}
+
+.pagination__item:hover, .pagination__item--current {
+  color: #fff;
+  background: #535e75
 }

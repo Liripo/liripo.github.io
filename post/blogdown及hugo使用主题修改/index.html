@@ -19,6 +19,7 @@
   </style>
   <link rel="stylesheet" href="../../css/et_book.css" />
   <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="alternate" type="application/rss+xml" href="https://liripo.github.io/index.xml" title="Liripo">
   
   <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
 
@@ -57,7 +58,7 @@
   <h3>
     16 Aug 2020
   </h3>
-   <h5 id="wc">2204 Words|Read in about 5       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">3572 Words|Read in about 8       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -65,9 +66,11 @@
 
       <main>
         
+
 <aside>
-    <div align="center">Table of Contents</div>
-    <nav id="TableOfContents">
+  <div id='anchors-navbar'>
+  <i class='fas fa-anchor'></i>
+  <nav id="TableOfContents">
   <ul>
     <li><a href="#blogdown">blogdown</a></li>
     <li><a href="#calade-theme">calade theme</a>
@@ -81,10 +84,14 @@
         <li><a href="#heading-2">引入谷歌字体</a></li>
         <li><a href="#heading-3">引入行内公式</a></li>
         <li><a href="#table">修改table目录</a></li>
+        <li><a href="#heading-4">浮动目录</a></li>
+        <li><a href="#heading-5">添加分页</a></li>
+        <li><a href="#rss">添加RSS</a></li>
       </ul>
     </li>
   </ul>
 </nav>
+  </div>
 </aside>
 
         <h1 id="blogdown">blogdown</h1>
@@ -281,6 +288,270 @@ unsafe = true
     ordered = false
     startLevel = 2
 </code></pre></div><p>开始解析是从标题head2 开始，改成1开始。</p>
+<h2 id="heading-4">浮动目录</h2>
+<p><a href="https://css-tricks.com/css-basics-styling-links-like-boss/">link链接修改</a></p>
+<p><a href="https://fakedev.com/2020/hugo-custom-shortcodes-template.html">hugo shortcode</a></p>
+<p><a href="https://linuxer.io/posts/hugo-toc/">hugo toc修改</a></p>
+<p>对于普通的markdown文件，可以使用{{.TableOfContents}}进行设置，对于这个主题，你可以修改主题文件中的toc.html</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">{{ if (.Params.toc) }}
+&lt;<span style="color:#f92672">aside</span>&gt;
+  &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;anchors-navbar&#39;</span>&gt;
+  &lt;<span style="color:#f92672">i</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;fas fa-anchor&#39;</span>&gt;&lt;/<span style="color:#f92672">i</span>&gt;
+  {{.TableOfContents}}
+  &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">aside</span>&gt;
+{{ end }}
+</code></pre></div><p>之后根据class id属性修改css。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-CSS" data-lang="CSS"><span style="color:#75715e">/* formatting table of contents */</span>
+#TableOfContents {
+    <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#333399</span>;
+    <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">table</span>;
+    <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">75</span><span style="color:#66d9ef">%</span>;
+    <span style="color:#66d9ef">margin-bottom</span>: <span style="color:#ae81ff">1</span><span style="color:#66d9ef">em</span>;
+    <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">0</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">width</span>: <span style="color:#66d9ef">auto</span>;
+}
+#anchors-navbar {
+    <span style="color:#75715e">/*border: 1px solid;*/</span>
+    <span style="color:#75715e">/*border-radius: 1px;*/</span>
+    <span style="color:#66d9ef">-webkit-</span><span style="color:#66d9ef">box-shadow</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">20</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">30</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">teal</span>;
+    <span style="color:#75715e">/*box-shadow: 0 6px 12px #333333;*/</span>
+    <span style="color:#66d9ef">background-clip</span>: <span style="color:#66d9ef">padding-box</span>;
+    <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">6</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">6</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">position</span>: <span style="color:#66d9ef">fixed</span>;
+    <span style="color:#66d9ef">right</span>: <span style="color:#ae81ff">50</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">top</span>: <span style="color:#ae81ff">68</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">14</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#75715e">/*white-space: nowrap;*/</span>
+    <span style="color:#66d9ef">z-index</span>: <span style="color:#ae81ff">999</span>;
+    <span style="color:#66d9ef">cursor</span>: <span style="color:#66d9ef">pointer</span>;
+    <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">left</span>;
+    <span style="color:#66d9ef">max-height</span>: <span style="color:#ae81ff">50</span><span style="color:#66d9ef">%</span>;
+    <span style="color:#66d9ef">overflow-y</span>: <span style="color:#66d9ef">auto</span>;
+    <span style="color:#66d9ef">overflow-x</span>: <span style="color:#66d9ef">hidden</span>;
+    <span style="color:#75715e">/*display: table;*/</span>
+    <span style="color:#66d9ef">width</span>: <span style="color:#66d9ef">auto</span>;
+    <span style="color:#66d9ef">max-width</span>: <span style="color:#ae81ff">300</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#333399</span>;
+}
+
+#anchors-navbar <span style="color:#f92672">ul</span>{
+    <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">none</span>;
+    <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">left</span>;
+    <span style="color:#66d9ef">padding-right</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">padding-left</span>: <span style="color:#ae81ff">18</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">padding-top</span>: <span style="color:#ae81ff">5</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">list-style-type</span>: <span style="color:#66d9ef">lower-greek</span>;
+    <span style="color:#66d9ef">margin-left</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>;
+}
+
+#anchors-navbar:<span style="color:#a6e22e">hover</span> <span style="color:#f92672">ul</span>{
+    <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">block</span>;
+}
+
+#anchors-navbar <span style="color:#f92672">ul</span> <span style="color:#f92672">li</span> <span style="color:#f92672">a</span> {
+    <span style="color:#66d9ef">text-decoration</span>: <span style="color:#66d9ef">none</span>;
+    <span style="color:#66d9ef">border-bottom</span>: <span style="color:#66d9ef">none</span>;
+    <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">18</span><span style="color:#66d9ef">px</span>;
+    <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#ff69b4</span>;
+    <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">text-overflow</span>: <span style="color:#66d9ef">ellipsis</span>;
+    <span style="color:#66d9ef">overflow</span>: <span style="color:#66d9ef">hidden</span>;
+    <span style="color:#66d9ef">white-space</span>: <span style="color:#66d9ef">nowrap</span>;
+    <span style="color:#66d9ef">position</span>: <span style="color:#66d9ef">relative</span>;
+    <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+}
+
+#anchors-navbar <span style="color:#f92672">ul</span> <span style="color:#f92672">li</span> <span style="color:#f92672">a</span>:<span style="color:#a6e22e">hover</span> {
+    <span style="color:#66d9ef">text-decoration</span>: <span style="color:#66d9ef">underline</span>;
+    <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+    <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#CCCCCC</span>;
+}
+
+#anchors-navbar <span style="color:#f92672">ul</span> <span style="color:#f92672">li</span> .<span style="color:#a6e22e">title-icon</span> {
+    <span style="color:#66d9ef">padding-right</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span>;
+}
+.<span style="color:#a6e22e">fa-anchor</span> {
+    <span style="color:#66d9ef">color</span>:<span style="color:#ae81ff">#FF6600</span>;
+    <span style="color:#75715e">/*background-color: #333333;*/</span>
+    <span style="color:#66d9ef">text-shadow</span>: <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">#ccc</span>;
+    <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">2</span><span style="color:#66d9ef">em</span>;
+}
+</code></pre></div><p><strong>加入js</strong></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">iterativeUL</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">$dom</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">li_list</span> <span style="color:#f92672">=</span> []
+    <span style="color:#a6e22e">$dom</span>.<span style="color:#a6e22e">children</span>(<span style="color:#e6db74">&#34;li&#34;</span>).<span style="color:#a6e22e">each</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">item</span>) {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_li</span> <span style="color:#f92672">=</span> { 
+            <span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">item</span>).<span style="color:#a6e22e">children</span>(<span style="color:#e6db74">&#34;a&#34;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#34;href&#34;</span>), 
+            <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">item</span>).<span style="color:#a6e22e">children</span>(<span style="color:#e6db74">&#34;a&#34;</span>).<span style="color:#a6e22e">text</span>(),
+            <span style="color:#a6e22e">children</span><span style="color:#f92672">:</span> []
+        }   
+        <span style="color:#a6e22e">$sub_ul</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">item</span>).<span style="color:#a6e22e">children</span>(<span style="color:#e6db74">&#34;ul&#34;</span>)
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">$sub_ul</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+            <span style="color:#a6e22e">_li</span>.<span style="color:#a6e22e">children</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">main</span>.<span style="color:#a6e22e">iterativeUL</span>(<span style="color:#a6e22e">$sub_ul</span>)
+        }   
+        <span style="color:#a6e22e">li_list</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">_li</span>)
+    })  
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">li_list</span>
+};
+<span style="color:#a6e22e">iterativeUI</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">root</span>, <span style="color:#a6e22e">template</span>, <span style="color:#a6e22e">prefix</span>) {
+    <span style="color:#a6e22e">template</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&lt;ul&gt;&#34;</span>
+    <span style="color:#a6e22e">$</span>.<span style="color:#a6e22e">each</span>(<span style="color:#a6e22e">root</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">item</span>) {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">next_prefix</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">+</span> String(<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.&#34;</span> 
+        <span style="color:#a6e22e">template</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;li&gt;&#39;</span><span style="color:#f92672">+</span>
+                        <span style="color:#e6db74">&#39;&lt;i class=&#34;fa fa-hand-o-right&#34; aria-hidden=&#34;true&#34;&gt;&lt;/i&gt;&#39;</span><span style="color:#f92672">+</span>
+                        <span style="color:#e6db74">&#39;&lt;span class=&#34;title-icon &#34;&gt;&lt;/span&gt;&#39;</span><span style="color:#f92672">+</span>
+                        <span style="color:#e6db74">&#39;&lt;a href=&#34;99991997&#34;&gt;&lt;b&gt;99991998  &lt;/b&gt;99991999&lt;/a&gt;&#39;</span>
+                           .<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;99991997&#34;</span>, <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">url</span>)
+                           .<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;99991999&#34;</span>, <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">name</span>)
+                           .<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;99991998&#34;</span>, <span style="color:#a6e22e">next_prefix</span>) <span style="color:#f92672">+</span>
+                    <span style="color:#e6db74">&#39;&lt;/li&gt;&#39;</span>
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+            <span style="color:#a6e22e">template</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">main</span>.<span style="color:#a6e22e">iterativeUI</span>(<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">children</span>, <span style="color:#a6e22e">template</span>, <span style="color:#a6e22e">next_prefix</span>)
+        }   
+    })  
+    <span style="color:#a6e22e">template</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&lt;/ul&gt;&#34;</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">template</span>
+};
+<span style="color:#a6e22e">initNavigations</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">$navigations</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#34;#TableOfContents&#34;</span>);
+    <span style="color:#75715e">/* 这是个大坑, 需要大于号&gt;来限制只选择一级子元素，否则会有多组ul被匹配到 */</span>
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">root</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">main</span>.<span style="color:#a6e22e">iterativeUL</span>(<span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#34;#TableOfContents &gt; ul&#34;</span>))
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">root</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) {
+        <span style="color:#66d9ef">return</span>;
+    }
+
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">html</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">main</span>.<span style="color:#a6e22e">iterativeUI</span>(<span style="color:#a6e22e">root</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>)
+
+    <span style="color:#75715e">//重新替换Toc模板
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$navigations</span>.<span style="color:#a6e22e">html</span>(<span style="color:#a6e22e">html</span>)
+
+    <span style="color:#75715e">//由于导航栏固定,所以调整目录锚点往上偏移导航栏高度的距离
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fixSet</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#34;#main-navbar&#34;</span>).<span style="color:#a6e22e">height</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">10</span>; 
+    <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#39;nav#TableOfContents a[href^=&#34;#&#34;][href!=&#34;#&#34;]&#39;</span>).<span style="color:#a6e22e">click</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) {
+        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">preventDefault</span>();
+        <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#39;html, body&#39;</span>).<span style="color:#a6e22e">animate</span>({<span style="color:#a6e22e">scrollTop</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(decodeURI(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">hash</span>)).<span style="color:#a6e22e">offset</span>().<span style="color:#a6e22e">top</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">fixSet</span>}, <span style="color:#ae81ff">400</span>);
+    }); 
+};
+</code></pre></div><p>至于Rmarkdown,你可以修改后缀名.Rmd为.Rmarkdown,这两个区别见<a href="https://bookdown.org/yihui/blogdown/output-format.html">https://bookdown.org/yihui/blogdown/output-format.html</a></p>
+<p>或者knitr编译成.md文件，然后由hugo解析。</p>
+<p><a href="http://estebanmoro.org/post/2019-02-04-setting-up-your-blog-with-rstudio-and-blogdown-iii-modify-your-theme/">http://estebanmoro.org/post/2019-02-04-setting-up-your-blog-with-rstudio-and-blogdown-iii-modify-your-theme/</a></p>
+<p><a href="https://dadascience.design/post/r-some-tricks-when-working-with-blogdown-hugo-working-draft/">https://dadascience.design/post/r-some-tricks-when-working-with-blogdown-hugo-working-draft/</a></p>
+<p>当然，最好的方法是直接修改blogdown的pandoc模板，blogdown运行<code>blogdown::serve_site</code>等函数使用bloddown::html_page直接生成.html文件的，中间是使用pandoc进行markdown解析的。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">blogdown<span style="color:#f92672">:::</span><span style="color:#a6e22e">pkg_file</span>(<span style="color:#e6db74">&#39;</span><span style="color:#e6db74">resources&#39;</span>, <span style="color:#e6db74">&#39;</span><span style="color:#e6db74">template-minimal.html&#39;</span>)
+</code></pre></div><p>可以找到这个简单的模板文件。</p>
+<p>原来的：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">$</span><span style="color:#a6e22e">if</span>(toc)<span style="color:#f92672">$</span>
+<span style="color:#f92672">&lt;</span>div id<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$idprefix$TOC&#34;</span><span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">$</span>toc<span style="color:#f92672">$</span>
+<span style="color:#f92672">$</span>endif<span style="color:#f92672">$</span>
+</code></pre></div><p>可以加上刚刚使用toc float的类</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">$</span><span style="color:#a6e22e">if</span>(toc)<span style="color:#f92672">$</span>
+<span style="color:#f92672">&lt;</span>aside<span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;</span>div id<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">anchors-navbar&#39;</span><span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;</span>i class<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">fas fa-anchor&#39;</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">&lt;</span><span style="color:#f92672">/</span>i<span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;</span>div id<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$idprefix$TOC&#34;</span><span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">$</span>toc<span style="color:#f92672">$</span>
+<span style="color:#f92672">&lt;</span><span style="color:#f92672">/</span>div<span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;</span><span style="color:#f92672">/</span>div<span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">&lt;</span><span style="color:#f92672">/</span>aside<span style="color:#f92672">&gt;</span>
+<span style="color:#f92672">$</span>endif<span style="color:#f92672">$</span>
+</code></pre></div><p>这样就解决了。</p>
+<p>但是这样可不是长久之计，毕竟一更新这个包不就没了。</p>
+<p>还有高亮跟加入toc在yaml中使用</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">output<span style="color:#f92672">:</span>
+  blogdown<span style="color:#f92672">::</span>html_page<span style="color:#f92672">:</span>
+    highlight<span style="color:#f92672">:</span> zenburn
+    toc<span style="color:#f92672">:</span> true
+</code></pre></div><p>发现只有这个高亮适合这主题。</p>
+<h2 id="heading-5"><strong>添加分页</strong></h2>
+<p><a href="https://bookdown.org/yihui/blogdown/templates.html#how-to">https://bookdown.org/yihui/blogdown/templates.html#how-to</a></p>
+<p><a href="https://lvv.me/posts/2019/12/26_hugo_theme_dev_tips/">https://lvv.me/posts/2019/12/26_hugo_theme_dev_tips/</a></p>
+<p>最后我的list文件是这样的</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"><span style="color:#75715e">&lt;!DOCTYPE html&gt;</span>
+&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ .Site.LanguageCode }}&#34;</span>&gt;
+
+{{ partial &#34;header.html&#34; . }}
+
+&lt;<span style="color:#f92672">body</span>&gt;
+{{ partial &#34;default_header_image.html&#34; . }}
+
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main-content 
+</span><span style="color:#e6db74">site-main section-inner thin animated fadeIn faster&#34;</span>&gt;
+
+{{ partial &#34;menu_strip.html&#34; . }}
+
+&lt;<span style="color:#f92672">h1</span>&gt;{{ .Title | markdownify }}&lt;/<span style="color:#f92672">h1</span>&gt;
+
+{{ .Content }}
+
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prettylistcontainer&#34;</span>&gt;
+&lt;<span style="color:#f92672">ul</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prettylist&#34;</span>&gt;
+  <span style="color:#75715e">&lt;!--</span><span style="color:#75715e"> range (where .Data.Pages &#34;Section&#34; &#34;!=&#34; &#34;&#34;) </span><span style="color:#75715e">--&gt;</span>
+   {{ $paginator := .Paginate .Data.Pages }}
+   {{ range $paginator.Pages }}
+&lt;<span style="color:#f92672">li</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prettylist&#34;</span>&gt;
+&lt;<span style="color:#f92672">p</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prettylist&#34;</span>&gt;
+&lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ .URL }}&#34;</span>&gt;{{ .Title | markdownify }}&lt;/<span style="color:#f92672">a</span>&gt;&amp;nbsp;&amp;nbsp;
+&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;prettylistdate&#34;</span>&gt;{{ .Date.Format &#34;02 Jan 2006&#34; }}&lt;/<span style="color:#f92672">span</span>&gt;
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;posts-group&#34;</span>&gt;
+
+      
+            
+            
+&lt;<span style="color:#f92672">br</span>&gt;
+<span style="color:#75715e">&lt;!--</span><span style="color:#75715e"> 
+</span><span style="color:#75715e">&lt;span class=&#34;prettylistsummary&#34;&gt;{{ .Summary | markdownify }}&lt;/span&gt;
+</span><span style="color:#75715e"></span><span style="color:#75715e">--&gt;</span>
+&lt;/<span style="color:#f92672">p</span>&gt;
+&lt;/<span style="color:#f92672">li</span>&gt;
+{{ end }}
+&lt;/<span style="color:#f92672">ul</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+{{ partial &#34;pagination.html&#34; . }} 
+{{ partial &#34;footer.html&#34; . }}
+
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><p>\partial目录下的pagination.html文件如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"> {{ if or (.Paginator.HasPrev) (.Paginator.HasNext) }}
+ &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;pagination&#34;</span>&gt;
+     {{- if .Paginator.HasPrev }}
+     &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;pagination__item pagination__item--prev btn&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ .Paginator.Prev.URL }}&#34;</span>&gt;«&lt;/<span style="color:#f92672">a</span>&gt;
+     {{- end }}
+     &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;pagination__item pagination__item--current&#34;</span>&gt;{{ .Paginator.PageNumber }}/{{ .Paginator.TotalPages }}&lt;/<span style="color:#f92672">span</span>&gt;
+     {{- if .Paginator.HasNext }}
+     &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;pagination__item pagination__item--next btn&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{{ .Paginator.Next.URL }}&#34;</span>&gt;»&lt;/<span style="color:#f92672">a</span>&gt;
+     {{- end }}
+ &lt;/<span style="color:#f92672">div</span>&gt;
+ {{ end }}  
+</code></pre></div><p>之后就是加css了，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css"><span style="color:#75715e">/*增加文章分页css*/</span>
+.<span style="color:#a6e22e">pagination</span> {
+   <span style="color:#66d9ef">margin-top</span>: <span style="color:#ae81ff">20</span><span style="color:#66d9ef">px</span>
+}
+
+.<span style="color:#a6e22e">pagination__item</span> {
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>;
+  <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">15</span><span style="color:#66d9ef">px</span>;
+   <span style="color:#66d9ef">font-weight</span>: <span style="color:#ae81ff">700</span>;
+   <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#333333</span>;
+   <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#336633</span>
+}
+
+.<span style="color:#a6e22e">pagination__item</span>:<span style="color:#a6e22e">hover</span><span style="color:#f92672">,</span> .<span style="color:#a6e22e">pagination__item--current</span> {
+  <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#fff</span>;
+  <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#535e75</span>
+}
+</code></pre></div><p>每页显示多少文章数，在站点配置文件改,默认10。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Paginate <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>
+</code></pre></div><p>具体看文章:<a href="https://fffou.com/post/2020-05-14/">https://fffou.com/post/2020-05-14/</a></p>
+<h2 id="rss">添加RSS</h2>
+<p>hugo默认有RSS，你仔细看你的网站会发现有一个index.xml文件，但是谷歌插件不会自动识别这个文件，必须打开，不大友好。</p>
+<p>在header.html添加，</p>
+<pre><code>&lt;link rel=&quot;alternate&quot; type=&quot;application/rss+xml&quot; href=&quot;https://liripo.github.io/index.xml&quot; title=&quot;Liripo&quot;&gt;
+</code></pre><p>这样会在你整个网站添加链接，不想的话可以只添加到你的主页。</p>
 
       </main>
 
