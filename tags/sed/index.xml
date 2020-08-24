@@ -2,22 +2,22 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>sed on Liripo</title>
-    <link>/tags/sed/</link>
+    <link>https://liripo.github.io/tags/sed/</link>
     <description>Recent content in sed on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
     <lastBuildDate>Mon, 11 Nov 2019 19:41:39 +0000</lastBuildDate>
     
-	<atom:link href="/tags/sed/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/sed/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>sed使用</title>
-      <link>/post/sed%E4%BD%BF%E7%94%A8/</link>
+      <link>https://liripo.github.io/post/sed%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Mon, 11 Nov 2019 19:41:39 +0000</pubDate>
       
-      <guid>/post/sed%E4%BD%BF%E7%94%A8/</guid>
+      <guid>https://liripo.github.io/post/sed%E4%BD%BF%E7%94%A8/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;sed 命令是一个面向行处理的工具，它以“行”为处理单位，针对每一行进行处理。与awk不同，awk是以”列“为处理单位[当然，awk也是一行行进行处理的]。
 &lt;a href=&#34;https://man.linuxde.net/sed%E5%9C%A8%E7%BA%BF%E6%95%99%E7%A8%8B&#34;&gt;在线教程&lt;/a&gt;&lt;/p&gt;
