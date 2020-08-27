@@ -178,7 +178,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ##         theme_mono(color = background)
 ##     return(picture)
 ## }
-## &lt;bytecode: 0x0000000021687188&gt;
+## &lt;bytecode: 0x00000000210b9a38&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>绘图源代码中使用了<code>ggforce::geom_bezier2</code>函数去绘制图形，我在看这个函数的源代码时发现<code>StatBezier</code>在数据转换使用了一个<code>ggforce:::getBeziers</code>函数，没怎么看明白cpp代码，而且ggplot2的扩展我也还没怎么弄清。不过大概意思就是根据贝塞尔曲线生成一系列的点，然后使用geom_path绘制图形。</p>
 <p>搜了下贝塞尔曲线是什么，参考了<a href="https://github.com/BooheeFE/weekly/issues/31">https://github.com/BooheeFE/weekly/issues/31</a>。</p>
@@ -222,7 +222,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ##     tree$id_leaf &lt;- tree$id_time == max(tree$id_time)
 ##     return(tree)
 ## }
-## &lt;bytecode: 0x0000000019468330&gt;
+## &lt;bytecode: 0x0000000018fd41f0&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>这些参数，seed明显就是用来可重复的，time帮助文档说是迭代的次数，经过摸索，它是要生成多少次树枝，而split是生成的分枝个数，prune是修剪的概率。prune的实现原理是使用sample_n跟stats::rbinom实现的，可以看看<code>flametree:::grow_shoots</code>的代码，这里默认0是不修剪，暂时先不管它了。
 看下time = 2,split = 1的图长什么样。</p>
@@ -247,7 +247,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ##         .init = sapling, param = param)
 ##     return(tree)
 ## }
-## &lt;bytecode: 0x00000000196961a8&gt;
+## &lt;bytecode: 0x0000000019187398&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>可以看到，.init参数是sapling,即生成的数据框列表第一个是sapling,之后进行迭代。
 花了挺久时间才明白.init参数是什么作用。</p>
@@ -261,7 +261,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ##         shoots = shoots, param = param)
 ##     return(new_shoots)
 ## }
-## &lt;bytecode: 0x00000000196ad648&gt;
+## &lt;bytecode: 0x0000000019191088&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>可以看到split参数就是用来生成多少行的数据框的，
 先看下grow_shoots源码，</p>
@@ -281,7 +281,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ##         n_pruned)
 ##     return(shoots)
 ## }
-## &lt;bytecode: 0x00000000196cb5b0&gt;
+## &lt;bytecode: 0x00000000191b14c0&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>time参数并没有在grow_shoots使用到。所以当用1:param$split为time参数，且默认split为2时,生成的点是有可能跟原来重复的。也就是有的地方geom_path会绘制多次。验证一下，</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>flametree<span class="op">::</span><span class="kw">flametree_grow</span>()-&gt;a</span>
@@ -325,14 +325,14 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 ## {
 ##     distance * cos(radians(angle))
 ## }
-## &lt;bytecode: 0x000000001a583eb8&gt;
+## &lt;bytecode: 0x000000001a495f70&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>flametree<span class="op">:::</span>radians</span></code></pre></div>
 <pre><code>## function (degree) 
 ## {
 ##     2 * pi * degree/360
 ## }
-## &lt;bytecode: 0x000000001a583400&gt;
+## &lt;bytecode: 0x000000001a496bb0&gt;
 ## &lt;environment: namespace:flametree&gt;</code></pre>
 <p>然后p1点的延伸使用的是新的shoots的长度跟原来的shoots的角度,p2点的延伸使用新的shoots的长度与角度生成。（为什么不都使用新的长度跟角度呢）</p>
 <p>所以假设ch_seg_len = 0.9,ch_seg = 10的话,新的shoots即为，</p>
