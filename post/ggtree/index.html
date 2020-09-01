@@ -59,7 +59,7 @@
   <h3>
     26 Aug 2020
   </h3>
-   <h5 id="wc">1691 Words|Read in about 4       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">2282 Words|Read in about 5       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -145,6 +145,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <li><a href="#newick">newick</a></li>
 <li><a href="#树的可视化以及数据注释">树的可视化以及数据注释</a></li>
 <li><a href="#ggtree绘制层次聚类图等">ggtree绘制层次聚类图等</a></li>
+<li><a href="#进化树注释">进化树注释</a></li>
+<li><a href="#ggtreeextra">ggtreeExtra</a></li>
 </ul>
 </div>
 </div>
@@ -275,7 +277,7 @@ D移动到了最下面,这实际上就是有根了，当然也可以展示那种
 ##     }
 ##     pg %add% data
 ## }
-## &lt;bytecode: 0x0000000019c86840&gt;
+## &lt;bytecode: 0x0000000019ee81b8&gt;
 ## &lt;environment: namespace:ggtree&gt;</code></pre>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>ggtree<span class="op">:::</span><span class="st">`</span><span class="dt">%add%</span><span class="st">`</span></span></code></pre></div>
 <pre><code>## function (p, data) 
@@ -283,7 +285,7 @@ D移动到了最下面,这实际上就是有根了，当然也可以展示那种
 ##     p$data &lt;- p$data %add2% data
 ##     return(p)
 ## }
-## &lt;bytecode: 0x0000000019b05820&gt;
+## &lt;bytecode: 0x0000000019cf3ca0&gt;
 ## &lt;environment: namespace:ggtree&gt;</code></pre>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>ggtree<span class="op">:::</span><span class="st">`</span><span class="dt">%add2%</span><span class="st">`</span></span></code></pre></div>
 <pre><code>## function (d1, d2) 
@@ -302,7 +304,7 @@ D移动到了最下面,这实际上就是有根了，当然也可以展示那种
 ##     dd &lt;- dd[match(d1$node, dd$node), ]
 ##     return(dd)
 ## }
-## &lt;bytecode: 0x00000000198e7b58&gt;
+## &lt;bytecode: 0x0000000019b2d038&gt;
 ## &lt;environment: namespace:ggtree&gt;</code></pre>
 <p>将<code>left_join</code>函数封装起来了，使得我们可以轻易的在绘图时使用。
 这个函数在<a href="http://yulab-smu.top/treedata-book/chapter7.html">http://yulab-smu.top/treedata-book/chapter7.html</a>有讲到。
@@ -321,6 +323,103 @@ D移动到了最下面,这实际上就是有根了，当然也可以展示那种
 <div id="ggtree绘制层次聚类图等" class="section level1">
 <h1>ggtree绘制层次聚类图等</h1>
 <p>具体的看<a href="http://yulab-smu.top/treedata-book/chapter9.html">http://yulab-smu.top/treedata-book/chapter9.html</a></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>hc &lt;-<span class="st"> </span><span class="kw">hclust</span>(<span class="kw">dist</span>(mtcars))</span>
+<span id="cb35-2"><a href="#cb35-2"></a>hc</span></code></pre></div>
+<pre><code>## 
+## Call:
+## hclust(d = dist(mtcars))
+## 
+## Cluster method   : complete 
+## Distance         : euclidean 
+## Number of objects: 32</code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a>den &lt;-<span class="st"> </span><span class="kw">as.dendrogram</span>(hc)</span>
+<span id="cb37-2"><a href="#cb37-2"></a>den</span></code></pre></div>
+<pre><code>## &#39;dendrogram&#39; with 2 branches and 32 members total, at height 425.3447</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>clus &lt;-<span class="st"> </span><span class="kw">cutree</span>(hc, <span class="dv">4</span>)</span>
+<span id="cb39-2"><a href="#cb39-2"></a>clus</span></code></pre></div>
+<pre><code>##           Mazda RX4       Mazda RX4 Wag          Datsun 710      Hornet 4 Drive 
+##                   1                   1                   1                   2 
+##   Hornet Sportabout             Valiant          Duster 360           Merc 240D 
+##                   3                   2                   3                   1 
+##            Merc 230            Merc 280           Merc 280C          Merc 450SE 
+##                   1                   1                   1                   2 
+##          Merc 450SL         Merc 450SLC  Cadillac Fleetwood Lincoln Continental 
+##                   2                   2                   3                   3 
+##   Chrysler Imperial            Fiat 128         Honda Civic      Toyota Corolla 
+##                   3                   1                   1                   1 
+##       Toyota Corona    Dodge Challenger         AMC Javelin          Camaro Z28 
+##                   1                   2                   2                   3 
+##    Pontiac Firebird           Fiat X1-9       Porsche 914-2        Lotus Europa 
+##                   3                   1                   1                   1 
+##      Ford Pantera L        Ferrari Dino       Maserati Bora          Volvo 142E 
+##                   3                   1                   4                   1</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a>g &lt;-<span class="st"> </span><span class="kw">split</span>(<span class="kw">names</span>(clus), clus)</span>
+<span id="cb41-2"><a href="#cb41-2"></a>p &lt;-<span class="st"> </span><span class="kw">ggtree</span>(hc, <span class="dt">linetype=</span><span class="st">&#39;dashed&#39;</span>)</span>
+<span id="cb41-3"><a href="#cb41-3"></a>clades &lt;-<span class="st"> </span><span class="kw">sapply</span>(g, <span class="cf">function</span>(n) <span class="kw">MRCA</span>(p, n))</span>
+<span id="cb41-4"><a href="#cb41-4"></a>d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">label =</span> <span class="kw">names</span>(clus), </span>
+<span id="cb41-5"><a href="#cb41-5"></a>                <span class="dt">cyl =</span> mtcars[<span class="kw">names</span>(clus), <span class="st">&quot;cyl&quot;</span>])</span>
+<span id="cb41-6"><a href="#cb41-6"></a>p &lt;-<span class="st"> </span><span class="kw">groupClade</span>(p, clades, <span class="dt">group_name=</span><span class="st">&#39;subtree&#39;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">aes</span>(<span class="dt">color=</span>subtree)</span>
+<span id="cb41-7"><a href="#cb41-7"></a>p <span class="op">%&lt;+%</span><span class="st"> </span>d <span class="op">+</span><span class="st"> </span></span>
+<span id="cb41-8"><a href="#cb41-8"></a><span class="st">  </span><span class="kw">layout_dendrogram</span>() <span class="op">+</span><span class="st"> </span></span>
+<span id="cb41-9"><a href="#cb41-9"></a><span class="st">  </span><span class="kw">geom_tippoint</span>(<span class="dt">size=</span><span class="dv">5</span>, <span class="dt">shape=</span><span class="dv">21</span>, <span class="kw">aes</span>(<span class="dt">fill=</span><span class="kw">factor</span>(cyl), <span class="dt">x=</span>x<span class="fl">+.5</span>), <span class="dt">color=</span><span class="st">&#39;black&#39;</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb41-10"><a href="#cb41-10"></a><span class="st">  </span><span class="kw">geom_tiplab</span>(<span class="kw">aes</span>(<span class="dt">label=</span>cyl), <span class="dt">size=</span><span class="dv">3</span>, <span class="dt">hjust=</span>.<span class="dv">5</span>, <span class="dt">color=</span><span class="st">&#39;black&#39;</span>) <span class="op">+</span></span>
+<span id="cb41-11"><a href="#cb41-11"></a><span class="st">  </span><span class="kw">geom_tiplab</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>, <span class="dt">offset=</span><span class="op">-</span><span class="dv">10</span>, <span class="dt">show.legend=</span>F) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb41-12"><a href="#cb41-12"></a><span class="st">  </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette=</span><span class="st">&#39;Set1&#39;</span>, <span class="dt">breaks=</span><span class="dv">1</span><span class="op">:</span><span class="dv">4</span>) <span class="op">+</span></span>
+<span id="cb41-13"><a href="#cb41-13"></a><span class="st">  </span><span class="kw">theme_dendrogram</span>(<span class="dt">plot.margin=</span><span class="kw">margin</span>(<span class="dv">6</span>,<span class="dv">6</span>,<span class="dv">80</span>,<span class="dv">6</span>)) <span class="op">+</span></span>
+<span id="cb41-14"><a href="#cb41-14"></a><span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="kw">c</span>(.<span class="dv">9</span>, <span class="fl">.6</span>))</span></code></pre></div>
+<p><img src="../../post/R/2020-08-26-ggtree_files/figure-html/unnamed-chunk-18-1.png" width="672" />
+其中MRCA返回所输入的tip.label向量的最近的节点,可以直接传入列表。即找到一组节点的祖先节点。
+这个代码是treedata-book的代码，基本将层次树图的方方面面都讲到了。既然展示了groupClade，那就再试下groupOut</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a>group &lt;-<span class="st"> </span>mtcars <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">rownames_to_column</span>(<span class="st">&quot;aa&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(aa,cyl) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">split</span>(.<span class="op">$</span>cyl)</span>
+<span id="cb42-2"><a href="#cb42-2"></a>group &lt;-<span class="st"> </span><span class="kw">map</span>(group,<span class="op">~</span>.x[,<span class="dv">1</span>])</span>
+<span id="cb42-3"><a href="#cb42-3"></a>p &lt;-<span class="st"> </span><span class="kw">ggtree</span>(hc)</span>
+<span id="cb42-4"><a href="#cb42-4"></a><span class="kw">groupOTU</span>(p,group)<span class="op">+</span></span>
+<span id="cb42-5"><a href="#cb42-5"></a><span class="st">  </span><span class="kw">aes</span>(<span class="dt">color =</span> group) <span class="op">+</span></span>
+<span id="cb42-6"><a href="#cb42-6"></a><span class="st">  </span><span class="kw">layout_dendrogram</span>() <span class="op">+</span></span>
+<span id="cb42-7"><a href="#cb42-7"></a><span class="st">  </span><span class="kw">geom_tiplab</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>, <span class="dt">offset=</span><span class="op">-</span><span class="dv">1</span>, <span class="dt">show.legend=</span>F)<span class="op">+</span></span>
+<span id="cb42-8"><a href="#cb42-8"></a><span class="st">  </span><span class="kw">theme_dendrogram</span>(<span class="dt">plot.margin=</span><span class="kw">margin</span>(<span class="dv">6</span>,<span class="dv">6</span>,<span class="dv">80</span>,<span class="dv">6</span>))</span></code></pre></div>
+<pre><code>## Warning: `filter_()` is deprecated as of dplyr 0.7.0.
+## Please use `filter()` instead.
+## See vignette(&#39;programming&#39;) for more help
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<p><img src="../../post/R/2020-08-26-ggtree_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+<div id="进化树注释" class="section level1">
+<h1>进化树注释</h1>
+<ul>
+<li>geom_cladelabel 【用于标记进化枝】</li>
+<li>geom_strip 【用于某两个tip间标记】</li>
+<li>geom_hilight 【高亮分支】</li>
+<li>geom_balance 【突出某个节点两个直接后代分支】</li>
+<li>geom_taxalink 【分类单元连结】</li>
+<li>geom_range 【显示置信区间】</li>
+</ul>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>text &lt;-<span class="st"> &quot;(((((((((A1:0.00012831,A2:0.00010735)0.8130:0.00014485,A3:5.715e-05)0.5010:1.31e-05,A4:0.00022247)0.8490:4.053e-05,A5:9.82e-06)0.9970:0.00017401,(A6:0.00079318,(A7:0.00028724,(A8:0.00011095,A9:5.717e-05)0.6770:8.273e-05)1.0000:0.00041883)1.0000:0.00269228)0.9930:8.471e-05,A10:1.415e-05)0.9940:0.00010982,A11:0.00012538)0.5100:8.467e-05,((A12:1e-07,A13:0)1.0000:6.308e-05,(A14:1.17e-06,(A15:0.00023437,(A16:6.695e-05,A17:0.0001348)0.6060:1.07e-06)0.5940:3.211e-05)1.0000:0.00024049)0.6400:0.00017276)0.9980:8.37e-05,A18:6.729e-05,A19:0);&quot;</span></span>
+<span id="cb44-2"><a href="#cb44-2"></a>tree &lt;-<span class="st"> </span><span class="kw">read.tree</span>(<span class="dt">text =</span> text)</span>
+<span id="cb44-3"><a href="#cb44-3"></a>p1 &lt;-<span class="st"> </span><span class="kw">ggtree</span>(tree) <span class="op">+</span><span class="st"> </span><span class="kw">geom_nodelab</span>(<span class="kw">aes</span>(<span class="dt">label =</span> node)) <span class="op">+</span><span class="st"> </span><span class="kw">geom_tiplab</span>()</span>
+<span id="cb44-4"><a href="#cb44-4"></a>p2 &lt;-<span class="st"> </span><span class="kw">ggtree</span>(tree) <span class="op">+</span><span class="st"> </span><span class="kw">geom_tiplab</span>() <span class="op">+</span></span>
+<span id="cb44-5"><a href="#cb44-5"></a><span class="st">  </span><span class="kw">geom_cladelabel</span>(<span class="dt">node =</span> <span class="dv">35</span>,<span class="dt">offset =</span> <span class="fl">.0001</span>,<span class="dt">label =</span> <span class="st">&quot;mg&quot;</span>)<span class="op">+</span></span>
+<span id="cb44-6"><a href="#cb44-6"></a><span class="st">  </span><span class="kw">geom_cladelabel</span>(<span class="dt">node =</span> <span class="dv">29</span>,<span class="dt">align =</span> T,<span class="dt">barsize =</span> <span class="dv">3</span>,<span class="dt">geom =</span> <span class="st">&quot;label&quot;</span>,<span class="dt">label =</span> <span class="st">&quot;gg&quot;</span>)</span>
+<span id="cb44-7"><a href="#cb44-7"></a>p3 &lt;-<span class="st"> </span><span class="kw">ggtree</span>(tree) <span class="op">+</span><span class="st"> </span><span class="kw">geom_tiplab</span>() <span class="op">+</span></span>
+<span id="cb44-8"><a href="#cb44-8"></a><span class="st">  </span><span class="kw">geom_strip</span>(<span class="st">&quot;A13&quot;</span>,<span class="st">&quot;A18&quot;</span>,<span class="dt">label=</span> <span class="st">&quot;13-18&quot;</span>,<span class="dt">offset.text=</span><span class="dv">0</span>,<span class="dt">offset =</span> <span class="fl">-0.0035</span>)</span>
+<span id="cb44-9"><a href="#cb44-9"></a>p4 &lt;-<span class="st"> </span>p2 <span class="op">+</span><span class="st"> </span><span class="kw">geom_hilight</span>(<span class="dt">node =</span> <span class="dv">29</span>,<span class="dt">fill=</span><span class="st">&#39;darkgreen&#39;</span>, <span class="dt">type=</span><span class="st">&quot;rect&quot;</span>)</span>
+<span id="cb44-10"><a href="#cb44-10"></a>p5 &lt;-<span class="st"> </span>p4 <span class="op">+</span><span class="st"> </span><span class="kw">geom_balance</span>(<span class="dt">node=</span><span class="dv">35</span>, <span class="dt">fill=</span><span class="st">&#39;steelblue&#39;</span>, <span class="dt">color=</span><span class="st">&#39;white&#39;</span>, <span class="dt">alpha=</span><span class="fl">0.6</span>)</span>
+<span id="cb44-11"><a href="#cb44-11"></a>p6 &lt;-<span class="st"> </span><span class="kw">ggtree</span>(tree, <span class="dt">layout=</span><span class="st">&quot;inward_circular&quot;</span>)<span class="op">+</span><span class="st"> </span><span class="kw">geom_tiplab</span>(<span class="dt">hjust =</span> <span class="dv">1</span>)<span class="op">+</span></span>
+<span id="cb44-12"><a href="#cb44-12"></a><span class="st">  </span><span class="kw">geom_taxalink</span>(<span class="dt">taxa1=</span><span class="st">&#39;A13&#39;</span>, <span class="dt">taxa2=</span><span class="st">&#39;A18&#39;</span>, <span class="dt">color=</span><span class="st">&quot;red&quot;</span>, <span class="dt">alpha=</span><span class="fl">0.5</span>, </span>
+<span id="cb44-13"><a href="#cb44-13"></a>              <span class="dt">outward=</span><span class="ot">FALSE</span>)</span>
+<span id="cb44-14"><a href="#cb44-14"></a>p1<span class="op">+</span>p2<span class="op">+</span>p3<span class="op">+</span>p4<span class="op">+</span>p5<span class="op">+</span>p6 <span class="op">+</span><span class="st"> </span><span class="kw">plot_annotation</span>(<span class="dt">tag_levels =</span> <span class="st">&quot;I&quot;</span>) <span class="op">+</span><span class="st"> </span></span>
+<span id="cb44-15"><a href="#cb44-15"></a><span class="st">  </span><span class="kw">plot_layout</span>(<span class="dt">ncol =</span> <span class="dv">2</span>,<span class="dt">heights =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>),<span class="dt">widths =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</span></code></pre></div>
+<div class="figure"><span id="fig:unnamed-chunk-20"></span>
+<img src="../../post/R/2020-08-26-ggtree_files/figure-html/unnamed-chunk-20-1.svg" alt="capthion" width="1728" />
+<p class="caption">
+Figure 1: capthion
+</p>
+</div>
+<p>ggtree还有拼图，分面图，图像注释这些。其中我很感兴趣的是ggmsa这个多序列拼图。</p>
+</div>
+<div id="ggtreeextra" class="section level1">
+<h1>ggtreeExtra</h1>
 </div>
 
       </main>
