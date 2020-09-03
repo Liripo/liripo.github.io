@@ -57,9 +57,9 @@
       <div>
   <h1>vim</h1>
   <h3>
-    28 Mar 2020
+    03 Sep 2020
   </h3>
-   <h5 id="wc">781 Words|Read in about 2       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">617 Words|Read in about 2       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -68,150 +68,66 @@
       <main>
         
 
-        <p>vim 配置</p>
-<p>bundle安装在~/.vim/bundle</p>
-<p>如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。</p>
-<h3 id="heading">依赖包安装</h3>
-<p>确保环境中有<code>cmake</code> , <code>python-dev</code> , <code>python3-dev</code> ,没有的话需要事先安装</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo apt-get install cmake python-dev python3-dev clang
-</code></pre></div><h3 id="youcompleteme-"><code>YouCompleteMe</code> 及其依赖包下载</h3>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">#在~/.vim/bundle/文件夹下</span>
-git clone https://github.com/ycm-core/YouCompleteMe.git
-cd YouCompleteMe
-<span style="color:#75715e"># 下载依赖库，这一步与网速有关，可能会断掉报错，重新运行可以了。</span>
-git submodule update --init --recursive
-</code></pre></div><h3 id="youcompleteme">编译<code>YouCompleteMe</code></h3>
-<p>下载好<code>YouCompleteMe</code> 及其依赖包后，打开<code>vi</code> 发现仍然会报错，是因为其核心包<code>ycmd</code> 还没有被编译好，需要我们手动编译。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">cd /opt/vimbundle/bundle/YouCompleteMe/
-<span style="color:#75715e"># 具体是支持哪个python版本看自己情况，我这边指支持python，所以用python编译。要不要支持c语言也看自己需要，不需要的话就去掉`--clang-completer`。</span>
-python install.py --clang-completer
-</code></pre></div><h3 id="heading-1">可能的报错</h3>
-<p>如果编译好<code>ycmd_core</code> 后仍然报错，那很可能就是一些<code>python module</code> 没有安装，通过下面方法检测出来再安装即可。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">cd /opt/vimbundle/bundle/YouCompleteMe/third_party/ycmd/
-cp ycmd/default_settings.json .
-<span style="color:#75715e"># 通过下面查看是不是出现python的某些模块没有安装，如果是，那就安装上就好了。</span>
-python ycmd --options_file default_settings.json
-</code></pre></div><p>一个示例配置</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">  
-syntax on
-set guifont<span style="color:#f92672">=</span>Monaco:h13
-<span style="color:#e6db74">&#34;set tabstop=4
-</span><span style="color:#e6db74">set hlsearch
-</span><span style="color:#e6db74">set nocompatible
-</span><span style="color:#e6db74">set nofoldenable
-</span><span style="color:#e6db74">set history=1000
-</span><span style="color:#e6db74">set backspace=indent,eol,start
-</span><span style="color:#e6db74">&#34;</span> prompt when existing from an unsaved file
-set confirm
-set t_Co<span style="color:#f92672">=</span>256
-set title
-set autoread
-set spell
-set cursorline
-set cursorcolumn
-set fenc<span style="color:#f92672">=</span>utf-8
-set encoding<span style="color:#f92672">=</span>utf-8
-set langmenu<span style="color:#f92672">=</span>zh_CN.UTF-8
+        <h1 id="nvim">nvim安装</h1>
+<p><a href="https://neovim.io/">https://neovim.io/</a></p>
+<p><a href="https://github.com/neovim/neovim/releases">https://github.com/neovim/neovim/releases</a>  ====版本发布页面。</p>
+<p>neovim的linux版本你可以在上面找到，你可以选择nvim-linux.tar.gz里面有编译好的nvim文件，也可以选择官网说的appimage安装，不过appimage怎么装我也不清楚。</p>
+<h2 id="heading">配置</h2>
+<p>nvim的配置文件为<code>~/.config/nvim/init.vim</code>,没有则自己创键</p>
+<p>插件管理选择<a href="https://github.com/junegunn/vim-plug">vim-plug</a></p>
+<h3 id="heading-1">插件管理文件安装</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir -p ~/.var/app/io.neovim.nvim/data/nvim/site
+curl -fLo ~/.var/app/io.neovim.nvim/data/nvim/site/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+<span style="color:#75715e">#建个文件夹作为插件安装目录吧</span>
+mkdir ~/.var/app/io.neovim.nvim/data/nvim/site/plugged
+</code></pre></div><p>完成上述步骤后在<code>init.vim</code>中加入代码</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span>插件管理
+let plug_install <span style="color:#f92672">=</span> 0
+let autoload_plug_path <span style="color:#f92672">=</span> stdpath<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;config&#39;</span><span style="color:#f92672">)</span> . <span style="color:#e6db74">&#39;/autoload/plug.vim&#39;</span>
+<span style="color:#66d9ef">if</span> !filereadable<span style="color:#f92672">(</span>autoload_plug_path<span style="color:#f92672">)</span>
+    silent exe <span style="color:#e6db74">&#39;!curl -fL --create-dirs -o &#39;</span> . autoload_plug_path .
+        <span style="color:#ae81ff">\ </span><span style="color:#e6db74">&#39; https://raw.github.com/junegunn/vim-plug/master/plug.vim&#39;</span>
+    execute <span style="color:#e6db74">&#39;source &#39;</span> . fnameescape<span style="color:#f92672">(</span>autoload_plug_path<span style="color:#f92672">)</span>
+    let plug_install <span style="color:#f92672">=</span> 1
+endif
+unlet autoload_plug_path
+</code></pre></div><p>这个代码使得nvim识别到vim-plug插件。当你使用vim时，你则无需<code>~/.vimrc</code>中加入。</p>
+<h2 id="nvimr">nvim中R的使用</h2>
+<p>首先自动补全及vim中开启R的终端需要的插件，<code>init.vim</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#e6db74">&#34;配置安装目录及所需插件
+</span><span style="color:#e6db74">call plug#begin(&#39;~/.var/app/io.neovim.nvim/data/nvim/site/plugged&#39;)
+</span><span style="color:#e6db74">Plug &#39;jalvesaq/Nvim-R&#39;
+</span><span style="color:#e6db74">&#34;</span>Plug <span style="color:#e6db74">&#39;ycm-core/YouCompleteMe&#39;</span>
+Plug <span style="color:#e6db74">&#39;gaalcaras/ncm-R&#39;</span>
+Plug <span style="color:#e6db74">&#39;ncm2/ncm2&#39;</span>
+Plug <span style="color:#e6db74">&#39;roxma/nvim-yarp&#39;</span>
 
-<span style="color:#e6db74">&#34; bundle conf
-</span><span style="color:#e6db74">filetype off
-</span><span style="color:#e6db74">set rtp+=/mnt/d/UbuntuApps/vimbundle/bundle/Vundle.vim
-</span><span style="color:#e6db74">call vundle#begin(&#34;</span>/mnt/d/UbuntuApps/vimbundle/bundle/<span style="color:#e6db74">&#34;)
-</span><span style="color:#e6db74">Plugin &#39;VundleVim/Vundle.vim&#39;
-</span><span style="color:#e6db74">Plugin &#39;vim-pandoc/vim-rmarkdown&#39;
-</span><span style="color:#e6db74">Plugin &#39;vim-pandoc/vim-pandoc-syntax&#39;
-</span><span style="color:#e6db74">Plugin &#39;vim-pandoc/vim-pandoc&#39;
-</span><span style="color:#e6db74">Plugin &#39;iamcco/markdown-preview.vim&#39;
-</span><span style="color:#e6db74">Plugin &#39;iamcco/mathjax-support-for-mkdp&#39;
-</span><span style="color:#e6db74">Plugin &#39;godlygeek/tabular&#39;
-</span><span style="color:#e6db74">Plugin &#39;plasticboy/vim-markdown&#39;
-</span><span style="color:#e6db74">Plugin &#39;elzr/vim-json&#39;
-</span><span style="color:#e6db74">Plugin &#39;tomasr/molokai&#39;
-</span><span style="color:#e6db74">Plugin &#39;flazz/vim-colorschemes&#39;
-</span><span style="color:#e6db74">Plugin &#39;Valloric/YouCompleteMe&#39;
-</span><span style="color:#e6db74">Plugin &#39;jalvesaq/Nvim-R&#39;
-</span><span style="color:#e6db74">Plugin &#39;scrooloose/nerdtree&#39;
-</span><span style="color:#e6db74">Plugin &#39;vim-airline/vim-airline&#39;
-</span><span style="color:#e6db74">Plugin &#39;majutsushi/tagbar&#39;
-</span><span style="color:#e6db74">Plugin &#39;jalvesaq/vimcmdline&#39;
-</span><span style="color:#e6db74">call vundle#end()
-</span><span style="color:#e6db74">filetype plugin indent on
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">&#34;</span> YouComleteMe conf
-let g:ycm_use_clangd <span style="color:#f92672">=</span> 0
-let g:ycm_server_python_interpreter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;/usr/bin/python3&#39;</span>
-let g:ycm_global_ycm_extra_conf<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;/mnt/d/UbuntuApps/vimbundle/bundle/.ycm_extra_conf.py&#39;</span>
-let g:ycm_confirm_extra_conf <span style="color:#f92672">=</span> 0
-let g:ycm_seed_identifiers_with_syntax <span style="color:#f92672">=</span> 1
-let g:ycm_complete_in_comments <span style="color:#f92672">=</span> 1
-let g:ycm_collect_identifiers_from_comments_and_strings <span style="color:#f92672">=</span> 0
-let g:ycm_complete_in_strings <span style="color:#f92672">=</span> 1
-let g:ycm_cache_omnifunc <span style="color:#f92672">=</span> 1
-let g:ycm_autoclose_preview_window_after_completation<span style="color:#f92672">=</span>1
-let g:ycm_min_num_of_chars_for_completion<span style="color:#f92672">=</span>3
-autocmd InsertLeave * <span style="color:#66d9ef">if</span> pumvisible<span style="color:#f92672">(</span><span style="color:#f92672">)</span> <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> | pclose | endif
-
-<span style="color:#e6db74">&#34; Nvim-R conf
-</span><span style="color:#e6db74">let R_assign = 0
-</span><span style="color:#e6db74">let R_objbr_place = &#39;script,right&#39;
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">&#34;</span> vim-colorschemes conf
-colorscheme wombat
-
-<span style="color:#e6db74">&#34; vim-json conf
-</span><span style="color:#e6db74">let g:vim_json_syntax_conceal = 0
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">&#34;</span> nerdtree conf
-nmap &lt;F2&gt; :NERDTreeToggle&lt;CR&gt;
-let NERDChristmasTree<span style="color:#f92672">=</span>0
-let NERDTreeChDirMode <span style="color:#f92672">=</span> 2
-let NERDTreeShowBookmarks <span style="color:#f92672">=</span> 1
-let NERDTreeIgnore <span style="color:#f92672">=</span> <span style="color:#f92672">[</span><span style="color:#e6db74">&#39;\~$&#39;</span>, <span style="color:#e6db74">&#39;\.pyc$&#39;</span>, <span style="color:#e6db74">&#39;\.swp$&#39;</span><span style="color:#f92672">]</span>
-let NERDTreeWinSize <span style="color:#f92672">=</span> 25
-let NERDTreeWinPos <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;left&#34;</span>
-
-<span style="color:#e6db74">&#34; vim-airline conf
-</span><span style="color:#e6db74">let g:airline_powerline_fonts=0
-</span><span style="color:#e6db74">let g:airline#extensions#tabline#enabled=1
-</span><span style="color:#e6db74">let g:airline#extensions#tabline#buffer_nr_show=1
-</span><span style="color:#e6db74">let g:airline#extensions#tagbar#enabled=0
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">&#34;</span> tagbar conf
-nmap &lt;F8&gt; :TagbarToggle&lt;CR&gt;
-let g:tagbar_left<span style="color:#f92672">=</span>0
-let g:tagbar_width<span style="color:#f92672">=</span>30
-let g:tagbar_autofocus <span style="color:#f92672">=</span> 1
-let g:tagbar_sort <span style="color:#f92672">=</span> 0
-let g:tagbar_compact <span style="color:#f92672">=</span> 1
-<span style="color:#e6db74">&#34; tag for coffee
-</span><span style="color:#e6db74">if executable(&#34;</span>coffeetags<span style="color:#e6db74">&#34;)
-</span><span style="color:#e6db74">    let g:tagbar_type_coffee = {
-</span><span style="color:#e6db74">          \ &#39;ctagsbin&#39; : &#39;coffeetags&#39;,
-</span><span style="color:#e6db74">          \ &#39;ctagsargs&#39; : &#39;&#39;,
-</span><span style="color:#e6db74">          \ &#39;kinds&#39; : [
-</span><span style="color:#e6db74">          \ &#39;f:function&#39;,
-</span><span style="color:#e6db74">          \ &#39;o:object&#39;,
-</span><span style="color:#e6db74">          \ ],
-</span><span style="color:#e6db74">          \ &#39;sro&#39;: &#34;</span>.<span style="color:#e6db74">&#34;,
-</span><span style="color:#e6db74">          \ &#39;kind2scope&#39; : {
-</span><span style="color:#e6db74">          \ &#39;f&#39; : &#39;object&#39;,
-</span><span style="color:#e6db74">          \ &#39;o&#39; : &#39;object&#39;,
-</span><span style="color:#e6db74">          \ }
-</span><span style="color:#e6db74">          \ }
-</span><span style="color:#e6db74">    let g:tagbar_type_markdown = {
-</span><span style="color:#e6db74">          \ &#39;ctagstype&#39; : &#39;markdown&#39;,
-</span><span style="color:#e6db74">          \ &#39;sort&#39; : 0,
-</span><span style="color:#e6db74">          \ &#39;kinds&#39;: [
-</span><span style="color:#e6db74">          \ &#39;h:sections&#39;
-</span><span style="color:#e6db74">          \ ]
-</span><span style="color:#e6db74">          \ }
-</span><span style="color:#e6db74">endif
-</span><span style="color:#e6db74">
-</span><span style="color:#e6db74">&#34;</span> markdown-preview
-let g:mkdp_path_to_chrome <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/usr/bin/firefox&#34;</span>
-</code></pre></div><blockquote>
-<p>别人的，做个记录。</p>
-</blockquote>
+<span style="color:#e6db74">&#34; Optional: for snippet support
+</span><span style="color:#e6db74">&#34;</span> Further configuration might be required, read below
+Plug <span style="color:#e6db74">&#39;sirver/UltiSnips&#39;</span>
+Plug <span style="color:#e6db74">&#39;ncm2/ncm2-ultisnips&#39;</span>
+call plug#end<span style="color:#f92672">(</span><span style="color:#f92672">)</span>
+filetype plugin indent on
+<span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">&#34;&#34;</span>
+</code></pre></div><p>使用<code>:PlugInstall</code>安装插件</p>
+<p>加入提示你没有python3的话，你需要在<code>init.vim</code>添加</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">let g:python3_host_prog <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/mnt/d/linux/software/miniconda3/bin/python&#34;</span>
+</code></pre></div><p>上述路径修改为你的python路径。</p>
+<p>加入配色主题</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">配色主题
+</span><span style="color:#e6db74">Plug &#39;jalvesaq/southernlights&#39;
+</span></code></pre></div><h2 id="heading-2">使用</h2>
+<p>打开vim后，在命令行模式输入<code>\rf</code>即可打开R会话，<code>\l</code>可以发送代码到R会话。</p>
+<p>nvim重要键绑定：</p>
+<ul>
+<li>
+<p><code>Ctrl-x Ctrl-o</code>自动补全，</p>
+</li>
+<li>
+<p><code>CTRL</code>-xf来完成字符串下文件名</p>
+</li>
+<li></li>
+</ul>
 
       </main>
 

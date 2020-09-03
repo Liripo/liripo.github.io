@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>vim</title>
+      <link>/post/vim/</link>
+      <pubDate>Thu, 03 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/vim/</guid>
+      <description>nvim安装 https://neovim.io/ https://github.com/neovim/neovim/releases ====版本发布页面。 neovim的linux版本你可以在上面找到，你可以选择nvim-linux.tar.gz里面有编译好</description>
+    </item>
     
     <item>
       <title>linux软件安装及R、R包安装</title>
@@ -19,15 +28,6 @@
       
       <guid>/post/linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8F%8Arr%E5%8C%85%E5%AE%89%E8%A3%85/</guid>
       <description>apt卸载软件 内容如下： 卸载软件：sudo apt-get remove 软件名(+版本号) 卸载软件并删除依赖：sudo apt-get remove &amp;ndash;auto-remove 软件名(+版本号) 清除软件：sudo apt-get purge 软</description>
-    </item>
-    
-    <item>
-      <title>vim</title>
-      <link>/post/vim/</link>
-      <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/post/vim/</guid>
-      <description>vim 配置 bundle安装在~/.vim/bundle 如果要公用可以装在/opt/vimbundle/bundle/文件夹下，或者配置环境变量。</description>
     </item>
     
     <item>
