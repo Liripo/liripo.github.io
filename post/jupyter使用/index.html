@@ -45,7 +45,7 @@
     
   
 
-  <span class="article-header-caption">jupyter</span>
+  
 
   
   
@@ -79,7 +79,7 @@
   <h3>
     20 Jul 2020
   </h3>
-   <h5 id="wc">883 Words|Read in about 2       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">1125 Words|Read in about 3       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -88,123 +88,102 @@
       <main>
         
 
-        
-<script src="../../rmarkdown-libs/accessible-code-block/empty-anchor.js"></script>
-<style type="text/css">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  { color: #cccccc; background-color: #303030; }
-@media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ffcfaf; } /* Alert */
-code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
-code span.at { } /* Attribute */
-code span.bn { color: #dca3a3; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #f0dfaf; } /* ControlFlow */
-code span.ch { color: #dca3a3; } /* Char */
-code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
-code span.co { color: #7f9f7f; } /* Comment */
-code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
-code span.do { color: #7f9f7f; } /* Documentation */
-code span.dt { color: #dfdfbf; } /* DataType */
-code span.dv { color: #dcdccc; } /* DecVal */
-code span.er { color: #c3bf9f; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #c0bed1; } /* Float */
-code span.fu { color: #efef8f; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
-code span.kw { color: #f0dfaf; } /* Keyword */
-code span.op { color: #f0efd0; } /* Operator */
-code span.ot { color: #efef8f; } /* Other */
-code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
-code span.sc { color: #dca3a3; } /* SpecialChar */
-code span.ss { color: #cc9393; } /* SpecialString */
-code span.st { color: #cc9393; } /* String */
-code span.va { } /* Variable */
-code span.vs { color: #cc9393; } /* VerbatimString */
-code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
-</style>
-
 <aside>
-<div id='anchors-navbar'>
-<i class='fas fa-anchor'></i>
-<div id="TOC">
-<ul>
-<li><a href="#安装">安装</a></li>
-<li><a href="#修改工作目录">修改工作目录</a></li>
-<li><a href="#jupyter使用r">jupyter使用R</a></li>
-<li><a href="#使用多个python版本">使用多个python版本</a></li>
-</ul>
-</div>
-</div>
+  <div id='anchors-navbar'>
+  <i class='fas fa-anchor'></i>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#heading">安装</a></li>
+    <li><a href="#heading-1">修改工作目录</a></li>
+    <li><a href="#heading-2">快捷键</a></li>
+    <li><a href="#jupyterr">jupyter使用R</a></li>
+    <li><a href="#python">使用多个python版本</a></li>
+    <li><a href="#linuxjupyterlab">linux下安装jupyterlab</a>
+      <ul>
+        <li><a href="#heading-3">配置</a></li>
+      </ul>
+    </li>
+    <li><a href="#heading-4">使用</a>
+      <ul>
+        <li><a href="#jupyterlab">jupyterlab绘图使用中文</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
 </aside>
 
-<div id="安装" class="section level1">
-<h1>安装</h1>
+        <h1 id="heading">安装</h1>
 <p>可以查看<a href="https://jupyter.org/">官网</a>
 之后使用<code>jupyter notebook</code>即可运行</p>
-</div>
-<div id="修改工作目录" class="section level1">
-<h1>修改工作目录</h1>
+<h1 id="heading-1">修改工作目录</h1>
 <p>没有jupyter配置文件需要生成一个初始的配置文件</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a> jupyter notebook <span class="op">--</span>generate<span class="op">-</span>config</span></code></pre></div>
-<p>之后会在命令行生成一个配置文件：<code>"C:\Users\Administrator\.jupyter\jupyter_notebook_config.py"</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"> jupyter notebook <span style="color:#f92672">-</span><span style="color:#f92672">-</span>generate<span style="color:#f92672">-</span>config
+</code></pre></div><p>之后会在命令行生成一个配置文件：<code>&quot;C:\Users\Administrator\.jupyter\jupyter_notebook_config.py&quot;</code></p>
 <p>查找<code>The directory to use for notebooks and kernels</code>字样
 修改#c.NotebookApp.notebook_dir = “”为所要的工作目录，记得去掉“#”号。</p>
-<p># 快捷键
-jupyter的快捷键帮助是中文的，可以直接看Help.</p>
-</div>
-<div id="jupyter使用r" class="section level1">
-<h1>jupyter使用R</h1>
+<h1 id="heading-2">快捷键</h1>
+<p>jupyter的快捷键帮助是中文的，可以直接看Help.</p>
+<h1 id="jupyterr">jupyter使用R</h1>
 <p>网址<a href="https://github.com/IRkernel/IRkernel">github</a></p>
-</div>
-<div id="使用多个python版本" class="section level1">
-<h1>使用多个python版本</h1>
+<h1 id="python">使用多个python版本</h1>
 <p>在其他python路径中安装ipykernel,第一个是你的其他python版本的具体路径</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m pip install ipykernel</span></code></pre></div>
-<p>然后运行</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m ipykernel install <span class="op">-</span>h</span></code></pre></div>
-<p>查看帮助，发现有个–user 和–name –display-name参数可以使用
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">python3.7.exe -m pip install ipykernel
+</code></pre></div><p>然后运行</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">python3.7.exe -m ipykernel install -h
+</code></pre></div><p>查看帮助，发现有个&ndash;user 和&ndash;name &ndash;display-name参数可以使用
 所以接着运行</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>python3.<span class="fl">7.</span>exe <span class="op">-</span>m ipykernel install <span class="op">--</span>user <span class="op">--</span>name python3<span class="fl">.7</span> <span class="op">--</span>display<span class="op">-</span>name python3<span class="fl">.7</span></span></code></pre></div>
-<p>之后运行</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a>jupyter kernelspec <span class="bu">list</span></span></code></pre></div>
-<p>应该会看到你的用户目录多了个文件夹,比如我的,因为我还装了R，所以有个ir</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a>Available kernels:</span>
-<span id="cb6-2"><a href="#cb6-2"></a>  python3      C:<span class="op">\</span>Users<span class="op">\</span>Liripo<span class="op">\</span>AppData<span class="op">\</span>Roaming<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>python3</span>
-<span id="cb6-3"><a href="#cb6-3"></a>  python3<span class="fl">.7</span>    C:<span class="op">\</span>Users<span class="op">\</span>Liripo<span class="op">\</span>AppData<span class="op">\</span>Roaming<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>python3<span class="fl">.7</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a>  ir           C:<span class="op">\</span>ProgramData<span class="op">\</span>jupyter<span class="op">\</span>kernels<span class="op">\</span>ir</span></code></pre></div>
-</div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">python3.7.exe -m ipykernel install --user --name python3.7 --display-name python3.7
+</code></pre></div><p>之后运行</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">jupyter kernelspec list
+</code></pre></div><p>应该会看到你的用户目录多了个文件夹,比如我的,因为我还装了R，所以有个ir</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">Available kernels:
+  python3      C:<span style="color:#ae81ff">\U</span>sers<span style="color:#ae81ff">\L</span>iripo<span style="color:#ae81ff">\A</span>ppData<span style="color:#ae81ff">\R</span>oaming<span style="color:#ae81ff">\j</span>upyter<span style="color:#ae81ff">\k</span>ernels<span style="color:#ae81ff">\p</span>ython3
+  python3.7    C:<span style="color:#ae81ff">\U</span>sers<span style="color:#ae81ff">\L</span>iripo<span style="color:#ae81ff">\A</span>ppData<span style="color:#ae81ff">\R</span>oaming<span style="color:#ae81ff">\j</span>upyter<span style="color:#ae81ff">\k</span>ernels<span style="color:#ae81ff">\p</span>ython3.7
+  ir           C:<span style="color:#ae81ff">\P</span>rogramData<span style="color:#ae81ff">\j</span>upyter<span style="color:#ae81ff">\k</span>ernels<span style="color:#ae81ff">\i</span>r
+</code></pre></div><h1 id="linuxjupyterlab">linux下安装jupyterlab</h1>
+<p>【为什么我执着于conda与源码编译，直接下载二进制版本,单纯只是因为我没有sudo权限。】</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">conda install -c conda-forge jupyterlab
+</code></pre></div><p>顺便的jupyter notebook也装上了。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">jupyter notebook --version
+</code></pre></div><h2 id="heading-3">配置</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">jupyter lab --generate-config
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">## Writing default config to: /home/liripo/.jupyter/jupyter_notebook_config.py</span>
+</code></pre></div><p>如上所述，修改默认工作区。</p>
+<p>jupyter使用R,</p>
+<p>1.R中下载包：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">install.packages</span>(<span style="color:#e6db74">&#39;</span><span style="color:#e6db74">IRkernel&#39;</span>)
+</code></pre></div><p>2.注册内核</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># in R 4.0.2</span>
+IRkernel::installspec<span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ir402&#39;</span>, displayname <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;R4.0.2&#39;</span><span style="color:#f92672">)</span>
+</code></pre></div><p>使用Rstuio快捷键</p>
+<p>在运行命令前，需要装好node.js和npm，可以在<a href="https://nodejs.org/en/download/">node官网</a>下载二进制版本，解压后配置环境变量。之后bash下运行：</p>
+<pre><code>jupyter labextension install @techrah/text-shortcuts 
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">jupyter kernelspec list
+</code></pre></div><p><code>jupyter kernelspec list</code>看下是否有R内核。</p>
+<h1 id="heading-4">使用</h1>
+<p>在使用jupyter写了一个脚本后，例如保存为<code>Untitled.ipynb</code>，使用命令转换为R脚本。</p>
+<pre><code>jupyter nbconvert --to script Untitled.ipynb
+</code></pre><h2 id="jupyterlab">jupyterlab绘图使用中文</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">wget https://github.com/welai/glow-sans/releases/download/v0.9/GlowSansSC-Normal-v0.9.zip ~/.fonts
+unzip GlowSansSC-Normal-v0.9.zip
+</code></pre></div><pre><code>#查看下载的字体
+fc-list
+#查看支持的中文字体
+fc-list :lang=zh
+</code></pre><p>下载好后会看到中文支持字体。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">/home/liripo/.fonts/GlowSansSC-Normal-ExtraBold.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal ExtraBold,ExtraBold
+/home/liripo/.fonts/GlowSansSC-Normal-Heavy.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Heavy,Heavy
+/home/liripo/.fonts/GlowSansSC-Normal-ExtraLight.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal ExtraLight,ExtraLight
+/home/liripo/.fonts/GlowSansSC-Normal-Regular.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Regular,Regular
+/home/liripo/.fonts/GlowSansSC-Normal-Thin.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Thin,Thin
+/home/liripo/.fonts/GlowSansSC-Normal-Bold.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Bold,Bold
+/home/liripo/.fonts/GlowSansSC-Normal-Light.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Light,Light
+/home/liripo/.fonts/GlowSansSC-Normal-Book.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Book,Book
+/home/liripo/.fonts/GlowSansSC-Normal-Medium.otf: Glow Sans SC,未来荧黑,Glow Sans SC Normal,未来荧黑 Normal:style<span style="color:#f92672">=</span>Normal Medium,Medium
+</code></pre></div><p>生成缓存,快速在程序中使用</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">fc-cache
+</code></pre></div><p>重启jupyter lab即可.</p>
 
       </main>
 

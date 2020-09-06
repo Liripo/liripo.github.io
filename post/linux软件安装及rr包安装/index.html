@@ -59,7 +59,7 @@
   <h3>
     28 Mar 2020
   </h3>
-   <h5 id="wc">339 Words|Read in about 1       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">228 Words|Read in about 1       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -76,7 +76,7 @@
     <li><a href="#apt">apt卸载软件</a></li>
     <li><a href="#conda">conda</a>
       <ul>
-        <li><a href="#r">R更新</a></li>
+        <li><a href="#r">R包更新</a></li>
       </ul>
     </li>
   </ul>
@@ -97,9 +97,11 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">conda search r-base
 conda install r-base <span style="color:#f92672">=</span><span style="color:#f92672">=</span> 4.0.2
 </code></pre></div><p>即可。</p>
-<h2 id="r">R更新</h2>
-<p>我认为最好的方式还是重新下载，R包再慢慢更，反正在windows使用Installr之后使用Bioconductor让我非常痛苦，而且这软件更新也是重新安装你现有的R包，你完全可以把你R目前所含的包名弄成出来，然后install.package更新之类的。</p>
-
+<h2 id="r">R包更新</h2>
+<p>更新版本后，R包必须全部更新</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">install.package</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">rvcheck&#34;</span>)
+rvcheck<span style="color:#f92672">::</span><span style="color:#a6e22e">uodate_all</span>()
+</code></pre></div>
       </main>
 
       <footer>

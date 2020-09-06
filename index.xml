@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Sat, 05 Sep 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Rstudio server in linux</title>
+      <link>/post/rstudio-server-in-linux/</link>
+      <pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/rstudio-server-in-linux/</guid>
+      <description>安装 官网教程 由于刚刚升级了WSL24,所以就尝试下WSL2安装Rstudio server。 首先你要先确定自己是否安装了R，其中conda怎么</description>
+    </item>
     
     <item>
       <title>wsl更新到WSL2</title>
@@ -99,7 +108,7 @@
       <pubDate>Mon, 20 Jul 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/jupyter%E4%BD%BF%E7%94%A8/</guid>
-      <description>jupyter。</description>
+      <description>安装 可以查看官网 之后使用jupyter notebook即可运行 修改工作目录 没有jupyter配置文件需要生成一个初始的配置文件 jupyter notebook --generate-config 之后会在</description>
     </item>
     
     <item>
