@@ -144,13 +144,20 @@ awk <span style="color:#e6db74">&#39;ARGIND==1 &amp;&amp; NR%4==1{name[i]=$0;i++
 </code></pre></div>
       </main>
 
-      <footer>
+      <div id="fastSearch">
+   <input id="searchInput" tabindex="0">
+   <ul id="searchResults">
+   </ul>
+</div>
+<footer>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
   <script src ="/js/search.js"></script>
+  <script src="../../js/fuse.js"></script> 
+ <script src="../../js/fastsearch.js"></script>
 
   <script>
   hljs.configure({languages: []});
@@ -159,9 +166,10 @@ awk <span style="color:#e6db74">&#39;ARGIND==1 &amp;&amp; NR%4==1{name[i]=$0;i++
   
   <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
   <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
-  <span id="busuanzi_container_site_uv">
-    本站访客数<span id="busuanzi_value_site_uv"></span>人次
-</span>
+  <br>
+  <span >
+    <mark>CMD+/</mark>对网站进行搜索
+  </span>
   
   
 <script async src="../../js/center-image.js"></script>

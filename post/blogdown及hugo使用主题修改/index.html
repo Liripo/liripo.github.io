@@ -59,7 +59,7 @@
   <h3>
     16 Aug 2020
   </h3>
-   <h5 id="wc">3579 Words|Read in about 8       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">4487 Words|Read in about 9       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -556,16 +556,210 @@ unsafe = true
 </code></pre><p>这样会在你整个网站添加链接，不想的话可以只添加到你的主页。</p>
 <h2 id="heading-6">添加站内搜素</h2>
 <p><a href="https://palant.info/2020/06/04/the-easier-way-to-use-lunr-search-with-hugo/">https://palant.info/2020/06/04/the-easier-way-to-use-lunr-search-with-hugo/</a></p>
+<p>我使用如下教程:</p>
+<p><a href="https://gist.github.com/cmod/5410eae147e4318164258742dd053993">https://gist.github.com/cmod/5410eae147e4318164258742dd053993</a></p>
+<p>除了文件需要修改下，其余均如文档所述，运行<code>CMD+/</code>即可对站内进行检索。</p>
+<p>里面的fastsearch,js更改如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fuse</span>; <span style="color:#75715e">// holds our search engine
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; 
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">firstRun</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; <span style="color:#75715e">// allow us to delay loading json data unless search activated
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">list</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;searchResults&#39;</span>); <span style="color:#75715e">// targets the &lt;ul&gt;
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">first</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>.<span style="color:#a6e22e">firstChild</span>; <span style="color:#75715e">// first child of search list
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">last</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>.<span style="color:#a6e22e">lastChild</span>; <span style="color:#75715e">// last child of search list
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">maininput</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;searchInput&#39;</span>); <span style="color:#75715e">// input box for search
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">resultsAvailable</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; <span style="color:#75715e">// Did we get any search results?
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">// ==========================================
+</span><span style="color:#75715e"></span><span style="color:#75715e">// The main keyboard event listener running the show
+</span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span>document.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;keydown&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">event</span>) {
 
+  <span style="color:#75715e">// CMD-/ to show / hide Search
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">metaKey</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">which</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">191</span>) {
+      <span style="color:#75715e">// Load json search index if first time invoking search
+</span><span style="color:#75715e"></span>      <span style="color:#75715e">// Means we don&#39;t load json unless searches are going to happen; keep user payload small unless needed
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">firstRun</span>) {
+        <span style="color:#a6e22e">loadSearch</span>(); <span style="color:#75715e">// loads our json data and builds fuse.js search index
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">firstRun</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; <span style="color:#75715e">// let&#39;s never do this again
+</span><span style="color:#75715e"></span>      }
+
+      <span style="color:#75715e">// Toggle visibility of search box
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">searchVisible</span>) {
+        document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;fastSearch&#34;</span>).<span style="color:#a6e22e">style</span>.<span style="color:#a6e22e">visibility</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;visible&#34;</span>; <span style="color:#75715e">// show search box
+</span><span style="color:#75715e"></span>        document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;searchInput&#34;</span>).<span style="color:#a6e22e">focus</span>(); <span style="color:#75715e">// put focus in input box so you can just start typing
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; <span style="color:#75715e">// search visible
+</span><span style="color:#75715e"></span>      }
+      <span style="color:#66d9ef">else</span> {
+        document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;fastSearch&#34;</span>).<span style="color:#a6e22e">style</span>.<span style="color:#a6e22e">visibility</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hidden&#34;</span>; <span style="color:#75715e">// hide search box
+</span><span style="color:#75715e"></span>        document.<span style="color:#a6e22e">activeElement</span>.<span style="color:#a6e22e">blur</span>(); <span style="color:#75715e">// remove focus from search box 
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; <span style="color:#75715e">// search not visible
+</span><span style="color:#75715e"></span>      }
+  }
+
+  <span style="color:#75715e">// Allow ESC (27) to close search box
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">keyCode</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">27</span>) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">searchVisible</span>) {
+      document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;fastSearch&#34;</span>).<span style="color:#a6e22e">style</span>.<span style="color:#a6e22e">visibility</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hidden&#34;</span>;
+      document.<span style="color:#a6e22e">activeElement</span>.<span style="color:#a6e22e">blur</span>();
+      <span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+    }
+  }
+
+  <span style="color:#75715e">// DOWN (40) arrow
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">keyCode</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">40</span>) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">resultsAvailable</span>) {
+      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;down&#34;</span>);
+      <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">preventDefault</span>(); <span style="color:#75715e">// stop window from scrolling
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> ( document.<span style="color:#a6e22e">activeElement</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">maininput</span>) { <span style="color:#a6e22e">first</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// if the currently focused element is the main input --&gt; focus the first &lt;li&gt;
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> ( document.<span style="color:#a6e22e">activeElement</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">last</span> ) { <span style="color:#a6e22e">last</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// if we&#39;re at the bottom, stay there
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">else</span> { document.<span style="color:#a6e22e">activeElement</span>.<span style="color:#a6e22e">parentElement</span>.<span style="color:#a6e22e">nextSibling</span>.<span style="color:#a6e22e">firstElementChild</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// otherwise select the next search result
+</span><span style="color:#75715e"></span>    }
+  }
+
+  <span style="color:#75715e">// UP (38) arrow
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">keyCode</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">38</span>) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">searchVisible</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">resultsAvailable</span>) {
+      <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">preventDefault</span>(); <span style="color:#75715e">// stop window from scrolling
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> ( document.<span style="color:#a6e22e">activeElement</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">maininput</span>) { <span style="color:#a6e22e">maininput</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// If we&#39;re in the input box, do nothing
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> ( document.<span style="color:#a6e22e">activeElement</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">first</span>) { <span style="color:#a6e22e">maininput</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// If we&#39;re at the first item, go to input box
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">else</span> { document.<span style="color:#a6e22e">activeElement</span>.<span style="color:#a6e22e">parentElement</span>.<span style="color:#a6e22e">previousSibling</span>.<span style="color:#a6e22e">firstElementChild</span>.<span style="color:#a6e22e">focus</span>(); } <span style="color:#75715e">// Otherwise, select the search result above the current active one
+</span><span style="color:#75715e"></span>    }
+  }
+});
+
+
+<span style="color:#75715e">// ==========================================
+</span><span style="color:#75715e"></span><span style="color:#75715e">// execute search as each character is typed
+</span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;searchInput&#34;</span>).<span style="color:#a6e22e">onkeyup</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) { 
+  <span style="color:#a6e22e">executeSearch</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">value</span>);
+}
+
+
+<span style="color:#75715e">// ==========================================
+</span><span style="color:#75715e"></span><span style="color:#75715e">// fetch some json without jquery
+</span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetchJSONFile</span>(<span style="color:#a6e22e">path</span>, <span style="color:#a6e22e">callback</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">httpRequest</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">XMLHttpRequest</span>();
+  <span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">onreadystatechange</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">readyState</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">4</span>) {
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">200</span>) {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">responseText</span>);
+          <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">callback</span>) <span style="color:#a6e22e">callback</span>(<span style="color:#a6e22e">data</span>);
+      }
+    }
+  };
+  <span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#39;GET&#39;</span>, <span style="color:#a6e22e">path</span>);
+  <span style="color:#a6e22e">httpRequest</span>.<span style="color:#a6e22e">send</span>(); 
+}
+
+
+<span style="color:#75715e">// ==========================================
+</span><span style="color:#75715e"></span><span style="color:#75715e">// load our search index, only executed once
+</span><span style="color:#75715e"></span><span style="color:#75715e">// on first call of search box (CMD-/)
+</span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">loadSearch</span>() { 
+  <span style="color:#a6e22e">fetchJSONFile</span>(<span style="color:#e6db74">&#39;/index.json&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">data</span>){
+
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> { <span style="color:#75715e">// fuse.js options; check fuse.js website for details
+</span><span style="color:#75715e"></span>      <span style="color:#a6e22e">shouldSort</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+      <span style="color:#a6e22e">location</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>,
+      <span style="color:#a6e22e">distance</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>,
+      <span style="color:#a6e22e">threshold</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0.4</span>,
+      <span style="color:#a6e22e">minMatchCharLength</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">2</span>,
+      <span style="color:#a6e22e">keys</span><span style="color:#f92672">:</span> [
+        <span style="color:#e6db74">&#39;title&#39;</span>,
+        <span style="color:#e6db74">&#39;permalink&#39;</span>,
+        <span style="color:#e6db74">&#39;tags&#39;</span>,
+        <span style="color:#e6db74">&#39;content&#39;</span>
+        ]
+    };
+    <span style="color:#a6e22e">fuse</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Fuse</span>(<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">options</span>); <span style="color:#75715e">// build the index from the json file
+</span><span style="color:#75715e"></span>  });
+}
+
+
+<span style="color:#75715e">// ==========================================
+</span><span style="color:#75715e"></span><span style="color:#75715e">// using the index we loaded on CMD-/, run 
+</span><span style="color:#75715e"></span><span style="color:#75715e">// a search query (for &#34;term&#34;) every time a letter is typed
+</span><span style="color:#75715e"></span><span style="color:#75715e">// in the search box
+</span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">executeSearch</span>(<span style="color:#a6e22e">term</span>) {
+  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">results</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fuse</span>.<span style="color:#a6e22e">search</span>(<span style="color:#a6e22e">term</span>); <span style="color:#75715e">// the actual query being run using fuse.js
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">searchitems</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>; <span style="color:#75715e">// our results bucket
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) { <span style="color:#75715e">// no results based on what was typed into the input box
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">resultsAvailable</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+    <span style="color:#a6e22e">searchitems</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+  } <span style="color:#66d9ef">else</span> { <span style="color:#75715e">// build our html 
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">item</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">5</span>)) { <span style="color:#75715e">// only show first 5 results
+</span><span style="color:#75715e"></span>       <span style="color:#a6e22e">searchitems</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">searchitems</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&lt;li&gt;&lt;a href=&#34;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">results</span>[<span style="color:#a6e22e">item</span>].<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">permalink</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34; tabindex=&#34;0&#34;&gt;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&lt;span class=&#34;title&#34;&gt;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">results</span>[<span style="color:#a6e22e">item</span>].<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">title</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&lt;/span&gt;&lt;br /&gt; &lt;span class=&#34;sc&#34;&gt;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">results</span>[<span style="color:#a6e22e">item</span>].<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">tags</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&lt;/em&gt;&lt;/a&gt;&lt;/li&gt;&#39;</span>;
+    }
+    <span style="color:#a6e22e">resultsAvailable</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+  }
+
+  document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;searchResults&#34;</span>).<span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">searchitems</span>;
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+    <span style="color:#a6e22e">first</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>.<span style="color:#a6e22e">firstChild</span>.<span style="color:#a6e22e">firstElementChild</span>; <span style="color:#75715e">// first result container — used for checking against keyboard up/down location
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">last</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">list</span>.<span style="color:#a6e22e">lastChild</span>.<span style="color:#a6e22e">firstElementChild</span>; <span style="color:#75715e">// last result container — used for checking against keyboard up/down location
+</span><span style="color:#75715e"></span>  }
+}
+</code></pre></div><p>serach.css如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css">#fastSearch { 
+  <span style="color:#66d9ef">visibility</span>: <span style="color:#66d9ef">hidden</span>;
+  <span style="color:#66d9ef">position</span>: <span style="color:#66d9ef">fixed</span>;
+  <span style="color:#66d9ef">right</span>: <span style="color:#ae81ff">0</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">top</span>: <span style="color:#ae81ff">0</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>;
+  <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">300</span><span style="color:#66d9ef">px</span>;
+}      
+
+#fastSearch <span style="color:#f92672">input</span> { 
+  <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">100</span><span style="color:#66d9ef">%</span>;
+  <span style="color:#66d9ef">height</span>: <span style="color:#ae81ff">31</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">1.6</span><span style="color:#66d9ef">em</span>;
+  <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#aaa</span>;
+  <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
+  <span style="color:#66d9ef">background-color</span>: <span style="color:#ae81ff">#000</span>;
+  <span style="color:#66d9ef">border-radius</span>: <span style="color:#ae81ff">3</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">3</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">0</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">0</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">border</span>: <span style="color:#66d9ef">none</span>;
+  <span style="color:#66d9ef">outline</span>: <span style="color:#66d9ef">none</span>;
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">left</span>;
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>;
+}
+
+#searchResults <span style="color:#f92672">li</span> { 
+  <span style="color:#66d9ef">list-style</span>: <span style="color:#66d9ef">none</span>; 
+  <span style="color:#66d9ef">margin-left</span>: <span style="color:#ae81ff">0</span><span style="color:#66d9ef">em</span>;
+  <span style="color:#66d9ef">background-color</span>: <span style="color:#ae81ff">#333</span>; 
+  <span style="color:#66d9ef">border-bottom</span>: <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">dotted</span> <span style="color:#ae81ff">#000</span>;
+}
+  #searchResults <span style="color:#f92672">li</span> .<span style="color:#a6e22e">title</span> { <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">1.1</span><span style="color:#66d9ef">em</span>; <span style="color:#66d9ef">margin-bottom</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>;}
+
+#searchResults { <span style="color:#66d9ef">visibility</span>: <span style="color:#66d9ef">inherit</span>; <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>; <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">320</span><span style="color:#66d9ef">px</span>; }
+#searchResults <span style="color:#f92672">a</span> { <span style="color:#66d9ef">text-decoration</span>: <span style="color:#66d9ef">none</span> <span style="color:#75715e">!important</span>; <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>; }
+  #searchResults <span style="color:#f92672">a</span>:<span style="color:#a6e22e">hover</span><span style="color:#f92672">,</span> <span style="color:#f92672">a</span>:<span style="color:#a6e22e">focus</span> { <span style="color:#66d9ef">outline</span>: <span style="color:#ae81ff">0</span>; <span style="color:#66d9ef">background-color</span>: <span style="color:#ae81ff">#666</span>; <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#fff</span>; }
+</code></pre></div><p>index.json如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{<span style="color:#960050;background-color:#1e0010">{</span><span style="color:#960050;background-color:#1e0010">-</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">S</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">h</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">A</span><span style="color:#960050;background-color:#1e0010">d</span><span style="color:#960050;background-color:#1e0010">d</span> <span style="color:#f92672">&#34;index&#34;</span> <span style="color:#960050;background-color:#1e0010">s</span><span style="color:#960050;background-color:#1e0010">l</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">e</span> <span style="color:#960050;background-color:#1e0010">-</span>}<span style="color:#960050;background-color:#1e0010">}</span>
+{<span style="color:#960050;background-color:#1e0010">{</span><span style="color:#960050;background-color:#1e0010">-</span> <span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">n</span><span style="color:#960050;background-color:#1e0010">g</span><span style="color:#960050;background-color:#1e0010">e</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">S</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">g</span><span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">s</span> <span style="color:#960050;background-color:#1e0010">-</span>}<span style="color:#960050;background-color:#1e0010">}</span>{<span style="color:#960050;background-color:#1e0010">{</span><span style="color:#960050;background-color:#1e0010">-</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">S</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">h</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">A</span><span style="color:#960050;background-color:#1e0010">d</span><span style="color:#960050;background-color:#1e0010">d</span> <span style="color:#f92672">&#34;index&#34;</span> <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#960050;background-color:#1e0010">d</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">t</span> <span style="color:#e6db74">&#34;title&#34;</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">T</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">l</span><span style="color:#960050;background-color:#1e0010">e</span> <span style="color:#e6db74">&#34;tags&#34;</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">m</span><span style="color:#960050;background-color:#1e0010">s</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">g</span><span style="color:#960050;background-color:#1e0010">s</span> <span style="color:#e6db74">&#34;content&#34;</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">l</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">n</span> <span style="color:#e6db74">&#34;permalink&#34;</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">m</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">l</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">n</span><span style="color:#960050;background-color:#1e0010">k</span> <span style="color:#e6db74">&#34;date&#34;</span> <span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">m</span><span style="color:#960050;background-color:#1e0010">s</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">d</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">)</span> <span style="color:#960050;background-color:#1e0010">-</span>}<span style="color:#960050;background-color:#1e0010">}</span>{<span style="color:#960050;background-color:#1e0010">{</span><span style="color:#960050;background-color:#1e0010">-</span> <span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">n</span><span style="color:#960050;background-color:#1e0010">d</span> <span style="color:#960050;background-color:#1e0010">-</span>}<span style="color:#960050;background-color:#1e0010">}</span>
+{<span style="color:#960050;background-color:#1e0010">{</span><span style="color:#960050;background-color:#1e0010">-</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">S</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">r</span><span style="color:#960050;background-color:#1e0010">a</span><span style="color:#960050;background-color:#1e0010">t</span><span style="color:#960050;background-color:#1e0010">c</span><span style="color:#960050;background-color:#1e0010">h</span><span style="color:#960050;background-color:#1e0010">.</span><span style="color:#960050;background-color:#1e0010">G</span><span style="color:#960050;background-color:#1e0010">e</span><span style="color:#960050;background-color:#1e0010">t</span> <span style="color:#f92672">&#34;index&#34;</span> <span style="color:#960050;background-color:#1e0010">|</span> <span style="color:#960050;background-color:#1e0010">j</span><span style="color:#960050;background-color:#1e0010">s</span><span style="color:#960050;background-color:#1e0010">o</span><span style="color:#960050;background-color:#1e0010">n</span><span style="color:#960050;background-color:#1e0010">i</span><span style="color:#960050;background-color:#1e0010">f</span><span style="color:#960050;background-color:#1e0010">y</span> <span style="color:#960050;background-color:#1e0010">-</span>}<span style="color:#960050;background-color:#1e0010">}</span>
+</code></pre></div>
       </main>
 
-      <footer>
+      <div id="fastSearch">
+   <input id="searchInput" tabindex="0">
+   <ul id="searchResults">
+   </ul>
+</div>
+<footer>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
   <script src ="/js/search.js"></script>
+  <script src="../../js/fuse.js"></script> 
+ <script src="../../js/fastsearch.js"></script>
 
   <script>
   hljs.configure({languages: []});
@@ -574,9 +768,10 @@ unsafe = true
   
   <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
   <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
-  <span id="busuanzi_container_site_uv">
-    本站访客数<span id="busuanzi_value_site_uv"></span>人次
-</span>
+  <br>
+  <span >
+    <mark>CMD+/</mark>对网站进行搜索
+  </span>
   
   
 <script async src="../../js/center-image.js"></script>

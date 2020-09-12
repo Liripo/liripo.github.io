@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ka与Ks计算 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #6BB0DF;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/search.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="alternate" type="application/rss+xml" href="https://liripo.github.io/index.xml" title="Liripo">
+  
+  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="Ka与Ks计算">
+
+
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>Ka与Ks计算</h1>
+  <h3>
+    03 Sep 2020
+  </h3>
+   <h5 id="wc">1373 Words|Read in about 3       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+    </h5>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <p>kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>软件获得在<a href="http://evolution.genomics.org.cn/software.htm.">http://evolution.genomics.org.cn/software.htm.</a></p>
+<p>下载解压缩后可以在里面找到windows，Linux版本以及源代码，示例文件以及帮助文档。</p>
+<blockquote>
+<p>Ka/Ks，在遗传学中，<strong>Ka/Ks</strong>或者<strong>dN/dS</strong>表示的是异义替换（Ka）和同义替换（Ks）之间的比例。这个比例可以判断是否有选择压力作用于这个蛋白质编码基因。</p>
+<p>不导致氨基酸改变的<a href="https://baike.baidu.com/item/%E6%A0%B8%E8%8B%B7%E9%85%B8">核苷酸</a>变异我们称为同义突变，反之则称为非同义突变。一般认为，同义突变不受自然选择，而非同义突变则受到自然选择作用。在进化分析中，了解同义突变和非同义突变发生的速率是很有意义的。常用的参数有以下几种：同义突变频率(Ks)、非同义突变频率(Ka)、非同义突变率与同义突变率的比值(Ka/Ks)。如果Ka/Ks&gt;1，则认为有正选择效应。如果Ka/Ks=1，则认为存在中性选择。如果Ka/Ks&lt;1，则认为有纯化选择作用。</p>
+</blockquote>
+<p>而且Ka,Ks不考虑终止子，比如stop gain,stop loss。</p>
+<p>kaks_calculator使用的输入文件为axt文件</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">NP_000026
+ATGCTCCTGTG-CCACTGGCC
+ATCCCC-TGCGCTCACTGGAC
+NP_000053
+ACAGaTtCTACCc-GCCcACTA--GgtGtt
+---ggTTCTCCtACCcA-G-CACTACTggg
+</code></pre></div><p>就是一个基因或者一个开放阅读框有比对好的两条序列去计算。如果我们使用<a href="https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/">mega</a>生成一个比对好的fasta文件后，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span>a
+ATATTAGGTTTTTACCTACCCAGGAAAAGCCAACCAACCTCGATCTCTTGTAGATCTGTT
+CTCTAAACGAACTTTAAAATCTGTGTAGCTGTCGCTCGGCTGCATGCCTAGTGCACCTAC
+<span style="color:#f92672">&gt;</span>b
+<span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span><span style="color:#f92672">-</span>TAGGTTTTTACCTACCCAGGAAAAGCCAACCAACCTCGATCTCTTGTAGATCTGTT
+CTCTAAACGAACTTTAAAATCTGTGTAGCTGTCGCTCGGCTGCATGCCTAGTGCACCTAC
+</code></pre></div><p>就前面四个我改成空位了。</p>
+<p>可以使用</p>
+<p>fa_to_axt.R转下，我自己写的脚本。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(tidyverse)
+
+args<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">commandArgs</span>(<span style="color:#66d9ef">TRUE</span>)
+<span style="color:#75715e">##比对后fasta,第一个参数</span>
+fasta <span style="color:#f92672">&lt;-</span> args[1]
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">is.na</span>(fasta)){<span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">fasta文件必须提供!&#34;</span>)}
+<span style="color:#75715e">#开放阅读框,第二个参数,可要可不要，不要就整个fasta文件转axt</span>
+orf <span style="color:#f92672">&lt;-</span> args[2]
+
+fas <span style="color:#f92672">&lt;-</span> Biostrings<span style="color:#f92672">::</span><span style="color:#a6e22e">readDNAStringSet</span>(fasta)
+
+as_axt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(DNAStrings,name){
+  chr <span style="color:#f92672">&lt;-</span> DNAStrings <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as.character</span>()
+  chr_write <span style="color:#f92672">&lt;-</span> base<span style="color:#f92672">::</span><span style="color:#a6e22e">paste</span>(chr,collapse <span style="color:#f92672">=</span>  <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\n&#34;</span>)
+  res <span style="color:#f92672">&lt;-</span> base<span style="color:#f92672">::</span><span style="color:#a6e22e">paste</span>(name,chr_write,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#34;</span>,sep <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\n&#34;</span>)
+  res
+}
+seq_from_bed <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(orf_tbl){
+  <span style="color:#a6e22e">map</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(orf_tbl),<span style="color:#a6e22e">function</span>(i){
+    row <span style="color:#f92672">&lt;-</span> orf_tbl[i,]
+    orfname <span style="color:#f92672">&lt;-</span> row[[1]]
+    start <span style="color:#f92672">&lt;-</span> row[[2]]
+    end <span style="color:#f92672">&lt;-</span> row[[3]]
+    <span style="color:#a6e22e">if</span>((end <span style="color:#f92672">-</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)<span style="color:#f92672">%%</span><span style="color:#ae81ff">3</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>){<span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">长度不是3的倍数!&#34;</span>,call. <span style="color:#f92672">=</span> F)}
+    subseq <span style="color:#f92672">&lt;-</span> Biostrings<span style="color:#f92672">::</span><span style="color:#a6e22e">subseq</span>(fas,start,end)
+    name <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(orfname,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">:&#34;</span>,start,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">-&#34;</span>,end)
+    axt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as_axt</span>(subseq,name <span style="color:#f92672">=</span> name)
+    axt
+  })
+filename <span style="color:#f92672">&lt;-</span> fs<span style="color:#f92672">::</span><span style="color:#a6e22e">path_file</span>(fasta) <span style="color:#f92672">%&gt;%</span> fs<span style="color:#f92672">::</span><span style="color:#a6e22e">path_ext_remove</span>()
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">is.na</span>(orf)){
+  llsc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as_axt</span>(fas,name <span style="color:#f92672">=</span> filename)
+}else{
+  orf_tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read_delim</span>(orf,delim <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\t&#34;</span>,col_names <span style="color:#f92672">=</span> F)
+  llsc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq_from_bed</span>(orf_tbl <span style="color:#f92672">=</span> orf_tbl)
+}
+
+llsc <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">write_lines</span>(<span style="color:#a6e22e">paste0</span>(filename,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.axt&#34;</span>))
+</code></pre></div><p>使用,没有需要提取的对应位置的话，可以不传入开放阅读框的位置</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Rscript fa_to_axt.R xxx.fasta
+</code></pre></div><p>如果你要提取出全基因序列某个能翻译蛋白质的序列区域，这用于多序列比对后的fasta文件，全基因组的可以用bedtools工具提取。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Rscript fa_to_axt.R xxx.fasta xxx.bed
+<span style="color:#75715e">#xxx.bed如下</span>
+c	<span style="color:#ae81ff">1</span>	<span style="color:#ae81ff">3</span>
+d	<span style="color:#ae81ff">5</span>	<span style="color:#ae81ff">13</span>
+</code></pre></div><p>当然，更好的是有直接测得的两个基因的序列，直接进行比对然后转axt。但是要是其中一条序列你不知道开放阅读框位置，就得先全基因比对了吧。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">KaKs_Calculator -i test.axt -o test.kaks -m MA
+</code></pre></div><p>其中还有一个-c参数，寻找密码子类型的，默认标准密码子。</p>
+<p>-m MA默认的这个最大似然方法十分耗时。可以试试跟-m NG的运行速度区别。</p>
+<blockquote>
+<p>总之就是你必须获得两条比对好的序列，而且这序列是编码蛋白质的区域，然后可以自己写一个fasta文件转axt文件的程序或者用上面那个程序。</p>
+</blockquote>
+<p>use LWL, YN and MYN and standard Code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">use LWL, YN and MYN and standard Code
+KaKs_Calculator -i test.axt -o test.axt.kaks -m LWL -m YN -m MYN
+</code></pre></div><p>方法可以多个，至于选哪种就不清楚了。</p>
+<p>生成的结果：</p>
+<p>● Ka: Nonsynonymous substitution rate
+● Ks: Synonymous substitution rate
+● Ka/Ks: Selective strength
+● P-Value (Fisher): The value computed by Fisher exact test
+● Length: Sequence length (after removing gaps and stop codon(s))
+● S-Sites: Synonymous sites
+● N-Sites: Nonsynonymous sites
+● Fold-Sites (0:2:4): 0,2,4-fold degenerate sites
+● Substitutions: Substitutions between sequences
+● S-Substitutions: Synonymous substitutions
+● N-Substitutions: Nonsynonymous substitutions
+● Fold-S-Substitutions (0:2:4): Synonymous substitutions at 0,2,4-fold
+● Fold-N-Substitutions (0:2:4): Nonsynonymous substitutions at 0,2,4-fold
+● Divergence-Time: Divergence time</p>
+<p>● Substitution-Rate-Ratio (rTC:rAG:rTA:rCG:rTG:rCA/rCA): Ratios of six substitution rates to the substitution rate between C and A
+● GC(1:2:3): GC content of entire sequences and of three codon positions
+● ML-Score: Maximum likelihood score
+● AICc: Value of AICc
+● Akaike-Weight: Value of Akaike weight for model selection
+● Model: Selected model for the method of MS</p>
+<p>这个软件还有绘图功能。详细看官方文档。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>KaKs_Calculator: Calculating Ka and Ks Through Model Selection and Model Averaging <a href="https://doi.org/10.1016/S1672-0229(07)60007-2">https://doi.org/10.1016/S1672-0229(07)60007-2</a><a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#8617;</a></p>
+</li>
+</ol>
+</section>
+
+      </main>
+
+      <div id="fastSearch">
+   <input id="searchInput" tabindex="0">
+   <ul id="searchResults">
+   </ul>
+</div>
+<footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+  <script src ="/js/search.js"></script>
+  <script src="../../js/fuse.js"></script> 
+ <script src="../../js/fastsearch.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+  
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
+  <br>
+  <span >
+    <mark>CMD+/</mark>对网站进行搜索
+  </span>
+  
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<center>
+Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
+<SCRIPT language=javascript>
+function show_date_time(){
+window.setTimeout("show_date_time()", 1000);
+BirthDay=new Date("7/8/2019 00:00:00");
+today=new Date();
+timeold=(today.getTime()-BirthDay.getTime());
+sectimeold=timeold/1000
+secondsold=Math.floor(sectimeold);
+msPerDay=24*60*60*1000
+e_daysold=timeold/msPerDay
+daysold=Math.floor(e_daysold);
+e_hrsold=(e_daysold-daysold)*24;
+hrsold=Math.floor(e_hrsold);
+e_minsold=(e_hrsold-hrsold)*60;
+minsold=Math.floor((e_hrsold-hrsold)*60);
+seconds=Math.floor((e_minsold-minsold)*60);
+span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+}
+show_date_time();
+</SCRIPT>
+</center>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

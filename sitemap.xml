@@ -4,17 +4,27 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>/tags/linux/</loc>
-    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
+    <lastmod>2020-09-11T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2020-09-11T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/</loc>
+    <lastmod>2020-09-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -23,13 +33,13 @@
   </url>
   
   <url>
-    <loc>/tags/</loc>
-    <lastmod>2020-09-06T00:00:00+00:00</lastmod>
+    <loc>/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</loc>
+    <lastmod>2020-09-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</loc>
-    <lastmod>2020-09-05T00:00:00+00:00</lastmod>
+    <loc>/post/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/</loc>
+    <lastmod>2020-09-03T00:00:00+00:00</lastmod>
   </url>
   
   <url>
