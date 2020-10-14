@@ -2,40 +2,40 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bio on Liripo</title>
-    <link>/tags/bio/</link>
+    <link>https://liripo.github.io/tags/bio/</link>
     <description>Recent content in bio on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
     <lastBuildDate>Sat, 15 Aug 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/bio/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/bio/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Mega使用及多序列比对</title>
-      <link>/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</link>
+      <link>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</link>
       <pubDate>Sat, 15 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</guid>
+      <guid>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</guid>
       <description>安装 https://www.megasoftware.net/，下载windows的GUI版本，要使用CC（命令行）版本&amp;ndash;配置好</description>
     </item>
     
     <item>
       <title>blast学习</title>
-      <link>/post/ncbi/</link>
+      <link>https://liripo.github.io/post/ncbi/</link>
       <pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/ncbi/</guid>
+      <guid>https://liripo.github.io/post/ncbi/</guid>
       <description>最新的blast可以在页面ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/找到。</description>
     </item>
     
     <item>
       <title>TCGA</title>
-      <link>/post/tcga/</link>
+      <link>https://liripo.github.io/post/tcga/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/tcga/</guid>
+      <guid>https://liripo.github.io/post/tcga/</guid>
       <description></description>
     </item>
     

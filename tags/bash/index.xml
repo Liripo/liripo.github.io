@@ -2,22 +2,22 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>bash on Liripo</title>
-    <link>/tags/bash/</link>
+    <link>https://liripo.github.io/tags/bash/</link>
     <description>Recent content in bash on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
     <lastBuildDate>Fri, 08 Nov 2019 22:37:49 +0000</lastBuildDate>
     
-	<atom:link href="/tags/bash/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/bash/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>gitbash配置文件</title>
-      <link>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</link>
+      <link>https://liripo.github.io/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</link>
       <pubDate>Fri, 08 Nov 2019 22:37:49 +0000</pubDate>
       
-      <guid>/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</guid>
+      <guid>https://liripo.github.io/post/gitbash%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6/</guid>
       <description>&lt;p&gt;&lt;strong&gt;gitbash的好处是能在windows下使用bash命令以及自带vim编辑器。&lt;/strong&gt;&lt;/p&gt;</description>
     </item>
     

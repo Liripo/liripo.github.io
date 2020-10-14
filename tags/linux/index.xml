@@ -2,86 +2,95 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>linux on Liripo</title>
-    <link>/tags/linux/</link>
+    <link>https://liripo.github.io/tags/linux/</link>
     <description>Recent content in linux on Liripo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Fri, 11 Sep 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 13 Oct 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://liripo.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>VSCode 远程使用</title>
+      <link>https://liripo.github.io/post/vscode-%E8%BF%9C%E7%A8%8B%E4%BD%BF%E7%94%A8/</link>
+      <pubDate>Tue, 13 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/vscode-%E8%BF%9C%E7%A8%8B%E4%BD%BF%E7%94%A8/</guid>
+      <description>安装 vscode,下载安装，安装后默认是英文界面，要改成中文的话可以点击左侧的扩展按钮搜索 “Chinese”，安装搜索结果中的第一个（Chi</description>
+    </item>
+    
+    <item>
       <title>内网穿透</title>
-      <link>/post/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/</link>
+      <link>https://liripo.github.io/post/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/</link>
       <pubDate>Fri, 11 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/</guid>
+      <guid>https://liripo.github.io/post/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/</guid>
       <description>UDP 内网穿透的实质是利用路由器上的NAT 系统，NAT 是一种将私有（保留）地址转化为合法IP地址的转换技术。 比如当你处于内网时，也就是局域网，你</description>
     </item>
     
     <item>
       <title>Rstudio server in linux</title>
-      <link>/post/rstudio-server-in-linux/</link>
+      <link>https://liripo.github.io/post/rstudio-server-in-linux/</link>
       <pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/rstudio-server-in-linux/</guid>
+      <guid>https://liripo.github.io/post/rstudio-server-in-linux/</guid>
       <description>安装 官网教程 由于刚刚升级了WSL24,所以就尝试下WSL2安装Rstudio server。 首先你要先确定自己是否安装了R，其中conda怎么</description>
     </item>
     
     <item>
       <title>wsl更新到WSL2</title>
-      <link>/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</link>
+      <link>https://liripo.github.io/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</link>
       <pubDate>Sat, 05 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</guid>
+      <guid>https://liripo.github.io/post/wsl%E6%9B%B4%E6%96%B0%E5%88%B0wsl2/</guid>
       <description>更新 官网教程 首先检查自己的windows版本是否符和需求， cmd键入winver，可以看到你的版本。 systeminfo可以看下系统类型，在</description>
     </item>
     
     <item>
       <title>Ka与Ks计算</title>
-      <link>/post/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/</link>
+      <link>https://liripo.github.io/post/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/</link>
       <pubDate>Thu, 03 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/</guid>
+      <guid>https://liripo.github.io/post/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/</guid>
       <description>kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator1 软件获得在http://evoluti</description>
     </item>
     
     <item>
       <title>nvim</title>
-      <link>/post/nvim/</link>
+      <link>https://liripo.github.io/post/nvim/</link>
       <pubDate>Thu, 03 Sep 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/nvim/</guid>
+      <guid>https://liripo.github.io/post/nvim/</guid>
       <description>nvim安装 https://neovim.io/ https://github.com/neovim/neovim/releases ====版本发布页面。 neovim的linux版本你可以在上面找到，你可以选择nvim-linux.tar.gz里面有编译好</description>
     </item>
     
     <item>
       <title>linux软件安装及R、R包安装</title>
-      <link>/post/linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8F%8Arr%E5%8C%85%E5%AE%89%E8%A3%85/</link>
+      <link>https://liripo.github.io/post/linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8F%8Arr%E5%8C%85%E5%AE%89%E8%A3%85/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8F%8Arr%E5%8C%85%E5%AE%89%E8%A3%85/</guid>
+      <guid>https://liripo.github.io/post/linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8F%8Arr%E5%8C%85%E5%AE%89%E8%A3%85/</guid>
       <description>apt卸载软件 内容如下： 卸载软件：sudo apt-get remove 软件名(+版本号) 卸载软件并删除依赖：sudo apt-get remove &amp;ndash;auto-remove 软件名(+版本号) 清除软件：sudo apt-get purge 软</description>
     </item>
     
     <item>
       <title>windows10安装linux</title>
-      <link>/post/windows10%E5%AE%89%E8%A3%85linux/</link>
+      <link>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</link>
       <pubDate>Sat, 21 Mar 2020 14:27:47 +0000</pubDate>
       
-      <guid>/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
+      <guid>https://liripo.github.io/post/windows10%E5%AE%89%E8%A3%85linux/</guid>
       <description>&lt;p&gt;windows10安装ubuntu，以及源码安装python到指定目录，及更多相关配置。&lt;/p&gt;
 &lt;p&gt;温馨提示：目前已有wsl2,推荐安装wsl2。&lt;/p&gt;</description>
     </item>
     
     <item>
       <title>xshell 和 xming 联合使用图形界面软件</title>
-      <link>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
+      <link>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</link>
       <pubDate>Mon, 23 Dec 2019 10:59:34 +0000</pubDate>
       
-      <guid>/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
+      <guid>https://liripo.github.io/post/xshell-%E5%92%8C-xming-%E8%81%94%E5%90%88%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6/</guid>
       <description>&lt;p&gt;xmanger 是与xshell搭配的图形界面管理器，需要付费，作为替代，使用xming，只是运行没那么快。&lt;/p&gt;</description>
     </item>
     
