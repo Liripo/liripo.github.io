@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Sat, 15 Aug 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 13 Oct 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://liripo.github.io/tags/bio/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>NCBI数据下载</title>
+      <link>https://liripo.github.io/post/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
+      <pubDate>Tue, 13 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://liripo.github.io/post/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
+      <description>NCBI共享大量数据。 2020年，PubMed中有3160万篇论文，其中PubMed Central中有660万篇全文记录。 NCBI核苷酸数据</description>
+    </item>
     
     <item>
       <title>Mega使用及多序列比对</title>

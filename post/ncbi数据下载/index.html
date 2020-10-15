@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NCBI数据下载 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #6BB0DF;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/search.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="alternate" type="application/rss+xml" href="https://liripo.github.io/index.xml" title="Liripo">
+  
+  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="NCBI数据下载">
+
+
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>NCBI数据下载</h1>
+  <h3>
+    13 Oct 2020
+  </h3>
+   <h5 id="wc">785 Words|Read in about 2       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+    </h5>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>NCBI共享大量数据。 2020年，PubMed中有3160万篇论文，其中PubMed Central中有660万篇全文记录。 NCBI核苷酸数据库（包括GenBank）具有4.307亿个不同序列的数据，而dbSNP描述了7.206亿个不同的遗传变异。 所有这些记录都可以与NCBI分类中的186万个物种或OMIM中的2.69万个疾病相关的记录进行交叉引用。</p>
+</blockquote>
+<h1 id="sra">SRA数据下载</h1>
+<h2 id="sra-toolkit">SRA toolkit</h2>
+<p>参考文章；<a href="https://www.ncbi.nlm.nih.gov/sra/docs/sradownload/">https://www.ncbi.nlm.nih.gov/sra/docs/sradownload/</a></p>
+<p>文章中有特别强调要用最新的sra toolkit(时间2020-10-13)，所以目前你用aspera估计不能下了。另一种是直接找到链接直接浏览器下载或者wget。</p>
+<p>sra toolkit下载地址：<a href="https://github.com/ncbi/sra-tools/wiki/01.-Downloading-SRA-Toolkit">https://github.com/ncbi/sra-tools/wiki/01.-Downloading-SRA-Toolkit</a></p>
+<p>下载完解压后需要配置。配置看<a href="https://github.com/ncbi/sra-tools/wiki/03.-Quick-Toolkit-Configuration">https://github.com/ncbi/sra-tools/wiki/03.-Quick-Toolkit-Configuration</a></p>
+<p>只有一个run时，直接运行</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">prefetch SRR******
+</code></pre></div><p>一个SraAccList.txt文件，如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">SRR11192680
+SRR11192681
+SRR11192682
+SRR11192683
+SRR11192684
+</code></pre></div><p>使用命令：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">prefetch --option-file SraAccList.txt
+</code></pre></div><p>下完后解压sra格式文件。可以使用<strong>fasterq-dump</strong> and <strong>sam-dump</strong></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">fasterq-dump --split-files SRR11180057.sra
+</code></pre></div><h1 id="rentrez">rentrez</h1>
+<p>在R里面运行entrez。</p>
+<blockquote>
+<p>Entrez是分子生物学数据库系统，可提供对核苷酸和蛋白质序列数据，以基因为中心和基因组作图的信息，3D结构数据，PubMed MEDLINE等的集成访问。该系统由国家生物技术信息中心（NCBI）搭建。</p>
+</blockquote>
+<p>下载核酸序列，比如sars-cov-2</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">fasta <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">entrez_fetch</span>(db <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">nucleotide&#34;</span>,id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">NC_045512.2&#34;</span> ,rettype <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">fasta&#34;</span>)
+<span style="color:#a6e22e">write_lines</span>(fastas,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> NC_045512v2.fasta&#34;</span>)
+</code></pre></div><p>还有更多使用参考文章：<a href="https://docs.ropensci.org/rentrez/articles/rentrez_tutorial.html">https://docs.ropensci.org/rentrez/articles/rentrez_tutorial.html</a></p>
+
+      </main>
+
+      <div id="fastSearch">
+   <input id="searchInput" tabindex="0">
+   <ul id="searchResults">
+   </ul>
+</div>
+<footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+  <script src ="/js/search.js"></script>
+  <script src="../../js/fuse.js"></script> 
+ <script src="../../js/fastsearch.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+  
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
+  <br>
+  <span >
+    <mark>CMD+/</mark>对网站进行搜索
+  </span>
+  
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<center>
+Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
+<SCRIPT language=javascript>
+function show_date_time(){
+window.setTimeout("show_date_time()", 1000);
+BirthDay=new Date("7/8/2019 00:00:00");
+today=new Date();
+timeold=(today.getTime()-BirthDay.getTime());
+sectimeold=timeold/1000
+secondsold=Math.floor(sectimeold);
+msPerDay=24*60*60*1000
+e_daysold=timeold/msPerDay
+daysold=Math.floor(e_daysold);
+e_hrsold=(e_daysold-daysold)*24;
+hrsold=Math.floor(e_hrsold);
+e_minsold=(e_hrsold-hrsold)*60;
+minsold=Math.floor((e_hrsold-hrsold)*60);
+seconds=Math.floor((e_minsold-minsold)*60);
+span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+}
+show_date_time();
+</SCRIPT>
+</center>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>
