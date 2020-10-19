@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Tue, 13 Oct 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 18 Oct 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://liripo.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>bio</title>
       <link>https://liripo.github.io/tags/bio/</link>
-      <pubDate>Tue, 13 Oct 2020 00:00:00 +0000</pubDate>
+      <pubDate>Sun, 18 Oct 2020 00:00:00 +0000</pubDate>
       
       <guid>https://liripo.github.io/tags/bio/</guid>
       <description></description>
@@ -202,11 +202,11 @@
     </item>
     
     <item>
-      <title>Bioinformatics</title>
-      <link>https://liripo.github.io/tags/bioinformatics/</link>
-      <pubDate>Fri, 08 Nov 2019 09:39:24 +0000</pubDate>
+      <title>Bios</title>
+      <link>https://liripo.github.io/tags/bios/</link>
+      <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/tags/bioinformatics/</guid>
+      <guid>https://liripo.github.io/tags/bios/</guid>
       <description></description>
     </item>
     

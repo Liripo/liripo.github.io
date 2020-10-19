@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>生信文件格式汇总 | Liripo</title>
+    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
+  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
+
+  <style>
+  	:root {
+  		--pagecolour: #333333;
+  		--maintext: #dddddd;
+  		--faded: #888888;
+  		--highlight: #6BB0DF;
+  		--lowlight: #ba68c8;
+	}
+  </style>
+  <link rel="stylesheet" href="../../css/et_book.css" />
+  <link rel="stylesheet" href="../../css/search.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="alternate" type="application/rss+xml" href="https://liripo.github.io/index.xml" title="Liripo">
+  
+  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
+
+  
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="生信文件格式汇总">
+
+
+
+
+</head>
+
+
+  <body>
+    
+
+
+
+    <div class="main-content">
+      <nav>
+  <ul class="menu">
+    
+    <li><a href="../../">Home</a></li>
+    
+    <li><a href="../../about/">About</a></li>
+    
+    <li><a href="../../post/">Posts</a></li>
+    
+    <li><a href="../../tags/">Tags</a></li>
+    
+  </ul>
+</nav>
+
+      <div>
+  <h1>生信文件格式汇总</h1>
+  <h3>
+    08 Nov 2019
+  </h3>
+   <h5 id="wc">3810 Words|Read in about 8       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+    </h5>
+  <br><br>
+</div>
+
+
+      <main>
+        
+
+        <blockquote>
+<p>生信数据文件格式。</p>
+</blockquote>
+<h1 id="vcf">vcf</h1>
+<blockquote>
+<p>Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变异等,即SNP, indel, 和 structural variation calls。通常是对BAM文件格式的比对结果进行处理得到的。BCF格式文件是VCF格式的二进制文件。</p>
+</blockquote>
+<p>注释信息通常以##开头， 描述包括参考基因组版本，得到该VCF文件的命令，以及各个TAG解释缩写的简单描述等。</p>
+<p>以#开头为列名，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CHROM 和 POS：代表参考序列名和variant的位置；如果是INDEL的话，位置是INDEL的第一个碱基位置。
+ID：variant的ID。比如在dbSNP中有该SNP的id，则会在此行给出<span style="color:#f92672">(</span>这个需要自己下载dbSNP数据库文件进行注释才有的<span style="color:#f92672">)</span>。若没有或者注释不上，则用<span style="color:#e6db74">&#39;.&#39;</span>表示其为一个novel variant。
+REF 和 ALT：参考序列的碱基 和 Variant的碱基。
+QUAL：Phred格式<span style="color:#f92672">(</span>Phred_scaled<span style="color:#f92672">)</span>的质量值，表示在该位点存在variant的可能性；该值越高，则variant的可能性越大；计算方法：Phred值 <span style="color:#f92672">=</span>-10*log <span style="color:#f92672">(</span>1-p<span style="color:#f92672">)</span> p为variant存在的概率;
+FILTER：使用上一个QUAL值来进行过滤的话，是不够的，使用其他方法过滤，过滤结果中通过则该值为”PASS”;若variant不可靠，则该项不为”PASS”或”.”。
+INFO： 这一行是variant的详细信息，内容很多，以下再具体详述。
+FORMAT 和 样品名列：这两行合起来提供了样品的基因型的信息。是由SAM/BAM文件中的@RG下的 SM 标签决定的。或者变异检测软件自己定义的。
+<span style="color:#75715e">##第九，十列中</span>
+GT:DP:VD:AD:AF:RD:ALD 
+0/1:322:61:261,61:0.1894:144,117:33,28
+</code></pre></div><p>GT：样品的基因型（genotype）。两个数字中间用’/&lsquo;分开，这两个数字表示双倍体的sample的基因型。0 表示样品中有ref的allele； 1 表示样品中variant的allele； 2表示有第二个variant的allele。因此： 0/0 表示sample中该位点为纯合的，和ref一致； 0/1 表示sample中该位点为杂合的，有ref和variant两个基因型； 1/1 表示sample中该位点为纯合的，和variant一致。 
+DP（Depth）为sample中该位点的测序深度。
+AD(Allele Depth)为sample中每一种allele的reads覆盖度，以逗号分割。</p>
+<h1 id="bamsamcram">bam/sam/cram</h1>
+<p><strong>bam</strong>:sam文件的二进制压缩文件，可使用samtools工具查看。由于其运行速度快，所以常常使用bam而不是sam。(B取自binary)
+<strong>sam</strong>:SAM是一种序列比对格式标准， 由sanger制定，是以TAB为分割符的文本格式。主要应用于测序序列mapping到基因组上的结果表示，当然也可以表示任意的多重比对结果。
+当测序得到的fastq文件map到基因组之后，我们通常会得到一个sam或者bam为扩展名的文件。SAM的全称是sequence alignment/map format。</p>
+<p><a href="https://vip.biotrainee.com/d/162-sam">详细可见</a></p>
+<p>对上述网址，我记录我需要用又常忘记的，必须的字段有11个，顺序固定，不可自行改动 ，因为变异检测基本是靠这些列的信息。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">QNAME，比对片段的（template）的编号；比较常用的叫法是queryname
+FLAG，位标识，template mapping情况的数字表示，每一个数字代表一种比对情况，这里的值是符合情况的数字相加总和；
+RNAME，参考序列的编号，如果注释中对SQ-SN进行了定义，这里必须和其保持一致，另外对于没有mapping上的序列，这里是’*‘；
+POS，比对上的位置，注意是从1开始计数，没有比对上，此处为0；
+MAPQ，mapping的质量;
+CIGAR，简要比对信息表达式,
+“M”表示 match或 mismatch；
+“I”表示 insert；
+“D”表示 deletion；
+“N”表示 skipped（跳过这段区域）；
+“S”表示 soft clipping（被剪切的序列存在于序列中）；
+“H”表示 hard clipping（被剪切的序列不存在于序列中）；
+“P”表示 padding；
+“<span style="color:#f92672">=</span>”表示 match；
+“X”表示 mismatch（错配，位置是一一对应的）；
+</code></pre></div><p><strong>CRAM</strong>:</p>
+<h1 id="fastqfasta">fastq/fasta</h1>
+<h2 id="fastq">fastq</h2>
+<p>一种存储了生物序列（通常是核酸序列）以及相应的质量评价的文本格式。</p>
+<pre><code>第一行@开头，接描述信息，4为flowcell第四个lane？1：N：0:后面是index?
+第二行为序列信息，N代表A\T\G\C,即any,用处？
+第三行为+开头，后面也可接描述信息
+第四行为为第二行测序质量评价，字节数与第二行相等。Q=10*log10(p/(1-p))，其中p是对应碱基判定的概率。
+</code></pre><ul>
+<li>fastq to fasta</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">zcat input.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==1{printf &#34;&gt;%s\n&#34;, substr($0,2)}NR%4==2{print}&#39;</span> &gt; output.fa
+</code></pre></div><ul>
+<li>统计序列条数(reads)</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">zcat *R1.fq.gz |grep <span style="color:#e6db74">&#39;@&#39;</span>| wc –l或者zcat  *.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==2{c++} END{print c}&#39;</span>
+
+或者pigz -dc input.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==2{c++} END{print c}&#39;</span>（速度快10倍）
+</code></pre></div><ul>
+<li>GC含量及碱基数目</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">perl -ne  <span style="color:#e6db74">&#39;if($.%4){chomp;$count_G=$count_G+($_=~tr/G//);$count_C=$count_C+($_=~tr/C//);$cur_length=length($_);$total_length+=$cur_length;}END{print qq{total count is $total_length bp\nGC%:},($count_G+$count_C)/$total_length,qq{\n} }&#39;</span> input.fq
+</code></pre></div><h2 id="fasta">fasta</h2>
+<p>是一种基于文本用于表示核酸序列或多肽序列的格式。其中核酸或氨基酸均以单个字母来表示，且允许在序列前添加序列名及注释。</p>
+<h1 id="gtfgff3genepred">gtf/gff3/GenePred</h1>
+<p>以<a href="https://www.gencodegenes.org/human/">gencode</a>下人类的gtf文件为例，手册页<a href="https://www.gencodegenes.org/pages/data_format.html">https://www.gencodegenes.org/pages/data_format.html</a>有详细的格式说明。</p>
+<p>GENCODE和Ensembl数据库均提供具有基因组坐标的GTF / GFF3文件，但不提供BED文件。</p>
+<blockquote>
+<p>gtf to bed</p>
+</blockquote>
+<p>gtf转bed,如果你想要提取基因的bed文件，可以根据第三列筛选gene，之后再获取需要的信息，其中基因名，比如gene symbol信息存在第九列。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">grep -P <span style="color:#e6db74">&#34;\tgene\t&#34;</span> gencode.xxxxxx.gtf | <span style="color:#ae81ff">\ </span> <span style="color:#75715e">#第三列筛选gene，(或者transcripts之类的)</span>
+	cut -f1,4,5,7,9 | <span style="color:#ae81ff">\ </span>  <span style="color:#75715e">#提取所需列</span>
+	sed <span style="color:#e6db74">&#39;s/[[:space:]]/\t/g&#39;</span> | <span style="color:#ae81ff">\ </span><span style="color:#75715e">#空格替换制表符</span>
+	sed <span style="color:#e6db74">&#39;s/[;|&#34;]//g&#39;</span> | <span style="color:#ae81ff">\ </span>  <span style="color:#75715e">#去掉；”</span>
+	awk -F <span style="color:#e6db74">$&#39;\t&#39;</span> <span style="color:#e6db74">&#39;BEGIN { OFS=FS } { print $1,$2-1,$3,$6,&#34;.&#34;,$4,$10,$12,$14 }&#39;</span> | <span style="color:#ae81ff">\ </span><span style="color:#75715e">#bed文件起始位置从0开始，需要减一，这里你可以选择你需要的列，一般前三列加个gene symbol那一列就够了。</span>
+	&gt;genecode_by_gene.txt
+</code></pre></div><p><strong>在R中操作</strong>
+rtracklayer包(R的基因组浏览器接口)</p>
+<p>将gtf在R中转为数据框进行筛选。[或者直接对*<a href="https://bioconductor.org/packages/3.11/GenomicRanges">GenomicRanges</a>*对象进行操作]</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">gtf <span style="color:#f92672">&lt;-</span> rtracklayer<span style="color:#f92672">::</span><span style="color:#a6e22e">import</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">xxxxxxxx.gtf&#34;</span>)
+<span style="color:#a6e22e">library</span>(tidyverse)
+gtf <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as_tibble</span>() <span style="color:#f92672">%&gt;%</span> 
+    <span style="color:#a6e22e">filter</span>(type <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">gene&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+	<span style="color:#a6e22e">mutate</span>(start <span style="color:#f92672">=</span> start <span style="color:#ae81ff">-1</span>) <span style="color:#f92672">%&gt;%</span>
+    <span style="color:#a6e22e">select</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">3</span>,gene_id,gene_name) <span style="color:#f92672">%&gt;%</span> 
+    <span style="color:#a6e22e">write_tsv</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">xxx.bed&#34;</span>)
+</code></pre></div><p><strong>注：在R中将gtf制作成TxDb对象进行操作也可以。</strong></p>
+<blockquote>
+<p>gtf跟gff3,GenePred互相转换</p>
+</blockquote>
+<p>这三个文件本质包含相同内容，GenePred table格式主要用在基因浏览器中基因预测的track。而且GenePred table格式也是从0开始，跟bed文件一样。可以使用gtftogenepred工具。</p>
+<h1 id="bed">bed</h1>
+<blockquote>
+<p>bed:通过规定行的内容来展示注释信息,以\t为分隔符。</p>
+</blockquote>
+<pre><code># BED文件必须的3列:
+1.chrom - 染色体号; 例如，chr1，chrX……
+2.chromStart - feature在染色体上起始位置.染色体上第一个碱基位置标记为0。
+3.chromEnd - feature在染色体上终止位置。染色体上前100个碱基片段的位置位置标记为：chromStart=0, chromEnd=100。 实际上，第101个碱基不属于当前片段中，当前片段的碱基应该是0-99。所以在BED文件中，起始位置从0开始，终止位置从1开始。
+# BED文件可选的9列:
+4.name - BED行名
+5.score - 在基因组浏览器中显示的灰度设定，值介于0-1000；
+gray score
+6.strand - 正负链标记. Either &quot;.&quot; (=no strand) or &quot;+&quot; or &quot;-&quot;.
+7.thickStart - feature起始位置(for example, the start codon in gene displays)
+8.thickEnd - feature编码终止位置 (for example the stop codon in gene displays)
+9.itemRgb - R,G,B (e.g. 255,0,0)值，当itemRgb 设置为 &quot;On&quot;，BED的行会显示颜色.
+10.blockCount - blocks (exons)数目.
+11.blockSizes - blocks (exons)大小列表，逗号分隔，对应于blockCount.
+12.blockStarts -blocks (exons)起始位置列表，逗号分隔，对应于blockCount.；这个起始位置是与chromStart的一个相对位置。
+</code></pre><h3 id="heading">其他名词</h3>
+<p><strong>variant</strong>:突变体
+<strong>call,calling</strong>:识别
+<strong>transcript variant</strong> 是可变剪接体，是由DNA转录得到的,mRNA包含若干外显子,经过剪接组合成不同长度的mRNA,翻译成不同长度蛋白质.这种由同一基因不同外显子组成的序列称可变剪接体，不同可变剪接体表达的蛋白作用可能相近也可能相反。</p>
+<pre><code>Chr:  变异所在的染色体
+Start: 变异在染色体的起始位置
+End:  变异在染色体的终止位置
+Ref:  基因组的参考序列
+Alt:  检测样本的基因组序列
+Func.refGene:  变异所处参考基团的功能区（exonic,intronic,UTR3,UTR5,splicing,upstream,downstream,intergenic）此处的exonic特指外显子编码氨基酸区，不包含外显子的UTR区
+Gene.refGene:  变异所处参考基因名称（如果是基因间，则是两侧的基因）
+GeneDetail.refGene：  非外显子区处于特定转录本中的具体位置（如果是基因间，则是距离两侧的基因的距离）
+ExonicFunc.refGene：  外显子的变异类型（frameshift insertion/frameshiftdeletion/stopgain/stoploss/nonframeshift insertion/nonframeshiftdeletion/synonymous SNV/nonsynonymous SNV）或者”.”则说明该变异不在外显子区
+AAChange.refGene：氨基酸水平的改变（同一个基因可能具有多个转录本，氨基酸改变的位置在不同的转录本中可能不一样）
+avsnp150：dbsnp150 缩写，具有等位基因分裂和左标准化
+1000g2015aug_eas：1000个基因组项目数据集，其中东亚群体的等位基因频率
+gnomAD_exome_ALL：该变异在gnomAD数据库中的多个群体的全外显子组序列数据（频率）
+gnomAD_exome_EAS：该变异在gnomAD数据库中的东亚的多个群体的全外显子组序列数据（频率)
+het：杂合；hom: 纯合；Pathogenic: 致病的;
+</code></pre>
+      </main>
+
+      <div id="fastSearch">
+   <input id="searchInput" tabindex="0">
+   <ul id="searchResults">
+   </ul>
+</div>
+<footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
+  <script src ="/js/search.js"></script>
+  <script src="../../js/fuse.js"></script> 
+ <script src="../../js/fastsearch.js"></script>
+
+  <script>
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  </script>
+  
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
+  <br>
+  <span >
+    <mark>CMD+/</mark>对网站进行搜索
+  </span>
+  
+  
+<script async src="../../js/center-image.js"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<center>
+Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
+<SCRIPT language=javascript>
+function show_date_time(){
+window.setTimeout("show_date_time()", 1000);
+BirthDay=new Date("7/8/2019 00:00:00");
+today=new Date();
+timeold=(today.getTime()-BirthDay.getTime());
+sectimeold=timeold/1000
+secondsold=Math.floor(sectimeold);
+msPerDay=24*60*60*1000
+e_daysold=timeold/msPerDay
+daysold=Math.floor(e_daysold);
+e_hrsold=(e_daysold-daysold)*24;
+hrsold=Math.floor(e_hrsold);
+e_minsold=(e_hrsold-hrsold)*60;
+minsold=Math.floor((e_hrsold-hrsold)*60);
+seconds=Math.floor((e_minsold-minsold)*60);
+span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
+}
+show_date_time();
+</SCRIPT>
+</center>
+  
+</footer>
+
+
+    </div>
+  </body>
+</html>

@@ -59,7 +59,7 @@
   <h3>
     02 Aug 2020
   </h3>
-   <h5 id="wc">64 Words|Read in about 1       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
+   <h5 id="wc">524 Words|Read in about 2       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
     </h5>
   <br><br>
 </div>
@@ -71,11 +71,56 @@
 <aside>
   <div id='anchors-navbar'>
   <i class='fas fa-anchor'></i>
-  <nav id="TableOfContents"></nav>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#heading">本地使用</a></li>
+  </ul>
+</nav>
   </div>
 </aside>
 
         <p>最新的blast可以在页面<a href="ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/">ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/</a>找到。</p>
+<h1 id="heading">本地使用</h1>
+<p><a href="https://www.ncbi.nlm.nih.gov/books/NBK279668/">blast手册页</a></p>
+<p><a href="https://www.ncbi.nlm.nih.gov/books/NBK279684/#appendices.Options_for_the_commandline_a">blast命令行</a></p>
+<p>blastn使用,blastn -task有四个选项，分别为</p>
+<ul>
+<li>
+<p>blastn</p>
+</li>
+<li>
+<p>blastn-short</p>
+</li>
+<li>
+<p>megablast</p>
+</li>
+<li>
+<p>dc-megablast</p>
+</li>
+</ul>
+<p>具体可以在手册页找到。
+一开始应该建库，
+比如xxx.fasta核苷酸序列建库,可以简单</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">makeblastdb -in xxx.fasta -dbtype nucl
+</code></pre></div><p>makeblastdb参数</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">-in 需要建库的fasta序列
+ -dbtype 如果是蛋白库则用prot，核酸库用nucl
+ -out 所建数据库的名称
+ -parse_seqids <span style="color:#f92672">=</span>&gt; Parse bar delimited sequence identifiers <span style="color:#f92672">(</span>e.g., gi|129295<span style="color:#f92672">)</span> in FASTA input.
+ -hash_index <span style="color:#f92672">=</span>&gt; Create index of sequence hash values.
+-out <span style="color:#f92672">=</span>&gt;Name of BLAST database to be created. Input file name is used <span style="color:#66d9ef">if</span> none provided. This field is required <span style="color:#66d9ef">if</span> input consists of multiple files.
+</code></pre></div><p>更加具体的可以看<a href="https://www.ncbi.nlm.nih.gov/books/NBK279684/#appendices.Options_for_the_commandline_a">blast命令行</a></p>
+<p>比对的话我喜欢借鉴metablastr(R包)的输出，在命令行使用</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">blastn -query xxx.fasta <span style="color:#ae81ff">\</span>
+    -db reference.fasta <span style="color:#ae81ff">\</span>
+    -num_threads <span style="color:#ae81ff">30</span> <span style="color:#ae81ff">\</span>
+    -task megablast <span style="color:#ae81ff">\</span>
+    -outfmt <span style="color:#e6db74">&#34;10 qseqid sseqid pident nident length mismatch gapopen gaps positive ppos qstart qend qlen qcovs qcovhsp sstart send slen evalue bitscore score&#34;</span> &gt;xxx.csv
+</code></pre></div><p>之后使用R给输出加上表头</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">blast <span style="color:#f92672">&lt;-</span> metablastr<span style="color:#f92672">::</span><span style="color:#a6e22e">read_blast</span>(xxx.csv,out.format <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">csv&#34;</span>)
+</code></pre></div><p>默认的-outfmt是0。以比对的形式展示。</p>
+<p>SRA数据下载后，解压后得到fastq文件，可以转为fasta之后进行megablast之类的，当然，也可以在NCBI上操作，只是输出结果有5000条的限制。</p>
+<p>或者有一个<a href="https://ncbi.github.io/magicblast/">https://ncbi.github.io/magicblast/</a>可以试试直接分析sra数据。</p>
 
       </main>
 
