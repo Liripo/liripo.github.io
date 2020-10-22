@@ -3,27 +3,37 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://liripo.github.io/post/ggplot2%E7%BB%98%E5%88%B6heatmap/</loc>
+    <lastmod>2020-10-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/</loc>
+    <lastmod>2020-10-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/post/</loc>
+    <lastmod>2020-10-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/tags/r/</loc>
+    <lastmod>2020-10-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://liripo.github.io/tags/</loc>
+    <lastmod>2020-10-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://liripo.github.io/tags/bio/</loc>
     <lastmod>2020-10-18T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://liripo.github.io/</loc>
-    <lastmod>2020-10-18T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://liripo.github.io/post/</loc>
-    <lastmod>2020-10-18T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://liripo.github.io/post/rna-seq%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B/</loc>
-    <lastmod>2020-10-18T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://liripo.github.io/tags/</loc>
     <lastmod>2020-10-18T00:00:00+00:00</lastmod>
   </url>
   
@@ -69,11 +79,6 @@
   
   <url>
     <loc>https://liripo.github.io/post/ggtree/</loc>
-    <lastmod>2020-08-26T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://liripo.github.io/tags/r/</loc>
     <lastmod>2020-08-26T00:00:00+00:00</lastmod>
   </url>
   
@@ -213,12 +218,12 @@
   </url>
   
   <url>
-    <loc>https://liripo.github.io/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <loc>https://liripo.github.io/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
     <lastmod>2020-03-01T17:19:55+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://liripo.github.io/tags/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
+    <loc>https://liripo.github.io/categories/%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</loc>
     <lastmod>2020-03-01T17:19:55+00:00</lastmod>
   </url>
   
