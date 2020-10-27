@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator1 软件获得在http://evoluti" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2020/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Ka与Ks计算 - Liripo" />
+    <meta name="twitter:description"
+        content="kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator1 软件获得在http://evoluti" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Ka与Ks计算 - Liripo">
+    <meta property="og:description"
+        content="kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator1 软件获得在http://evoluti" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2020/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/" />
+    <meta property="og:site_name" content="Ka与Ks计算" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2020-09-03 00:00:00 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>Ka与Ks计算 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2020/ka%E4%B8%8Eks%E8%AE%A1%E7%AE%97/">Ka与Ks计算</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2020-09-03" class="no-wrap"
+                                    title="Created at 2020/09/03">
+                                    2020-09-03</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2020-09-03" class="no-wrap"
+                                    title="Modified  at 2020/09/03">
+                                    2020-09-03</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                1374 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><p>kaks的计算R包seqinr::kaks()可以计算，当然更多的使用KaKs_Calculator<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup></p>
+<p>软件获得在<a href="http://evolution.genomics.org.cn/software.htm.">http://evolution.genomics.org.cn/software.htm.</a></p>
+<p>下载解压缩后可以在里面找到windows，Linux版本以及源代码，示例文件以及帮助文档。</p>
+<blockquote>
+<p>Ka/Ks，在遗传学中，<strong>Ka/Ks</strong>或者<strong>dN/dS</strong>表示的是异义替换（Ka）和同义替换（Ks）之间的比例。这个比例可以判断是否有选择压力作用于这个蛋白质编码基因。</p>
+<p>不导致氨基酸改变的<a href="https://baike.baidu.com/item/%E6%A0%B8%E8%8B%B7%E9%85%B8">核苷酸</a>变异我们称为同义突变，反之则称为非同义突变。一般认为，同义突变不受自然选择，而非同义突变则受到自然选择作用。在进化分析中，了解同义突变和非同义突变发生的速率是很有意义的。常用的参数有以下几种：同义突变频率(Ks)、非同义突变频率(Ka)、非同义突变率与同义突变率的比值(Ka/Ks)。如果Ka/Ks&gt;1，则认为有正选择效应。如果Ka/Ks=1，则认为存在中性选择。如果Ka/Ks&lt;1，则认为有纯化选择作用。</p>
+</blockquote>
+<p>而且Ka,Ks不考虑终止子，比如stop gain,stop loss。</p>
+<p>kaks_calculator使用的输入文件为axt文件</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">NP_000026
+ATGCTCCTGTG-CCACTGGCC
+ATCCCC-TGCGCTCACTGGAC
+NP_000053
+ACAGaTtCTACCc-GCCcACTA--GgtGtt
+---ggTTCTCCtACCcA-G-CACTACTggg
+</code></pre></div><p>就是一个基因或者一个开放阅读框有比对好的两条序列去计算。如果我们使用<a href="https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/">mega</a>生成一个比对好的fasta文件后，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span>a
+ATATTAGGTTTTTACCTACCCAGGAAAAGCCAACCAACCTCGATCTCTTGTAGATCTGTT
+CTCTAAACGAACTTTAAAATCTGTGTAGCTGTCGCTCGGCTGCATGCCTAGTGCACCTAC
+<span style="color:#f92672">&gt;</span>b
+<span style="color:#f92672">----</span>TAGGTTTTTACCTACCCAGGAAAAGCCAACCAACCTCGATCTCTTGTAGATCTGTT
+CTCTAAACGAACTTTAAAATCTGTGTAGCTGTCGCTCGGCTGCATGCCTAGTGCACCTAC
+</code></pre></div><p>就前面四个我改成空位了。</p>
+<p>可以使用</p>
+<p>fa_to_axt.R转下，我自己写的脚本。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(tidyverse)
+
+args<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">commandArgs</span>(<span style="color:#66d9ef">TRUE</span>)
+<span style="color:#75715e">##比对后fasta,第一个参数</span>
+fasta <span style="color:#f92672">&lt;-</span> args[1]
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">is.na</span>(fasta)){<span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;fasta文件必须提供!&#34;</span>)}
+<span style="color:#75715e">#开放阅读框,第二个参数,可要可不要，不要就整个fasta文件转axt</span>
+orf <span style="color:#f92672">&lt;-</span> args[2]
+
+fas <span style="color:#f92672">&lt;-</span> Biostrings<span style="color:#f92672">::</span><span style="color:#a6e22e">readDNAStringSet</span>(fasta)
+
+as_axt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(DNAStrings,name){
+  chr <span style="color:#f92672">&lt;-</span> DNAStrings <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as.character</span>()
+  chr_write <span style="color:#f92672">&lt;-</span> base<span style="color:#f92672">::</span><span style="color:#a6e22e">paste</span>(chr,collapse <span style="color:#f92672">=</span>  <span style="color:#e6db74">&#34;\n&#34;</span>)
+  res <span style="color:#f92672">&lt;-</span> base<span style="color:#f92672">::</span><span style="color:#a6e22e">paste</span>(name,chr_write,<span style="color:#e6db74">&#34;&#34;</span>,sep <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\n&#34;</span>)
+  res
+}
+seq_from_bed <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(orf_tbl){
+  <span style="color:#a6e22e">map</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">nrow</span>(orf_tbl),<span style="color:#a6e22e">function</span>(i){
+    row <span style="color:#f92672">&lt;-</span> orf_tbl[i,]
+    orfname <span style="color:#f92672">&lt;-</span> row[[1]]
+    start <span style="color:#f92672">&lt;-</span> row[[2]]
+    end <span style="color:#f92672">&lt;-</span> row[[3]]
+    <span style="color:#a6e22e">if</span>((end <span style="color:#f92672">-</span> start <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)<span style="color:#f92672">%%</span><span style="color:#ae81ff">3</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>){<span style="color:#a6e22e">stop</span>(<span style="color:#e6db74">&#34;长度不是3的倍数!&#34;</span>,call. <span style="color:#f92672">=</span> F)}
+    subseq <span style="color:#f92672">&lt;-</span> Biostrings<span style="color:#f92672">::</span><span style="color:#a6e22e">subseq</span>(fas,start,end)
+    name <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">paste0</span>(orfname,<span style="color:#e6db74">&#34;:&#34;</span>,start,<span style="color:#e6db74">&#34;-&#34;</span>,end)
+    axt <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as_axt</span>(subseq,name <span style="color:#f92672">=</span> name)
+    axt
+  })
+filename <span style="color:#f92672">&lt;-</span> fs<span style="color:#f92672">::</span><span style="color:#a6e22e">path_file</span>(fasta) <span style="color:#f92672">%&gt;%</span> fs<span style="color:#f92672">::</span><span style="color:#a6e22e">path_ext_remove</span>()
+<span style="color:#a6e22e">if</span>(<span style="color:#a6e22e">is.na</span>(orf)){
+  llsc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">as_axt</span>(fas,name <span style="color:#f92672">=</span> filename)
+}else{
+  orf_tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">read_delim</span>(orf,delim <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;\t&#34;</span>,col_names <span style="color:#f92672">=</span> F)
+  llsc <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">seq_from_bed</span>(orf_tbl <span style="color:#f92672">=</span> orf_tbl)
+}
+
+llsc <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">write_lines</span>(<span style="color:#a6e22e">paste0</span>(filename,<span style="color:#e6db74">&#34;.axt&#34;</span>))
+</code></pre></div><p>使用,没有需要提取的对应位置的话，可以不传入开放阅读框的位置</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Rscript fa_to_axt.R xxx.fasta
+</code></pre></div><p>如果你要提取出全基因序列某个能翻译蛋白质的序列区域，这用于多序列比对后的fasta文件，全基因组的可以用bedtools工具提取。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Rscript fa_to_axt.R xxx.fasta xxx.bed
+<span style="color:#75715e">#xxx.bed如下</span>
+c	<span style="color:#ae81ff">1</span>	<span style="color:#ae81ff">3</span>
+d	<span style="color:#ae81ff">5</span>	<span style="color:#ae81ff">13</span>
+</code></pre></div><p>当然，更好的是有直接测得的两个基因的序列，直接进行比对然后转axt。但是要是其中一条序列你不知道开放阅读框位置，就得先全基因比对了吧。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">KaKs_Calculator -i test.axt -o test.kaks -m MA
+</code></pre></div><p>其中还有一个-c参数，寻找密码子类型的，默认标准密码子。</p>
+<p>-m MA默认的这个最大似然方法十分耗时。可以试试跟-m NG的运行速度区别。</p>
+<blockquote>
+<p>总之就是你必须获得两条比对好的序列，而且这序列是编码蛋白质的区域，然后可以自己写一个fasta文件转axt文件的程序或者用上面那个程序。</p>
+</blockquote>
+<p>use LWL, YN and MYN and standard Code:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">use LWL, YN and MYN and standard Code
+KaKs_Calculator -i test.axt -o test.axt.kaks -m LWL -m YN -m MYN
+</code></pre></div><p>方法可以多个，至于选哪种就不清楚了。</p>
+<p>生成的结果：</p>
+<p>● Ka: Nonsynonymous substitution rate
+● Ks: Synonymous substitution rate
+● Ka/Ks: Selective strength
+● P-Value (Fisher): The value computed by Fisher exact test
+● Length: Sequence length (after removing gaps and stop codon(s))
+● S-Sites: Synonymous sites
+● N-Sites: Nonsynonymous sites
+● Fold-Sites (0:2:4): 0,2,4-fold degenerate sites
+● Substitutions: Substitutions between sequences
+● S-Substitutions: Synonymous substitutions
+● N-Substitutions: Nonsynonymous substitutions
+● Fold-S-Substitutions (0:2:4): Synonymous substitutions at 0,2,4-fold
+● Fold-N-Substitutions (0:2:4): Nonsynonymous substitutions at 0,2,4-fold
+● Divergence-Time: Divergence time</p>
+<p>● Substitution-Rate-Ratio (rTC:rAG:rTA:rCG:rTG:rCA/rCA): Ratios of six substitution rates to the substitution rate between C and A
+● GC(1:2:3): GC content of entire sequences and of three codon positions
+● ML-Score: Maximum likelihood score
+● AICc: Value of AICc
+● Akaike-Weight: Value of Akaike weight for model selection
+● Model: Selected model for the method of MS</p>
+<p>这个软件还有绘图功能。详细看官方文档。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>KaKs_Calculator: Calculating Ka and Ks Through Model Selection and Model Averaging <a href="https://doi.org/10.1016/S1672-0229(07)60007-2">https://doi.org/10.1016/S1672-0229(07)60007-2</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

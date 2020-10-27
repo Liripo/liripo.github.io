@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="生信数据文件格式。 vcf Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2019/%E7%94%9F%E7%89%A9%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="生信文件格式汇总 - Liripo" />
+    <meta name="twitter:description"
+        content="生信数据文件格式。 vcf Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="生信文件格式汇总 - Liripo">
+    <meta property="og:description"
+        content="生信数据文件格式。 vcf Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2019/%E7%94%9F%E7%89%A9%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F/" />
+    <meta property="og:site_name" content="生信文件格式汇总" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2019-11-08 00:00:00 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>生信文件格式汇总 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2019/%E7%94%9F%E7%89%A9%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F/">生信文件格式汇总</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2019-11-08" class="no-wrap"
+                                    title="Created at 2019/11/08">
+                                    2019-11-08</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2019-11-08" class="no-wrap"
+                                    title="Modified  at 2019/11/08">
+                                    2019-11-08</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                3810 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><blockquote>
+<p>生信数据文件格式。</p>
+</blockquote>
+<h1 id="vcf">vcf</h1>
+<blockquote>
+<p>Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变异等,即SNP, indel, 和 structural variation calls。通常是对BAM文件格式的比对结果进行处理得到的。BCF格式文件是VCF格式的二进制文件。</p>
+</blockquote>
+<p>注释信息通常以##开头， 描述包括参考基因组版本，得到该VCF文件的命令，以及各个TAG解释缩写的简单描述等。</p>
+<p>以#开头为列名，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CHROM 和 POS：代表参考序列名和variant的位置；如果是INDEL的话，位置是INDEL的第一个碱基位置。
+ID：variant的ID。比如在dbSNP中有该SNP的id，则会在此行给出<span style="color:#f92672">(</span>这个需要自己下载dbSNP数据库文件进行注释才有的<span style="color:#f92672">)</span>。若没有或者注释不上，则用<span style="color:#e6db74">&#39;.&#39;</span>表示其为一个novel variant。
+REF 和 ALT：参考序列的碱基 和 Variant的碱基。
+QUAL：Phred格式<span style="color:#f92672">(</span>Phred_scaled<span style="color:#f92672">)</span>的质量值，表示在该位点存在variant的可能性；该值越高，则variant的可能性越大；计算方法：Phred值 <span style="color:#f92672">=</span>-10*log <span style="color:#f92672">(</span>1-p<span style="color:#f92672">)</span> p为variant存在的概率;
+FILTER：使用上一个QUAL值来进行过滤的话，是不够的，使用其他方法过滤，过滤结果中通过则该值为”PASS”;若variant不可靠，则该项不为”PASS”或”.”。
+INFO： 这一行是variant的详细信息，内容很多，以下再具体详述。
+FORMAT 和 样品名列：这两行合起来提供了样品的基因型的信息。是由SAM/BAM文件中的@RG下的 SM 标签决定的。或者变异检测软件自己定义的。
+<span style="color:#75715e">##第九，十列中</span>
+GT:DP:VD:AD:AF:RD:ALD 
+0/1:322:61:261,61:0.1894:144,117:33,28
+</code></pre></div><p>GT：样品的基因型（genotype）。两个数字中间用’/&lsquo;分开，这两个数字表示双倍体的sample的基因型。0 表示样品中有ref的allele； 1 表示样品中variant的allele； 2表示有第二个variant的allele。因此： 0/0 表示sample中该位点为纯合的，和ref一致； 0/1 表示sample中该位点为杂合的，有ref和variant两个基因型； 1/1 表示sample中该位点为纯合的，和variant一致。 
+DP（Depth）为sample中该位点的测序深度。
+AD(Allele Depth)为sample中每一种allele的reads覆盖度，以逗号分割。</p>
+<h1 id="bamsamcram">bam/sam/cram</h1>
+<p><strong>bam</strong>:sam文件的二进制压缩文件，可使用samtools工具查看。由于其运行速度快，所以常常使用bam而不是sam。(B取自binary)
+<strong>sam</strong>:SAM是一种序列比对格式标准， 由sanger制定，是以TAB为分割符的文本格式。主要应用于测序序列mapping到基因组上的结果表示，当然也可以表示任意的多重比对结果。
+当测序得到的fastq文件map到基因组之后，我们通常会得到一个sam或者bam为扩展名的文件。SAM的全称是sequence alignment/map format。</p>
+<p><a href="https://vip.biotrainee.com/d/162-sam">详细可见</a></p>
+<p>对上述网址，我记录我需要用又常忘记的，必须的字段有11个，顺序固定，不可自行改动 ，因为变异检测基本是靠这些列的信息。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">QNAME，比对片段的（template）的编号；比较常用的叫法是queryname
+FLAG，位标识，template mapping情况的数字表示，每一个数字代表一种比对情况，这里的值是符合情况的数字相加总和；
+RNAME，参考序列的编号，如果注释中对SQ-SN进行了定义，这里必须和其保持一致，另外对于没有mapping上的序列，这里是’*‘；
+POS，比对上的位置，注意是从1开始计数，没有比对上，此处为0；
+MAPQ，mapping的质量;
+CIGAR，简要比对信息表达式,
+“M”表示 match或 mismatch；
+“I”表示 insert；
+“D”表示 deletion；
+“N”表示 skipped（跳过这段区域）；
+“S”表示 soft clipping（被剪切的序列存在于序列中）；
+“H”表示 hard clipping（被剪切的序列不存在于序列中）；
+“P”表示 padding；
+“<span style="color:#f92672">=</span>”表示 match；
+“X”表示 mismatch（错配，位置是一一对应的）；
+</code></pre></div><p><strong>CRAM</strong>:</p>
+<h1 id="fastqfasta">fastq/fasta</h1>
+<h2 id="fastq">fastq</h2>
+<p>一种存储了生物序列（通常是核酸序列）以及相应的质量评价的文本格式。</p>
+<pre><code>第一行@开头，接描述信息，4为flowcell第四个lane？1：N：0:后面是index?
+第二行为序列信息，N代表A\T\G\C,即any,用处？
+第三行为+开头，后面也可接描述信息
+第四行为为第二行测序质量评价，字节数与第二行相等。Q=10*log10(p/(1-p))，其中p是对应碱基判定的概率。
+</code></pre><ul>
+<li>fastq to fasta</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">zcat input.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==1{printf &#34;&gt;%s\n&#34;, substr($0,2)}NR%4==2{print}&#39;</span> &gt; output.fa
+</code></pre></div><ul>
+<li>统计序列条数(reads)</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">zcat *R1.fq.gz |grep <span style="color:#e6db74">&#39;@&#39;</span>| wc –l或者zcat  *.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==2{c++} END{print c}&#39;</span>
+
+或者pigz -dc input.fastq.gz | awk <span style="color:#e6db74">&#39;NR%4==2{c++} END{print c}&#39;</span>（速度快10倍）
+</code></pre></div><ul>
+<li>GC含量及碱基数目</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">perl -ne  <span style="color:#e6db74">&#39;if($.%4){chomp;$count_G=$count_G+($_=~tr/G//);$count_C=$count_C+($_=~tr/C//);$cur_length=length($_);$total_length+=$cur_length;}END{print qq{total count is $total_length bp\nGC%:},($count_G+$count_C)/$total_length,qq{\n} }&#39;</span> input.fq
+</code></pre></div><h2 id="fasta">fasta</h2>
+<p>是一种基于文本用于表示核酸序列或多肽序列的格式。其中核酸或氨基酸均以单个字母来表示，且允许在序列前添加序列名及注释。</p>
+<h1 id="gtfgff3genepred">gtf/gff3/GenePred</h1>
+<p>以<a href="https://www.gencodegenes.org/human/">gencode</a>下人类的gtf文件为例，手册页<a href="https://www.gencodegenes.org/pages/data_format.html">https://www.gencodegenes.org/pages/data_format.html</a>有详细的格式说明。</p>
+<p>GENCODE和Ensembl数据库均提供具有基因组坐标的GTF / GFF3文件，但不提供BED文件。</p>
+<blockquote>
+<p>gtf to bed</p>
+</blockquote>
+<p>gtf转bed,如果你想要提取基因的bed文件，可以根据第三列筛选gene，之后再获取需要的信息，其中基因名，比如gene symbol信息存在第九列。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">grep -P <span style="color:#e6db74">&#34;\tgene\t&#34;</span> gencode.xxxxxx.gtf | <span style="color:#ae81ff">\ </span> <span style="color:#75715e">#第三列筛选gene，(或者transcripts之类的)</span>
+	cut -f1,4,5,7,9 | <span style="color:#ae81ff">\ </span>  <span style="color:#75715e">#提取所需列</span>
+	sed <span style="color:#e6db74">&#39;s/[[:space:]]/\t/g&#39;</span> | <span style="color:#ae81ff">\ </span><span style="color:#75715e">#空格替换制表符</span>
+	sed <span style="color:#e6db74">&#39;s/[;|&#34;]//g&#39;</span> | <span style="color:#ae81ff">\ </span>  <span style="color:#75715e">#去掉；”</span>
+	awk -F <span style="color:#e6db74">$&#39;\t&#39;</span> <span style="color:#e6db74">&#39;BEGIN { OFS=FS } { print $1,$2-1,$3,$6,&#34;.&#34;,$4,$10,$12,$14 }&#39;</span> | <span style="color:#ae81ff">\ </span><span style="color:#75715e">#bed文件起始位置从0开始，需要减一，这里你可以选择你需要的列，一般前三列加个gene symbol那一列就够了。</span>
+	&gt;genecode_by_gene.txt
+</code></pre></div><p><strong>在R中操作</strong>
+rtracklayer包(R的基因组浏览器接口)</p>
+<p>将gtf在R中转为数据框进行筛选。[或者直接对*<a href="https://bioconductor.org/packages/3.11/GenomicRanges">GenomicRanges</a>*对象进行操作]</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">gtf <span style="color:#f92672">&lt;-</span> rtracklayer<span style="color:#f92672">::</span><span style="color:#a6e22e">import</span>(<span style="color:#e6db74">&#34;xxxxxxxx.gtf&#34;</span>)
+<span style="color:#a6e22e">library</span>(tidyverse)
+gtf <span style="color:#f92672">%&gt;%</span> <span style="color:#a6e22e">as_tibble</span>() <span style="color:#f92672">%&gt;%</span> 
+    <span style="color:#a6e22e">filter</span>(type <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;gene&#34;</span>) <span style="color:#f92672">%&gt;%</span> 
+	<span style="color:#a6e22e">mutate</span>(start <span style="color:#f92672">=</span> start <span style="color:#ae81ff">-1</span>) <span style="color:#f92672">%&gt;%</span>
+    <span style="color:#a6e22e">select</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">3</span>,gene_id,gene_name) <span style="color:#f92672">%&gt;%</span> 
+    <span style="color:#a6e22e">write_tsv</span>(<span style="color:#e6db74">&#34;xxx.bed&#34;</span>)
+</code></pre></div><p><strong>注：在R中将gtf制作成TxDb对象进行操作也可以。</strong></p>
+<blockquote>
+<p>gtf跟gff3,GenePred互相转换</p>
+</blockquote>
+<p>这三个文件本质包含相同内容，GenePred table格式主要用在基因浏览器中基因预测的track。而且GenePred table格式也是从0开始，跟bed文件一样。可以使用gtftogenepred工具。</p>
+<h1 id="bed">bed</h1>
+<blockquote>
+<p>bed:通过规定行的内容来展示注释信息,以\t为分隔符。</p>
+</blockquote>
+<pre><code># BED文件必须的3列:
+1.chrom - 染色体号; 例如，chr1，chrX……
+2.chromStart - feature在染色体上起始位置.染色体上第一个碱基位置标记为0。
+3.chromEnd - feature在染色体上终止位置。染色体上前100个碱基片段的位置位置标记为：chromStart=0, chromEnd=100。 实际上，第101个碱基不属于当前片段中，当前片段的碱基应该是0-99。所以在BED文件中，起始位置从0开始，终止位置从1开始。
+# BED文件可选的9列:
+4.name - BED行名
+5.score - 在基因组浏览器中显示的灰度设定，值介于0-1000；
+gray score
+6.strand - 正负链标记. Either &quot;.&quot; (=no strand) or &quot;+&quot; or &quot;-&quot;.
+7.thickStart - feature起始位置(for example, the start codon in gene displays)
+8.thickEnd - feature编码终止位置 (for example the stop codon in gene displays)
+9.itemRgb - R,G,B (e.g. 255,0,0)值，当itemRgb 设置为 &quot;On&quot;，BED的行会显示颜色.
+10.blockCount - blocks (exons)数目.
+11.blockSizes - blocks (exons)大小列表，逗号分隔，对应于blockCount.
+12.blockStarts -blocks (exons)起始位置列表，逗号分隔，对应于blockCount.；这个起始位置是与chromStart的一个相对位置。
+</code></pre><h3 id="其他名词">其他名词</h3>
+<p><strong>variant</strong>:突变体
+<strong>call,calling</strong>:识别
+<strong>transcript variant</strong> 是可变剪接体，是由DNA转录得到的,mRNA包含若干外显子,经过剪接组合成不同长度的mRNA,翻译成不同长度蛋白质.这种由同一基因不同外显子组成的序列称可变剪接体，不同可变剪接体表达的蛋白作用可能相近也可能相反。</p>
+<pre><code>Chr:  变异所在的染色体
+Start: 变异在染色体的起始位置
+End:  变异在染色体的终止位置
+Ref:  基因组的参考序列
+Alt:  检测样本的基因组序列
+Func.refGene:  变异所处参考基团的功能区（exonic,intronic,UTR3,UTR5,splicing,upstream,downstream,intergenic）此处的exonic特指外显子编码氨基酸区，不包含外显子的UTR区
+Gene.refGene:  变异所处参考基因名称（如果是基因间，则是两侧的基因）
+GeneDetail.refGene：  非外显子区处于特定转录本中的具体位置（如果是基因间，则是距离两侧的基因的距离）
+ExonicFunc.refGene：  外显子的变异类型（frameshift insertion/frameshiftdeletion/stopgain/stoploss/nonframeshift insertion/nonframeshiftdeletion/synonymous SNV/nonsynonymous SNV）或者”.”则说明该变异不在外显子区
+AAChange.refGene：氨基酸水平的改变（同一个基因可能具有多个转录本，氨基酸改变的位置在不同的转录本中可能不一样）
+avsnp150：dbsnp150 缩写，具有等位基因分裂和左标准化
+1000g2015aug_eas：1000个基因组项目数据集，其中东亚群体的等位基因频率
+gnomAD_exome_ALL：该变异在gnomAD数据库中的多个群体的全外显子组序列数据（频率）
+gnomAD_exome_EAS：该变异在gnomAD数据库中的东亚的多个群体的全外显子组序列数据（频率)
+het：杂合；hom: 纯合；Pathogenic: 致病的;
+</code></pre></article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

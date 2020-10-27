@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="bamdst:用于计算bam文件测序深度和覆盖度（Sequencing depth and coverage）,有个疑问，应该使用哪个bam呢？？使用bwa及samtools得到的bam测序深度很高。。
+" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2019/bamdst%E4%BD%BF%E7%94%A8/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="bamdst使用 - Liripo" />
+    <meta name="twitter:description"
+        content="bamdst:用于计算bam文件测序深度和覆盖度（Sequencing depth and coverage）,有个疑问，应该使用哪个bam呢？？使用bwa及samtools得到的bam测序深度很高。。
+" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="bamdst使用 - Liripo">
+    <meta property="og:description"
+        content="bamdst:用于计算bam文件测序深度和覆盖度（Sequencing depth and coverage）,有个疑问，应该使用哪个bam呢？？使用bwa及samtools得到的bam测序深度很高。。
+" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2019/bamdst%E4%BD%BF%E7%94%A8/" />
+    <meta property="og:site_name" content="bamdst使用" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2019-12-17 10:56:40 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>bamdst使用 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2019/bamdst%E4%BD%BF%E7%94%A8/">bamdst使用</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2019-12-17" class="no-wrap"
+                                    title="Created at 2019/12/17">
+                                    2019-12-17</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2019-12-17" class="no-wrap"
+                                    title="Modified  at 2019/12/17">
+                                    2019-12-17</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                1226 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><p>bamdst:用于计算bam文件测序深度和覆盖度（Sequencing depth and coverage）,有个疑问，应该使用哪个bam呢？？使用bwa及samtools得到的bam测序深度很高。。</p>
+<h3 id="安装">安装</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">git clone https://github.com/shiquan/bamdst.git ~
+cd bamdst/
+make
+</code></pre></div><p>#安装完后会在项目根目录生成一个bamdst程序</p>
+<pre><code>-rwxrwxr-x 1 liaorp liaorp 532816 Dec 17 11:02 bamdst
+</code></pre><p>可以看到文件权限可执行,键入<code>./bamdst</code>即可运行，或者加入环境变量中。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">echo -e <span style="color:#e6db74">&#39;#添加bamdst\nexport PATH=~/software/bamdst:$PATH&#39;</span>&gt;&gt;~/.bashrc#记住是单引号
+source ~/.bashrc#使环境生效
+</code></pre></div><h3 id="概念">概念</h3>
+<p><strong>测序深度Depth</strong>：测序得到的总碱基数与待测基因组大小的比值。如人的基因组为3Gb，测序获得90Gb数据量，平均测序深度为30X。
+<strong>覆盖率</strong>：</p>
+<h3 id="example">example</h3>
+<p>下载数据有个example文件夹，测试以下,使用-p,-o参数</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">cd example <span style="color:#f92672">&amp;&amp;</span> mkdir test
+bamdst -p MT-RNR1.bed -o ./test test.bsm
+</code></pre></div><p>产生七个文件:</p>
+<pre><code>$ls
+chromosomes.report  coverage.report  depth_distribution.plot  depth.tsv.gz  insertsize.plot  region.tsv.gz  uncover.bed
+</code></pre><ul>
+<li>chromosomes.report:该文件中存储的是从bam文件中获取的目标染色体深度、覆盖度信息
+bed文件即是为了挑选目标区域，即感兴趣的位置。</li>
+<li>coverage.report：信息很多，只看这个文件即可
+文件分成三部分[total],[Target],[Flank],其中文件中还有一个关键字rmdup</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Average depth    0.26 
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Average depth<span style="color:#f92672">(</span>rmdup<span style="color:#f92672">)</span>    0.06
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Coverage <span style="color:#f92672">(</span>&gt;0x<span style="color:#f92672">)</span>    5.66% <span style="color:#75715e">#目标区域大于0X覆盖率，排除0X</span>
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Coverage <span style="color:#f92672">(</span>&gt;<span style="color:#f92672">=</span>4x<span style="color:#f92672">)</span>    2.83%
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Coverage <span style="color:#f92672">(</span>&gt;<span style="color:#f92672">=</span>10x<span style="color:#f92672">)</span>    0.00%
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Coverage <span style="color:#f92672">(</span>&gt;<span style="color:#f92672">=</span>30x<span style="color:#f92672">)</span>    0.00%
+<span style="color:#f92672">[</span>Target<span style="color:#f92672">]</span> Coverage <span style="color:#f92672">(</span>&gt;<span style="color:#f92672">=</span>100x<span style="color:#f92672">)</span>    0.00%
+</code></pre></div><p>目标区域平均测序深度，算一下呗,即LN/G，where L is the read length, N is the number of reads and G is the haploid genome length.<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>
+可以使用<a href="http://www.chinapubmed.net/">中文pubmed</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ awk <span style="color:#e6db74">&#39;{a=$1*$2;sum+=a;b=sum/954}END{print b}&#39;</span> depth_distribution.plot
+0.261006
+</code></pre></div><p>目标区域覆盖率：为文件depth_distribution.plot的第五列，1-第三列
+在R中输入<code>round(54/954,6)</code>得到0.056604</p>
+<ul>
+<li>
+<p>insertsize.plot：由于example得到的文件为空，有待探究</p>
+</li>
+<li>
+<p>depth.tsv.gz：记录了每个位点的 Raw Depth       Rmdup depth     Cover depth，三个名词各自代表？列出前几列</p>
+</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#Chr    Pos     Raw Depth       Rmdup depth     Cover depth</span>
+chrM    <span style="color:#ae81ff">650</span>     <span style="color:#ae81ff">8</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">8</span>
+chrM    <span style="color:#ae81ff">651</span>     <span style="color:#ae81ff">8</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">8</span>
+chrM    <span style="color:#ae81ff">652</span>     <span style="color:#ae81ff">8</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">8</span>
+chrM    <span style="color:#ae81ff">653</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+chrM    <span style="color:#ae81ff">654</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+chrM    <span style="color:#ae81ff">655</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+chrM    <span style="color:#ae81ff">656</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+chrM    <span style="color:#ae81ff">657</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+chrM    <span style="color:#ae81ff">658</span>     <span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">9</span>
+</code></pre></div><ul>
+<li>
+<p>region.tsv.gz：记录bed文件每个区域的测序深度中位数覆盖率以及Coverage(FIX)？？，由于example的bed只有一个区域，所以可以直接去除以那个区域长度得到目标区域测序深度。</p>
+</li>
+<li>
+<p>depth_distribution.plot :深度分布图，可以结合R绘图,如下，测序深度为9的有6个位点</p>
+</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#ae81ff">0</span>       <span style="color:#ae81ff">900</span>     0.943396        <span style="color:#ae81ff">54</span>      0.056604
+<span style="color:#ae81ff">1</span>       <span style="color:#ae81ff">0</span>       0.000000        <span style="color:#ae81ff">54</span>      0.056604
+<span style="color:#ae81ff">2</span>       <span style="color:#ae81ff">0</span>       0.000000        <span style="color:#ae81ff">54</span>      0.056604
+<span style="color:#ae81ff">3</span>       <span style="color:#ae81ff">27</span>      0.028302        <span style="color:#ae81ff">27</span>      0.028302
+<span style="color:#ae81ff">4</span>       <span style="color:#ae81ff">4</span>       0.004193        <span style="color:#ae81ff">23</span>      0.024109
+<span style="color:#ae81ff">5</span>       <span style="color:#ae81ff">12</span>      0.012579        <span style="color:#ae81ff">11</span>      0.011530
+<span style="color:#ae81ff">6</span>       <span style="color:#ae81ff">1</span>       0.001048        <span style="color:#ae81ff">10</span>      0.010482
+<span style="color:#ae81ff">7</span>       <span style="color:#ae81ff">0</span>       0.000000        <span style="color:#ae81ff">10</span>      0.010482
+<span style="color:#ae81ff">8</span>       <span style="color:#ae81ff">4</span>       0.004193        <span style="color:#ae81ff">6</span>       0.006289
+<span style="color:#ae81ff">9</span>       <span style="color:#ae81ff">6</span>       0.006289        <span style="color:#ae81ff">0</span>       0.000000
+</code></pre></div><p>算下理解是否正确</p>
+<pre><code>$ awk '{sum+=$2}END{print sum}' depth_distribution.plot
+954
+$ expr 1603 - 649
+954
+</code></pre><ul>
+<li>uncover.bed :没有捕获区域</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat example/MT-RNR1.bed
+chrM    <span style="color:#ae81ff">649</span>     <span style="color:#ae81ff">1603</span>
+$ cat uncover.bed
+chrM    <span style="color:#ae81ff">672</span>     <span style="color:#ae81ff">1603</span>
+</code></pre></div><h3 id="可选参数">可选参数</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#方括号中为程序默认的参数值</span>
+   -f, --flank <span style="color:#f92672">[</span>200<span style="color:#f92672">]</span>   flank n bp of each region
+   -q <span style="color:#f92672">[</span>20<span style="color:#f92672">]</span>             map quality cutoff value, greater or equal to the value will be count
+   --maxdepth <span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>      set the max depth to stat the cumu distribution.
+   --cutoffdepth <span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>   list the coverage of above depths
+   --isize <span style="color:#f92672">[</span>2000<span style="color:#f92672">]</span>      stat the inferred insert size under this value
+   --uncover <span style="color:#f92672">[</span>5<span style="color:#f92672">]</span>       region will included in uncover file <span style="color:#66d9ef">if</span> below it
+   --bamout  BAMFILE   target reads will be exported to this bam file
+   -1                  begin position of bed file is 1-based
+   -h, --help          print this help info
+</code></pre></div><section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>Sims, D., Sudbery, I., Ilott, N. et al. Sequencing depth and coverage: key considerations in genomic analyses. Nat Rev Genet 15, 121–132 (2014) doi:10.1038/nrg3642 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section></article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

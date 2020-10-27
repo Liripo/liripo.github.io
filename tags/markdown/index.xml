@@ -7,17 +7,13 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Tue, 17 Dec 2019 23:42:15 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/tags/markdown/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Tue, 17 Dec 2019 23:42:15 +0000</lastBuildDate><atom:link href="https://liripo.github.io/tags/markdown/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Markdown与Typora,Rmarkdown</title>
-      <link>https://liripo.github.io/post/markdown%E4%B8%8Etyporarmarkdown/</link>
+      <link>https://liripo.github.io/posts/2019/markdown%E4%B8%8Etyporarmarkdown/</link>
       <pubDate>Tue, 17 Dec 2019 23:42:15 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/markdown%E4%B8%8Etyporarmarkdown/</guid>
+      <guid>https://liripo.github.io/posts/2019/markdown%E4%B8%8Etyporarmarkdown/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;&lt;a href=&#34;http://www.markdown.cn/&#34;&gt;在线教程&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;</description>

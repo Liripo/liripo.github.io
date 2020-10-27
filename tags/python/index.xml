@@ -7,17 +7,13 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Wed, 12 Feb 2020 13:19:22 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/tags/python/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Wed, 12 Feb 2020 13:19:22 +0000</lastBuildDate><atom:link href="https://liripo.github.io/tags/python/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>python-docx笔记</title>
-      <link>https://liripo.github.io/post/python-docx%E7%AC%94%E8%AE%B0/</link>
+      <link>https://liripo.github.io/posts/2019/python-docx%E7%AC%94%E8%AE%B0/</link>
       <pubDate>Wed, 12 Feb 2020 13:19:22 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/python-docx%E7%AC%94%E8%AE%B0/</guid>
+      <guid>https://liripo.github.io/posts/2019/python-docx%E7%AC%94%E8%AE%B0/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。&lt;/p&gt;
 &lt;/blockquote&gt;</description>

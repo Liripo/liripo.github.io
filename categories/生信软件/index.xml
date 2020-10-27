@@ -7,17 +7,13 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Tue, 07 Jan 2020 23:05:42 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Tue, 07 Jan 2020 23:05:42 +0000</lastBuildDate><atom:link href="https://liripo.github.io/categories/%E7%94%9F%E4%BF%A1%E8%BD%AF%E4%BB%B6/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>fastp&#43;gencore使用</title>
-      <link>https://liripo.github.io/post/fastp-gencore%E4%BD%BF%E7%94%A8/</link>
+      <link>https://liripo.github.io/posts/2019/fastp-gencore%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Tue, 07 Jan 2020 23:05:42 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/fastp-gencore%E4%BD%BF%E7%94%A8/</guid>
+      <guid>https://liripo.github.io/posts/2019/fastp-gencore%E4%BD%BF%E7%94%A8/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;使用以上两个软件+vardict/varscan/outLyzer构建UMI分析流程&lt;/p&gt;
 &lt;/blockquote&gt;</description>

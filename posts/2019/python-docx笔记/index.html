@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content=" docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。
+" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2019/python-docx%E7%AC%94%E8%AE%B0/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="python-docx笔记 - Liripo" />
+    <meta name="twitter:description"
+        content=" docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。
+" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="python-docx笔记 - Liripo">
+    <meta property="og:description"
+        content=" docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。
+" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2019/python-docx%E7%AC%94%E8%AE%B0/" />
+    <meta property="og:site_name" content="python-docx笔记" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2020-02-12 13:19:22 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>python-docx笔记 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2019/python-docx%E7%AC%94%E8%AE%B0/">python-docx笔记</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2020-02-12" class="no-wrap"
+                                    title="Created at 2020/02/12">
+                                    2020-02-12</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2020-02-12" class="no-wrap"
+                                    title="Modified  at 2020/02/12">
+                                    2020-02-12</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                1017 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><blockquote>
+<p>docx文件是office2007之后的版本使用的，docx格式的文件本质上是一个zip文件，主要内容是保存为XML格式的，因此可以通过修改Word背后的XML文件来设置自动更新域 。</p>
+</blockquote>
+<blockquote>
+<p>python-docx是一个用于创建和更新Microsoft Word（.docx）文件的Python库 。</p>
+</blockquote>
+<p><a href="https://www.zybuluo.com/belia/note/1303813">中文教程，分享的cmd笔记</a></p>
+<p><a href="https://python-docx.readthedocs.io/en/latest/index.html">官方文档</a></p>
+<p>首先，谈谈一份word的组成部分，其基本是由标题，段落，表格，图片，分页，页眉页脚，目录，文本框，形状，章节，然后就是文字字体，字号等。【python-docx目前貌似还没有目录以及文本框的相关操作，所以对于涉及这两方面的暂时无法使用python-docx操作】</p>
+<p>当你将一份word模板使用函数 Document() 打开，或者新建一份空白文档时，你就得到了一个文档对象，如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> docx <span style="color:#f92672">import</span> Document
+document <span style="color:#f92672">=</span> Document()
+</code></pre></div><p>对于对象<code>document</code>即word文档，其势必由上述所述的部分组成，其中最基本的即是段落，可以使用<code>add_paragraph</code>方法添加段落，而对于一个已存在的段落而言，如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">paragraph <span style="color:#f92672">=</span> document<span style="color:#f92672">.</span>add_paragraph(<span style="color:#e6db74">&#39;Lorem ipsum dolor sit amet.&#39;</span>)
+paragraph<span style="color:#f92672">.</span>style <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;List Bullet&#39;</span>
+</code></pre></div><p>在空白文档加入段落，或者获取模板第四个段落<code>paragraph = document.paragraphs[3]</code>，可以在其后面使用add_run方法添加文字获得一个run对象，添加的字符格式是默认的，这时你可以对这个run进行字体加粗，斜体，字体名等操作，如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">run <span style="color:#f92672">=</span> paragraph<span style="color:#f92672">.</span>add_run(<span style="color:#e6db74">&#39;dolor&#39;</span>)
+run<span style="color:#f92672">.</span>bold <span style="color:#f92672">=</span> True
+<span style="color:#75715e">#英文字体名修改</span>
+run<span style="color:#f92672">.</span>font<span style="color:#f92672">.</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;黑体&#39;</span>
+<span style="color:#75715e">#中文字体名修改</span>
+chinese <span style="color:#f92672">=</span> qn(<span style="color:#e6db74">&#39;w:eastAsia&#39;</span>)
+run<span style="color:#f92672">.</span>_element<span style="color:#f92672">.</span>rPr<span style="color:#f92672">.</span>rFonts<span style="color:#f92672">.</span>set(chinese, <span style="color:#e6db74">u</span><span style="color:#e6db74">&#39;黑体&#39;</span>) <span style="color:#75715e">#u为unicode编码</span>
+</code></pre></div><p>当然，你也可以修改段落的style,但是我在实践中遇到字体无法修改的情况，可以自行尝试。</p>
+<p>标题添加就不说了，一般报告模板都会有的，但是记住，标题也是属于一个段落。</p>
+<p>对于表格，你可在段落<code>paragraphs</code>处使用方法<code>add_table</code>添加，在整篇文档段落计算时，表格不属于段落，反倒是添加的表格由行列，单元格组成，而单元格之中又包含了段落，段落中又可以使用run对象进行操作。</p>
+<p>说个例子，实际中我为了将自动化生成的表格文字单元格居中费了不少功夫。</p>
+<p>首先我们需要找到官网的说明文档，找到cell即单元格这个对象，我们会发现，它有一些方法去修改这个单元格，</p>
+<p>vertical_alignment这个方法，而对于居中，还是向上靠均存在WD_CELL_VERTICAL_ALIGNMENT这个预设好的对象里，而通过调用居中的方法即可实现单元格居中，如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> docx.enum.table <span style="color:#f92672">import</span> WD_CELL_VERTICAL_ALIGNMENT
+cell<span style="color:#f92672">.</span>vertical_alignment <span style="color:#f92672">=</span> WD_CELL_VERTICAL_ALIGNMENT<span style="color:#f92672">.</span>CENTER
+</code></pre></div><p>具体学习看官方文档即可。</p></article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

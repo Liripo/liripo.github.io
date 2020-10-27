@@ -1,293 +1,0 @@
-<!DOCTYPE html>
-<html lang="Zh-cn">
-
-  <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>R包开发 | Liripo</title>
-    <link rel="shortcut icon" href="../../image/title.svg" type="image/x-icon">
-  <script src="../../fontawesome-free-5.11.2-web/fontawesome-free-5.11.2-web/js/all.js" crossorigin="anonymous"></script>
-
-  <style>
-  	:root {
-  		--pagecolour: #333333;
-  		--maintext: #dddddd;
-  		--faded: #888888;
-  		--highlight: #6BB0DF;
-  		--lowlight: #ba68c8;
-	}
-  </style>
-  <link rel="stylesheet" href="../../css/et_book.css" />
-  <link rel="stylesheet" href="../../css/search.css" />
-  <link rel="stylesheet" href="../../css/style.css" />
-  <link rel="alternate" type="application/rss+xml" href="https://liripo.github.io/index.xml" title="Liripo">
-  
-  <link rel="stylesheet" href="https://fonts.loli.net/css?family=Tangerine">
-
-  
-<meta name="twitter:card" content="summary">
-<meta property="og:title" content="R包开发">
-
-
-
-
-</head>
-
-
-  <body>
-    
-
-
-
-    <div class="main-content">
-      <nav>
-  <ul class="menu">
-    
-    <li><a href="../../">Home</a></li>
-    
-    <li><a href="../../about/">About</a></li>
-    
-    <li><a href="../../post/">Posts</a></li>
-    
-    <li><a href="../../tags/">Tags</a></li>
-    
-  </ul>
-</nav>
-
-      <div>
-  <h1>R包开发</h1>
-  <h3>
-    28 Mar 2020
-  </h3>
-   <h5 id="wc">1233 Words|Read in about 3       Min|本文总阅读量<span id="busuanzi_value_page_pv"></span>次</h5>
-    </h5>
-  <br><br>
-</div>
-
-
-      <main>
-        
-
-<aside>
-  <div id='anchors-navbar'>
-  <i class='fas fa-anchor'></i>
-  <nav id="TableOfContents">
-  <ul>
-    <li><a href="#r-package">R package</a>
-      <ul>
-        <li>
-          <ul>
-            <li><a href="#create-package">create_package()</a></li>
-            <li><a href="#use-r">use_r()</a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-    <li><a href="#document">document</a></li>
-    <li><a href="#use-package">use_package</a>
-      <ul>
-        <li>
-          <ul>
-            <li><a href="#load-all">load_all()</a></li>
-            <li><a href="#check">check()</a></li>
-            <li><a href="#use-mit-licence">use_mit_licence</a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-    <li><a href="#skeleon">快捷插入skeleon代码</a></li>
-    <li><a href="#r">R包中文</a></li>
-    <li><a href="#install">install()</a>
-      <ul>
-        <li>
-          <ul>
-            <li><a href="#check-builtbuild">check_built()和build()</a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-    <li><a href="#r-1">R包加入数据集</a></li>
-  </ul>
-</nav>
-  </div>
-</aside>
-
-        <p><strong><a href="https://r-pkgs.org/">R包开发书籍</a></strong></p>
-<p><strong><a href="https://cran.r-project.org/doc/manuals/r-release/R-exts.html">Writing R Extensions</a></strong></p>
-<p><a href="https://qianjiye.de/2015/04/r-packages">https://qianjiye.de/2015/04/r-packages</a></p>
-<h1 id="r-package">R package</h1>
-<p>使用devtools+Rtools进行R包开发，而Linux可以使用dockor+Rstudio开发版本。</p>
-<h3 id="create-package">create_package()</h3>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(devtools)
-<span style="color:#a6e22e">create_package</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./liripo.R&#34;</span>)
-</code></pre></div><h3 id="use-r">use_r()</h3>
-<p>使用<code>use_r(&quot;scales&quot;)</code>在R文件夹下生成一个scales.R文件。</p>
-<p>下面举个我写的例子，参考函数<code>scales::show_col</code></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @title show your colors by ggplot2</span>
-<span style="color:#75715e">#&#39;</span>
-<span style="color:#75715e">#&#39; @param colors colors</span>
-<span style="color:#75715e">#&#39; @param ncol ncol</span>
-<span style="color:#75715e">#&#39; @importFrom ggplot2 ggplot geom_tile aes aes_</span>
-<span style="color:#75715e">#&#39; @importFrom ggplot2 geom_text scale_fill_manual theme_void</span>
-<span style="color:#75715e">#&#39; @export</span>
-show_color <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(colors,ncol <span style="color:#f92672">=</span> <span style="color:#66d9ef">NULL</span>){
-  n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">length</span>(colors)
-  ncol <span style="color:#f92672">&lt;-</span> ncol <span style="color:#f92672">%||%</span> <span style="color:#a6e22e">ceiling</span>(<span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">length</span>(colors)))
-  nrow <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ceiling</span>(n<span style="color:#f92672">/</span>ncol)
-  tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(cols <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>ncol,times <span style="color:#f92672">=</span> nrow),
-    rows <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(nrow<span style="color:#f92672">:</span><span style="color:#ae81ff">1</span>,each <span style="color:#f92672">=</span> ncol),
-    colors <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(colors,<span style="color:#a6e22e">rep</span>(<span style="color:#66d9ef">NA</span>,ncol<span style="color:#f92672">*</span>nrow<span style="color:#f92672">-</span><span style="color:#a6e22e">length</span>(colors)))
-  )
-  tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(tbl)
-  p <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggplot</span>(tbl,<span style="color:#a6e22e">aes_</span>(<span style="color:#f92672">~</span>cols,y <span style="color:#f92672">=</span><span style="color:#f92672">~</span>rows))<span style="color:#f92672">+</span>
-    <span style="color:#a6e22e">geom_tile</span>(<span style="color:#a6e22e">aes_</span>(fill <span style="color:#f92672">=</span> <span style="color:#f92672">~</span>colors),color <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">black&#34;</span>,show.legend <span style="color:#f92672">=</span> F) <span style="color:#f92672">+</span>
-    <span style="color:#a6e22e">geom_text</span>(<span style="color:#a6e22e">aes_</span>(label <span style="color:#f92672">=</span> <span style="color:#f92672">~</span>colors)) <span style="color:#f92672">+</span>
-    <span style="color:#a6e22e">scale_fill_manual</span>(values <span style="color:#f92672">=</span> tbl<span style="color:#f92672">$</span>colors,breaks <span style="color:#f92672">=</span> tbl<span style="color:#f92672">$</span>colors) <span style="color:#f92672">+</span>
-    <span style="color:#a6e22e">theme_void</span>()
-  class <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">attributes</span>(p)<span style="color:#f92672">$</span>class
-  <span style="color:#a6e22e">attr</span>(p,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">class&#34;</span>) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(class,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">show_color&#34;</span>)
-  p
-}
-<span style="color:#75715e">#&#39; @rdname print</span>
-<span style="color:#75715e">#&#39; @export</span>
-<span style="color:#75715e">#&#39; @method print show_color</span>
-print.show_color <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x,<span style="color:#66d9ef">...</span>){
-  <span style="color:#a6e22e">print</span>(x,<span style="color:#66d9ef">...</span>)
-}
-</code></pre></div><p>里面ggplot2写R包时应使用aes_替代aes函数，具体可以<code>?aes\_</code>,当你想在R包中使用dplyr时，你可以运行R代码<code>vignette(&quot;programming&quot;)</code>看看dplyr的编程文档。</p>
-<p>举个例子：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @title ---</span>
-<span style="color:#75715e">#&#39; @importFrom dplyr filter </span>
-<span style="color:#75715e">#&#39; @importFrom rlang .data</span>
-print_99 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(){
-    table <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">expand.grid</span>(a <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">9</span>,b <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">9</span>) <span style="color:#f92672">%&gt;%</span>
-    <span style="color:#a6e22e">filter</span>(.data<span style="color:#f92672">$</span>a <span style="color:#f92672">&lt;=</span> .data<span style="color:#f92672">$</span>b)
-}
-</code></pre></div><h1 id="document">document</h1>
-<p><code>devtools::document()</code>会自动根据上面的rocelt调用Roxygen2生成man/*.Rd文件和Description文件。</p>
-<p>具体可见<code>vignette(&quot;rd&quot;)</code></p>
-<h1 id="use-package">use_package</h1>
-<p>这个函数会在<strong>DESCRIPTION</strong>下引入R包依赖的其他R包,如：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Imports<span style="color:#f92672">:</span> 
-    ggplot2,
-    stats
-</code></pre></div><h3 id="load-all">load_all()</h3>
-<p><code>load_all()</code>默认载入当前路径的包，类似<code>library()</code>，然后你可以试试写的代码。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">exists</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">show_color&#34;</span>, where <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.GlobalEnv&#34;</span>, inherits <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
-[1] FLASE
-<span style="color:#75715e">#可以看到当前全局环境没有这个函数，确实是以包的函数载入</span>
-<span style="color:#f92672">&gt;</span><span style="color:#a6e22e">search</span>()<span style="color:#75715e">#看到载入的包</span>
-</code></pre></div><h3 id="check">check()</h3>
-<p>使用<code>check()</code>检查R包，可以看到是否有报错。</p>
-<h3 id="use-mit-licence">use_mit_licence</h3>
-<p><code>use_mit_licence(&quot;Liripo&quot;)</code>可以生成MIT许可证，具体生成什么许可证可以<code>?use_mit_license()</code></p>
-<h1 id="skeleon">快捷插入skeleon代码</h1>
-<p>Rstudio可以点击code&ndash;&gt;Inseart roxygen skeleton快速插入，当然函数不规范的话，无法使用这个操作。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">document</span>()
-Updating liripo.R documentation
-Loading liripo.R
-Writing NAMESPACE
-Writing NAMESPACE
-Writing scale.Rd
-</code></pre></div><h1 id="r">R包中文</h1>
-<p>目前来说，不要使用中文。必须使用的可以看看函数<code>?stringi::stri_escape_unicode()</code>使用生成的unicode替代。ps:不过我使用后还是提示我使用ASCII字符编码。</p>
-<h1 id="install">install()</h1>
-<p>install()将包载入到<code>.libpath()</code>路径。看下是否安装上了：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span> stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_detect</span>(<span style="color:#a6e22e">.packages</span>(all.available <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>),<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">liripo.R&#34;</span>,)
-[1] <span style="color:#66d9ef">TRUE</span>
-</code></pre></div><h3 id="check-builtbuild">check_built()和build()</h3>
-<p><code>check_built()</code>检查tar.gz包。</p>
-<p><code>build()</code>生成tar.gz包，便于分享。</p>
-<h1 id="r-1">R包加入数据集</h1>
-<p><code>use_data()</code>函数可以对R对象生成/data/*.rda文件，之后使用<code>use_r(&quot;R包名-package&quot;)</code>，在这个新生成的文件加入skeleon，例子：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @name Rliripo</span>
-<span style="color:#75715e">#&#39; @docType package</span>
-<span style="color:#75715e">#&#39; @importFrom grDevices colorRampPalette</span>
-<span style="color:#75715e">#&#39; @importFrom stats na.omit</span>
-<span style="color:#66d9ef">NULL</span>
-<span style="color:#75715e">#&#39;It&#39;s the color data of rmb</span>
-<span style="color:#75715e">#&#39;</span>
-<span style="color:#75715e">#&#39;used to this package</span>
-<span style="color:#75715e">#&#39;@docType data</span>
-<span style="color:#75715e">#&#39;@name rmb</span>
-<span style="color:#66d9ef">NULL</span>
-
-<span style="color:#75715e">#&#39;It&#39;s the Codon table</span>
-<span style="color:#75715e">#&#39;</span>
-<span style="color:#75715e">#&#39;used to this package</span>
-<span style="color:#75715e">#&#39;@docType data</span>
-<span style="color:#75715e">#&#39;@name dna_pro_table</span>
-<span style="color:#66d9ef">NULL</span>
-<span style="color:#75715e">#&#39;It&#39;s the seqence data of 2003 SARS</span>
-<span style="color:#75715e">#&#39;</span>
-<span style="color:#75715e">#&#39;used to this package</span>
-<span style="color:#75715e">#&#39;@docType data</span>
-<span style="color:#75715e">#&#39;@name SARS</span>
-<span style="color:#66d9ef">NULL</span>
-<span style="color:#a6e22e">globalVariables</span>(<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">rmb&#34;</span>,<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">dna_pro_table&#34;</span>))
-</code></pre></div><p><code>globalVariables</code>使得能在编写的R包中直接使用这些数据集。</p>
-
-      </main>
-
-      <div id="fastSearch">
-   <input id="searchInput" tabindex="0">
-   <ul id="searchResults">
-   </ul>
-</div>
-<footer>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/python.min.js"></script>
-  <script src ="/js/search.js"></script>
-  <script src="../../js/fuse.js"></script> 
- <script src="../../js/fastsearch.js"></script>
-
-  <script>
-  hljs.configure({languages: []});
-  hljs.initHighlightingOnLoad();
-  </script>
-  
-  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-  <span id="busuanzi_container_site_pv">本站总访问量<span id       ="busuanzi_value_site_pv"></span>次</span>
-  <br>
-  <span >
-    <mark>CMD+/</mark>对网站进行搜索
-  </span>
-  
-  
-<script async src="../../js/center-image.js"></script>
-<script type="text/javascript" id="MathJax-script" async
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-</script>
-<center>
-Liripo <SPAN id=span_dt_dt style="color: #0196e3;"></SPAN>
-<SCRIPT language=javascript>
-function show_date_time(){
-window.setTimeout("show_date_time()", 1000);
-BirthDay=new Date("7/8/2019 00:00:00");
-today=new Date();
-timeold=(today.getTime()-BirthDay.getTime());
-sectimeold=timeold/1000
-secondsold=Math.floor(sectimeold);
-msPerDay=24*60*60*1000
-e_daysold=timeold/msPerDay
-daysold=Math.floor(e_daysold);
-e_hrsold=(e_daysold-daysold)*24;
-hrsold=Math.floor(e_hrsold);
-e_minsold=(e_hrsold-hrsold)*60;
-minsold=Math.floor((e_hrsold-hrsold)*60);
-seconds=Math.floor((e_minsold-minsold)*60);
-span_dt_dt.innerHTML=""+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒";
-}
-show_date_time();
-</SCRIPT>
-</center>
-  
-</footer>
-
-
-    </div>
-  </body>
-</html>

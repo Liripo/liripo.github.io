@@ -7,53 +7,49 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Sun, 18 Oct 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/tags/bio/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 18 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://liripo.github.io/tags/bio/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>RNA-seq分析流程</title>
-      <link>https://liripo.github.io/post/rna-seq%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B/</link>
+      <link>https://liripo.github.io/posts/2020/rna-seq%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B/</link>
       <pubDate>Sun, 18 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/rna-seq%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B/</guid>
+      <guid>https://liripo.github.io/posts/2020/rna-seq%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B/</guid>
       <description>一般已发表文章所包含的数据可以在NCBI (SRA、GEO 等)、EMBL-EBI 等相关数据库获得。 ncbi数据下载参考 高通量测序知识 下载测序数</description>
     </item>
     
     <item>
       <title>NCBI数据下载</title>
-      <link>https://liripo.github.io/post/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
+      <link>https://liripo.github.io/posts/2020/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</link>
       <pubDate>Tue, 13 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
+      <guid>https://liripo.github.io/posts/2020/ncbi%E6%95%B0%E6%8D%AE%E4%B8%8B%E8%BD%BD/</guid>
       <description>NCBI共享大量数据。 2020年，PubMed中有3160万篇论文，其中PubMed Central中有660万篇全文记录。 NCBI核苷酸数据</description>
     </item>
     
     <item>
       <title>Mega使用及多序列比对</title>
-      <link>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</link>
+      <link>https://liripo.github.io/posts/2020/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</link>
       <pubDate>Sat, 15 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</guid>
+      <guid>https://liripo.github.io/posts/2020/mega%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%A4%9A%E5%BA%8F%E5%88%97%E6%AF%94%E5%AF%B9/</guid>
       <description>安装 https://www.megasoftware.net/，下载windows的GUI版本，要使用CC（命令行）版本&amp;ndash;配置好</description>
     </item>
     
     <item>
       <title>blast学习</title>
-      <link>https://liripo.github.io/post/ncbi/</link>
+      <link>https://liripo.github.io/posts/2020/ncbi/</link>
       <pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/ncbi/</guid>
+      <guid>https://liripo.github.io/posts/2020/ncbi/</guid>
       <description>最新的blast可以在页面ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/找到。 本地使用 bl</description>
     </item>
     
     <item>
       <title>TCGA</title>
-      <link>https://liripo.github.io/post/tcga/</link>
+      <link>https://liripo.github.io/posts/2020/tcga%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8C%96%E6%8E%98/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/tcga/</guid>
+      <guid>https://liripo.github.io/posts/2020/tcga%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8C%96%E6%8E%98/</guid>
       <description></description>
     </item>
     

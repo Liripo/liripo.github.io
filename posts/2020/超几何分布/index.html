@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2020/%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="富集分析超几何分布 - Liripo" />
+    <meta name="twitter:description"
+        content="" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="富集分析超几何分布 - Liripo">
+    <meta property="og:description"
+        content="" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2020/%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/" />
+    <meta property="og:site_name" content="富集分析超几何分布" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2020-03-28 00:00:00 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>富集分析超几何分布 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2020/%E8%B6%85%E5%87%A0%E4%BD%95%E5%88%86%E5%B8%83/">富集分析超几何分布</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2020-03-28" class="no-wrap"
+                                    title="Created at 2020/03/28">
+                                    2020-03-28</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2020-03-28" class="no-wrap"
+                                    title="Modified  at 2020/03/28">
+                                    2020-03-28</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                807 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><p>超几何分布是统计学中的一种离散分布，它描述了由有限个物件中抽出n个物件，成功抽出指定种类的物件的个数。 也是生物信息学中常用的一种统计分布模型。我们在GO，KEGG的富集分析时就采用的是这个模型。 其数学表达式如下：
+$$
+p(k)=P(X=k)=\frac{\binom{M}{k}*\binom{N-M}{n-k}}{\binom{N}{n}}
+$$</p>
+<p>R中使用choose函数计算</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">(<span style="color:#a6e22e">choose</span>(M,k))<span style="color:#f92672">*</span>(<span style="color:#a6e22e">choose</span>(N<span style="color:#f92672">-</span>M,n<span style="color:#f92672">-</span>k))<span style="color:#f92672">/</span>(<span style="color:#a6e22e">choose</span>(N,n))
+</code></pre></div><p>其中：</p>
+<p>N： 总样本数</p>
+<p>m： 总样本中“特定类别”的数量</p>
+<p>n: 从总样本中随机抽取的数量</p>
+<p>k: 抽取样本中属于“特定类别”的数量</p>
+<p>但是我们做统计模型时，统计不是分布概率，而是累积概率，所以计算的p_value 值计算公式为：
+$$
+p = 1-\sum_{i = 0}^{k-1}\frac{\binom{M}{i}*\binom{N-M}{n-i}}{\binom{N}{n}}
+$$
+R函数phyper：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">phyper</span>(k<span style="color:#ae81ff">-1</span>,m, N<span style="color:#f92672">-</span>m, n,)
+<span style="color:#a6e22e">phyper</span>(k<span style="color:#ae81ff">-1</span>,M, N<span style="color:#f92672">-</span>M, n, lower.tail<span style="color:#f92672">=</span>F)
+</code></pre></div><h1 id="go富集分析计算">Go富集分析计算</h1>
+<blockquote>
+<p>从gprofiler官网看到背景基因集有18126个ENSG</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">N <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">18126</span>
+goid <span style="color:#f92672">&lt;-</span> <span style="color:#e6db74">&#34;GO:0016491&#34;</span>
+</code></pre></div><blockquote>
+<p>goid在人中包含的ENSMBL基因</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">go <span style="color:#f92672">&lt;-</span> gprofiler2<span style="color:#f92672">::</span><span style="color:#a6e22e">gconvert</span>(query <span style="color:#f92672">=</span> goid,organism <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hsapiens&#34;</span>,target <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ENSG&#34;</span>)
+M <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">nrow</span>(go)
+</code></pre></div><blockquote>
+<p>假设查询56个基因，17个在这个go里面，那么超几何分布累积概率p(x&gt;=17)的概率应为：</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">n <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">56</span>
+k <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">17</span>
+p <span style="color:#f92672">&lt;-</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">phyper</span>(k <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>,M, N<span style="color:#f92672">-</span>M, n, lower.tail<span style="color:#f92672">=</span>T)
+<span style="color:#75715e">## [1] 7.967889e-11</span>
+</code></pre></div><p>使用二项式分布累积概率计算,二项式分布，是有放回的抽样，你可以多次抽到同一基因，这是不符合的。所以这个计算只能说是做为近似的估计值。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">sum</span>(<span style="color:#a6e22e">sapply</span>(<span style="color:#ae81ff">0</span><span style="color:#f92672">:</span>k<span style="color:#ae81ff">-1</span>, <span style="color:#a6e22e">function</span>(i) <span style="color:#a6e22e">choose</span>(n,i) <span style="color:#f92672">*</span> (M<span style="color:#f92672">/</span>N)^i <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">-</span>M<span style="color:#f92672">/</span>N)<span style="color:#a6e22e">^</span>(n<span style="color:#f92672">-</span>i)))
+<span style="color:#75715e">## [1] 9.148204e-11</span>
+</code></pre></div><p>使用$2\times2$列联表进行独立性检验</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">d <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(gene.not.interest<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(M<span style="color:#f92672">-</span>k, N<span style="color:#f92672">-</span>M<span style="color:#f92672">-</span>n<span style="color:#f92672">+</span>k), gene.in.interest<span style="color:#f92672">=</span><span style="color:#a6e22e">c</span>(k, n<span style="color:#f92672">-</span>k))
+<span style="color:#a6e22e">row.names</span>(d) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;In_category&#34;</span>, <span style="color:#e6db74">&#34;not_in_category&#34;</span>)
+<span style="color:#f92672">&gt;</span> d
+                gene.not.interest gene.in.interest
+In_category                   <span style="color:#ae81ff">751</span>               <span style="color:#ae81ff">17</span>
+not_in_category             <span style="color:#ae81ff">17319</span>               <span style="color:#ae81ff">39</span>
+</code></pre></div><p>经典的有卡方检验和fisher&rsquo;s exact test</p>
+<blockquote>
+<p>卡方检验</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">chisq.test</span>(d,)
+
+	Pearson<span style="color:#e6db74">&#39;s Chi-squared test with Yates&#39;</span> continuity correction
+
+data<span style="color:#f92672">:</span>  d
+X<span style="color:#f92672">-</span>squared <span style="color:#f92672">=</span> <span style="color:#ae81ff">88.108</span>, df <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>, p<span style="color:#f92672">-</span>value <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">2.2e-16</span>
+
+Warning message<span style="color:#f92672">:</span>
+In <span style="color:#a6e22e">chisq.test</span>(d, ) <span style="color:#f92672">:</span> Chi<span style="color:#f92672">-</span>squared近似算法有可能不准
+</code></pre></div><p>对于２x２表来说，卡方检验通常也只能做为近似估计值，特别是当sample size或expected all count比较小的时候，计算并不准确。</p>
+<blockquote>
+<p>fisher&rsquo;s exact test,它使用的是超几何分布来计算p值,所以fisher&rsquo;s exact test和超几何模式计算的p-值是一样的。</p>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">fisher.test</span>(d)
+
+	Fisher<span style="color:#e6db74">&#39;</span><span style="color:#960050;background-color:#1e0010">s Exact Test for Count Data</span>
+
+data<span style="color:#f92672">:</span>  d
+p<span style="color:#f92672">-</span>value <span style="color:#f92672">=</span> <span style="color:#ae81ff">7.968e-11</span>
+alternative hypothesis<span style="color:#f92672">:</span> true odds ratio is not equal to <span style="color:#ae81ff">1</span>
+<span style="color:#ae81ff">95</span> percent confidence interval<span style="color:#f92672">:</span>
+ <span style="color:#ae81ff">0.05470043</span> <span style="color:#ae81ff">0.18852771</span>
+sample estimates<span style="color:#f92672">:</span>
+odds ratio 
+<span style="color:#ae81ff">0.09951436</span> 
+</code></pre></div><p>超几何分布是偏态的，所以fisher.test默认的双侧检验。而使用双侧和单侧的p值是一样的，不过会影响对置信区间的估计。</p>
+</article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

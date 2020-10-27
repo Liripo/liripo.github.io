@@ -7,17 +7,13 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/tags/docker/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sat, 28 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://liripo.github.io/tags/docker/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>docker安装使用</title>
-      <link>https://liripo.github.io/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</link>
+      <link>https://liripo.github.io/posts/2019/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</link>
       <pubDate>Sat, 28 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</guid>
+      <guid>https://liripo.github.io/posts/2019/docker%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8/</guid>
       <description>linux dockor.</description>
     </item>
     

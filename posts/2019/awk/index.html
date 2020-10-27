@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="awk逐行读入文件，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。 awk书籍github
+" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2019/awk/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="awk - Liripo" />
+    <meta name="twitter:description"
+        content="awk逐行读入文件，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。 awk书籍github
+" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="awk - Liripo">
+    <meta property="og:description"
+        content="awk逐行读入文件，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。 awk书籍github
+" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2019/awk/" />
+    <meta property="og:site_name" content="awk" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2019-11-11 00:00:00 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>awk - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2019/awk/">awk</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2019-11-11" class="no-wrap"
+                                    title="Created at 2019/11/11">
+                                    2019-11-11</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2019-11-11" class="no-wrap"
+                                    title="Modified  at 2019/11/11">
+                                    2019-11-11</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                1677 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><p>awk逐行读入文件，以空格为默认分隔符将每行切片，切开的部分再进行各种分析处理。
+<a href="https://github.com/wuzhouhui/awk">awk书籍github</a></p>
+<p>读取fa文件碱基数</p>
+<pre><code>cat ref.fa|awk '/^&gt;/&amp;&amp;NR&gt;1{print &quot;&quot;;}{ printf &quot;%s&quot;,/^&gt;/ ? $0&quot; &quot;:$0 }'|awk '{print $1&quot;\t&quot;length($3)}'
+</code></pre><h1 id="awk简单入门">awk简单入门</h1>
+<p>运行一个awk 程序有多种方式. 可以键入下面这种形式的命令</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">awk <span style="color:#e6db74">&#39;program&#39;</span> input files
+</code></pre></div><p>awk帮助信息的example,计算第一列的和</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> gawk <span style="color:#e6db74">&#39;{ sum += $1 }; END { print sum }&#39;</span> file
+</code></pre></div><p>程序内容多时，将程序写入文件progfile，选择-f参数键入</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">awk -f progfile optional list of files
+</code></pre></div><p>awk报错信息，错误的地方会被&raquo;&gt; &laquo;&lt; 标记。</p>
+<h1 id="内建变量">内建变量</h1>
+<p><strong>$0</strong>	当前记录（这个变量中存放着整个行的内容）
+<strong>$1-$n</strong> 当前记录的第n个字段，字段间由FS分隔
+<strong>NF</strong>：awk 计算当前输入行的字段数量, 并将它存储在一个内建的变量中, 这个变量叫作NF。即为最后一列。或者说是字段。
+<strong>NR</strong>：表示的是已经处理过的总记录数目，或者说行号(不一定是一个文件，可能是多个)
+<strong>FNR</strong> 当前输入文件的记录数目
+<strong>FS</strong>  用来设置每一记录的字段分隔符号
+<strong>OFS</strong>: 输出字段分隔符变量
+<strong>RS</strong> 定义了一行记录。读取文件时，默认将一行作为一条记录。
+<strong>ORS</strong> 条记录在输出时候会用分隔符隔开，默认换行符
+<strong>FILENAME</strong> 表示当前正在输入的文件的名字。
+<strong>ARGIND</strong>        当前文件在ARGV中的位置
+<strong>ARGC</strong>         当前命令行参数个数
+<strong>ARGV</strong>         包含命令行参数的数组
+<strong>ENVIRON</strong>      当前shell环境变量及其值组成的关联数组
+<strong>RLENGTH</strong>       由match函数所匹配的子字符串的长度
+<strong>RSTART</strong>        由match函数所匹配的子字符串的起始位置</p>
+<h1 id="内建函数">内建函数</h1>
+<p>1.算术函数</p>
+<blockquote>
+<p>字符串函数</p>
+</blockquote>
+<p><strong>length()</strong>  获得字符串长度,例如：<code>length($0)</code>
+<strong>split()</strong>  将字符串按分隔符分隔，并保存至数组,如：<code>split($0,arr,/:/)</code>
+<strong>getline</strong> 从输入(可以是管道、另一个文件或当前文件的下一行)中获得记录，赋值给变量或重置某些环境变量。&mdash;&mdash;-很强大的命令
+<strong>next</strong> 作用和getline类似，也是读取下一行并覆盖<code>$0</code>，区别是next执行后，其后的命令不再执行，而是读取下一行从头再执行
+<strong>sub(regex,substr,string)</strong>   替换字符串string(省略时为<code>$0</code>)中首个出现匹配正则regex的子串substr
+<strong>gsub(regex,substr,string)</strong>  与sub()类似，但不止替换第一个，而是全局替换。
+<strong>substr(str,n,m)</strong>   切割字符串str，从第n个字符开始，切割m个长度字符。如果m省略，则到结尾。
+<strong>tolower(str)和toupper(str)</strong>  大小写转换
+<strong>system(cmd)</strong>  执行shell命令cmd，返回执行结果，执行成功为0，失败为非0
+<strong>match(str,regex)</strong>  返回字符串str中匹配正则regex的位置
+<strong>index(string, substring)</strong>  函数返回子字符串第一次被匹配的位置，偏移量从位置1开始。如：awk &lsquo;{ print index(&ldquo;test&rdquo;, &ldquo;mytest&rdquo;) }&rsquo; testfile 结果为3</p>
+<h1 id="awk---help">awk &ndash;help</h1>
+<p>-f 可以传入脚本文件，但是无法与命令行程序一起使用
+-F fs 指定分隔符
+-v var=val 传入shell变量</p>
+<h1 id="awk一行式实战">awk一行式实战</h1>
+<p>1.去重  <code>awk '!a[$0]++{print $0}' input.file</code>
+判定<code>!a[$0]++</code>是未定义的，以<code>$0</code>为数据下标，建立数组a，且其值为空字符串“”或者0&mdash;-此处执行<code>++</code>后数组被定义为int型，初始值就为0；遇到重复的行是，数组的下标相同，此时数组的value为0，执行<code>++</code>后，数组值为1，经取反后数组为0，action不执行【即不打印】；没有遇到重复的行，即<code>a[$0]</code>执行++后为0，而!0=1,1为真。
+那么<code>a[$0]</code>还同时记录着重复数-1
+2.awk 合并两个文件&mdash;-假设文件只有两个字段，而判定条件均为第一个字段</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">awk <span style="color:#e6db74">&#39;NR==FNR{a[$1]=$2;next}NR&gt;FNR{print $0,a[$1]}&#39;</span> b.txt a.txt
+</code></pre></div><blockquote>
+<p>这里NR==FNR即判断第一个文件，因为读取第一个文件总行数等于当前文件记录行数，而<code>a[$1]=$2</code>,即是把当前文件的第一个字段作为数组下标，第二个字段作为数组的值value
+当NR&gt;FNR读取第二个文件，输出第二个文件所有字段，以第二个文件第一个字段为索引，取得相应的值。当然可以使用ARGIND==number判定读取的文件</p>
+</blockquote>
+<ol start="3">
+<li>awk提取两个fastq.gz文件的UMI序列</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#提取R1，R2文件使用bioawk,可惜bioawk -c无法使用awk内置变量</span>
+bioawk -c fastx <span style="color:#e6db74">&#39;{umi=substr($seq,1,3);seq_8 = substr($seq,8,length($seq));qual_8=substr($qual,8,length($qual))}{print &#34;@&#34;$name&#34;_&#34;umi&#34;\n&#34;seq_8&#34;\n+\n&#34;qual_8}&#39;</span> NL190929-1C.R1.fastq.gz &gt;R1.fastq
+bioawk -c fastx <span style="color:#e6db74">&#39;{umi=substr($seq,1,3);seq_8 = substr($seq,8,length($seq));qual_8=substr($qual,8,length($qual))}{print &#34;@&#34;$name&#34;_&#34;umi&#34;\n&#34;seq_8&#34;\n+\n&#34;qual_8}&#39;</span> NL190929-1C.R2.fastq.gz &gt;R2.fastq
+<span style="color:#75715e">#将R2中UMI提取到R1，以&#34;_&#34;为分隔符</span>
+awk <span style="color:#e6db74">&#39;(ARGIND==1 &amp;&amp; NR%4==1){split($0,a,&#34;_&#34;);b[i]=a[2];i++}(NR!=FNR &amp;&amp; FNR%4==1){print $0&#34;&#34;b[j];j++}(ARGIND==2 &amp;&amp; NR%4!=1){print $0}&#39;</span> R2.fastq R1.fastq &gt;umi_R1.fastq
+awk <span style="color:#e6db74">&#39;ARGIND==1 &amp;&amp; NR%4==1{name[i]=$0;i++}ARGIND==2 &amp;&amp; FNR%4==1{split($0,a,&#34;_&#34;);print name[j]&#34;&#34;a[2];j++}ARGIND==2 &amp;&amp; FNR%4!=1{print}&#39;</span> R1.fastq R2.fastq &gt;umi_R2.fastq
+</code></pre></div><p>4.一行的fasta文件变成60bp碱基一行的fasta文件</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">awk <span style="color:#f92672">-</span>v FS<span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/^&gt;/{print;next}{for (i=0;i&lt;=NF/60;i++) {for (j=1;j&lt;=60;j++) printf &#34;%s&#34;, $(i*60 +j); print &#34;&#34;}}&#39;</span> test.fa
+</code></pre></div><p>或者<code>fold -w 60 test.fa</code></p>
+<p>5.多行的fasta文件合并为一行</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">cat test_multiline.fa <span style="color:#f92672">|</span> awk <span style="color:#e6db74">&#39;/^&gt;/{if(N&gt;0) printf(&#34;\n&#34;); ++N; printf(&#34;%s\n&#34;,$0);next;} {printf(&#34;%s&#34;,$0);}END{printf(&#34;\n&#34;);}&#39;</span>
+</code></pre></div></article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

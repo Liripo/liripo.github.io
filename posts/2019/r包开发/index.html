@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="Zh-cn">
+<head>
+    <meta charset="utf-8">
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/frameworks.css" />
+    <link crossorigin="anonymous" media="all" rel="stylesheet" href="https://liripo.github.io/css/github.css" />
+    
+    <link crossorigin="anonymous" media="(prefers-color-scheme: dark)" rel="stylesheet"
+        href="https://liripo.github.io/css/dark.css" />
+    
+    <meta name="viewport" content="width=device-width">
+    <meta name="description"
+        content="一些R包使用问题。" />
+    <meta name="keywords"
+        content="" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="https://liripo.github.io/posts/2019/r%E5%8C%85%E5%BC%80%E5%8F%91/" />
+
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="R包开发 - Liripo" />
+    <meta name="twitter:description"
+        content="一些R包使用问题。" />
+    <meta name="twitter:site" content="https://liripo.github.io" />
+    <meta name="twitter:creator" content="" />
+    <meta name="twitter:image"
+        content="https://liripo.github.io">
+
+    
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="R包开发 - Liripo">
+    <meta property="og:description"
+        content="一些R包使用问题。" />
+    <meta property="og:url" content="https://liripo.github.io/posts/2019/r%E5%8C%85%E5%BC%80%E5%8F%91/" />
+    <meta property="og:site_name" content="R包开发" />
+    <meta property="og:image"
+        content="https://liripo.github.io">
+    <meta property="og:image:width" content="2048">
+    <meta property="og:image:height" content="1024">
+    
+    <meta property="article:published_time" content="2020-03-28 00:00:00 &#43;0000 UTC" />
+    
+
+    
+    
+
+    
+    
+
+    <title>R包开发 - Liripo</title>
+
+    <link rel="icon" type="image/x-icon" class="js-site-favicon" href="https://liripo.github.io/images/favicon.ico">
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-155993181-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+<body class="env-production emoji-size-boost page-responsive page-profile">
+  <div class="position-relative js-header-wrapper ">
+    <span class="Progress progress-pjax-loader position-fixed width-full js-pjax-loader-bar">
+        <span class="progress-pjax-loader-bar top-0 left-0" style="width: 0%;"></span>
+    </span>
+    <header class="Header py-lg-0 js-details-container Details flex-wrap flex-lg-nowrap p-responsive" role="banner">
+        <div class="Header-item d-none d-lg-flex">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div
+            class="Header-item Header-item--full flex-column flex-lg-row width-full flex-order-2 flex-lg-order-none mr-0 mr-lg-3 mt-3 mt-lg-0 Details-content--hidden">
+            <div class="header-search flex-self-stretch flex-lg-self-auto mr-0 mr-lg-3 mb-3 mb-lg-0 scoped-search site-scoped-search js-site-search position-relative js-jump-to"
+                role="combobox" aria-owns="jump-to-results" aria-label="Search or jump to" aria-haspopup="listbox"
+                aria-expanded="false">
+                <div class="position-relative">
+                </div>
+            </div>
+        </div>
+        <nav class="d-flex" aria-label="Global">
+            <a class="js-selected-navigation-item Header-link py-lg-3">&nbsp;</a>
+        </nav>
+        <div class="Header-item Header-item--full flex-justify-center d-lg-none position-relative" style="margin-right: auto;">
+            <a class="Header-link" href="https://liripo.github.io" aria-label="Homepage"
+                data-ga-click="Header, go to dashboard, icon:logo">
+                <svg class="octicon octicon-mark-github v-align-middle" height="32" viewBox="0 0 16 16" version="1.1"
+                    width="32" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+            </a>
+        </div>
+        <div class="Header-item position-relative mr-0 d-none d-lg-flex">
+            <details class="details-overlay details-reset">
+                <summary class="Header-link" aria-label="View profile and more"
+                    data-ga-click="Header, show menu, icon:avatar">
+                    
+                    <img alt="" class="avatar" src="https://themes.gohugo.io/theme/github-style/images/avatar.png" height="20" width="20">
+                    
+                </summary>
+            </details>
+        </div>
+    </header>
+</div>
+
+<div id="start-of-content" class="show-on-focus"></div>
+<div id="js-flash-container">
+</div>
+
+  
+<div class="application-main " data-commit-hovercards-enabled="">
+    <div itemscope="" itemtype="http://schema.org/SoftwareSourceCode" class="">
+        <main>
+            <div class="pagehead repohead instapaper_ignore readability-menu experiment-repo-nav pt-0 pt-lg-4 ">
+                <div class="repohead-details-container clearfix container-lg p-responsive d-none d-lg-block">
+                    <div class="mb-3 d-flex">
+                        <h1 class="public css-truncate float-none flex-auto width-fit pl-0">
+                            <a class="avatar mr-1" href="https://liripo.github.io/about/">
+                                
+
+                                <img src="https://themes.gohugo.io/theme/github-style/images/avatar.png" width="26" height="26">
+                                
+                            </a>
+                            <span class="author"><a href="https://liripo.github.io">liripo</a></span>
+                            <span class="path-divider">/</span>
+                            <strong itemprop="name" class="css-truncate-target" style="max-width: 410px"><a
+                                    href="https://liripo.github.io/posts/2019/r%E5%8C%85%E5%BC%80%E5%8F%91/">R包开发</a></strong>
+
+                            <div class="d-block text-small text-gray">
+                                Created <time-ago datetime="2020-03-28" class="no-wrap"
+                                    title="Created at 2020/03/28">
+                                    2020-03-28</time-ago>
+                                <span class="file-info-divider"></span>
+                                Modified <time-ago datetime="2020-03-28" class="no-wrap"
+                                    title="Modified  at 2020/03/28">
+                                    2020-03-28</time-ago>
+                            </div>
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="container-lg clearfix new-discussion-timeline experiment-repo-nav  p-responsive">
+                <div class="repository-content ">
+                    <div class="Box mt-3 position-relative">
+                        <div class="Box-header py-2 d-flex flex-column flex-shrink-0 flex-md-row flex-md-items-center">
+                            <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                                1233 Words
+                                
+                            </div>
+                        </div>
+
+                        <div id="readme" class="Box-body readme blob instapaper_body js-code-block-container">
+                            <article class="markdown-body entry-content p-3 p-md-6" itemprop="text"><p><strong><a href="https://r-pkgs.org/">R包开发书籍</a></strong></p>
+<p><strong><a href="https://cran.r-project.org/doc/manuals/r-release/R-exts.html">Writing R Extensions</a></strong></p>
+<p><a href="https://qianjiye.de/2015/04/r-packages">https://qianjiye.de/2015/04/r-packages</a></p>
+<h1 id="r-package">R package</h1>
+<p>使用devtools+Rtools进行R包开发，而Linux可以使用dockor+Rstudio开发版本。</p>
+<h3 id="create_package">create_package()</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#a6e22e">library</span>(devtools)
+<span style="color:#a6e22e">create_package</span>(<span style="color:#e6db74">&#34;./liripo.R&#34;</span>)
+</code></pre></div><h3 id="use_r">use_r()</h3>
+<p>使用<code>use_r(&quot;scales&quot;)</code>在R文件夹下生成一个scales.R文件。</p>
+<p>下面举个我写的例子，参考函数<code>scales::show_col</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @title show your colors by ggplot2</span>
+<span style="color:#75715e">#&#39;</span>
+<span style="color:#75715e">#&#39; @param colors colors</span>
+<span style="color:#75715e">#&#39; @param ncol ncol</span>
+<span style="color:#75715e">#&#39; @importFrom ggplot2 ggplot geom_tile aes aes_</span>
+<span style="color:#75715e">#&#39; @importFrom ggplot2 geom_text scale_fill_manual theme_void</span>
+<span style="color:#75715e">#&#39; @export</span>
+show_color <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(colors,ncol <span style="color:#f92672">=</span> <span style="color:#66d9ef">NULL</span>){
+  n <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">length</span>(colors)
+  ncol <span style="color:#f92672">&lt;-</span> ncol <span style="color:#f92672">%||%</span> <span style="color:#a6e22e">ceiling</span>(<span style="color:#a6e22e">sqrt</span>(<span style="color:#a6e22e">length</span>(colors)))
+  nrow <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ceiling</span>(n<span style="color:#f92672">/</span>ncol)
+  tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">data.frame</span>(cols <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>ncol,times <span style="color:#f92672">=</span> nrow),
+    rows <span style="color:#f92672">=</span> <span style="color:#a6e22e">rep</span>(nrow<span style="color:#f92672">:</span><span style="color:#ae81ff">1</span>,each <span style="color:#f92672">=</span> ncol),
+    colors <span style="color:#f92672">=</span> <span style="color:#a6e22e">c</span>(colors,<span style="color:#a6e22e">rep</span>(<span style="color:#66d9ef">NA</span>,ncol<span style="color:#f92672">*</span>nrow<span style="color:#f92672">-</span><span style="color:#a6e22e">length</span>(colors)))
+  )
+  tbl <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">na.omit</span>(tbl)
+  p <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ggplot</span>(tbl,<span style="color:#a6e22e">aes_</span>(<span style="color:#f92672">~</span>cols,y <span style="color:#f92672">=~</span>rows))<span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_tile</span>(<span style="color:#a6e22e">aes_</span>(fill <span style="color:#f92672">=</span> <span style="color:#f92672">~</span>colors),color <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;black&#34;</span>,show.legend <span style="color:#f92672">=</span> F) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">geom_text</span>(<span style="color:#a6e22e">aes_</span>(label <span style="color:#f92672">=</span> <span style="color:#f92672">~</span>colors)) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">scale_fill_manual</span>(values <span style="color:#f92672">=</span> tbl<span style="color:#f92672">$</span>colors,breaks <span style="color:#f92672">=</span> tbl<span style="color:#f92672">$</span>colors) <span style="color:#f92672">+</span>
+    <span style="color:#a6e22e">theme_void</span>()
+  class <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">attributes</span>(p)<span style="color:#f92672">$</span>class
+  <span style="color:#a6e22e">attr</span>(p,<span style="color:#e6db74">&#34;class&#34;</span>) <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">c</span>(class,<span style="color:#e6db74">&#34;show_color&#34;</span>)
+  p
+}
+<span style="color:#75715e">#&#39; @rdname print</span>
+<span style="color:#75715e">#&#39; @export</span>
+<span style="color:#75715e">#&#39; @method print show_color</span>
+print.show_color <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(x,<span style="color:#66d9ef">...</span>){
+  <span style="color:#a6e22e">print</span>(x,<span style="color:#66d9ef">...</span>)
+}
+</code></pre></div><p>里面ggplot2写R包时应使用aes_替代aes函数，具体可以<code>?aes\_</code>,当你想在R包中使用dplyr时，你可以运行R代码<code>vignette(&quot;programming&quot;)</code>看看dplyr的编程文档。</p>
+<p>举个例子：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @title ---</span>
+<span style="color:#75715e">#&#39; @importFrom dplyr filter </span>
+<span style="color:#75715e">#&#39; @importFrom rlang .data</span>
+print_99 <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">function</span>(){
+    table <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">expand.grid</span>(a <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">9</span>,b <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#ae81ff">9</span>) <span style="color:#f92672">%&gt;%</span>
+    <span style="color:#a6e22e">filter</span>(.data<span style="color:#f92672">$</span>a <span style="color:#f92672">&lt;=</span> .data<span style="color:#f92672">$</span>b)
+}
+</code></pre></div><h1 id="document">document</h1>
+<p><code>devtools::document()</code>会自动根据上面的rocelt调用Roxygen2生成man/*.Rd文件和Description文件。</p>
+<p>具体可见<code>vignette(&quot;rd&quot;)</code></p>
+<h1 id="use_package">use_package</h1>
+<p>这个函数会在<strong>DESCRIPTION</strong>下引入R包依赖的其他R包,如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R">Imports<span style="color:#f92672">:</span> 
+    ggplot2,
+    stats
+</code></pre></div><h3 id="load_all">load_all()</h3>
+<p><code>load_all()</code>默认载入当前路径的包，类似<code>library()</code>，然后你可以试试写的代码。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-r" data-lang="r"><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">exists</span>(<span style="color:#e6db74">&#34;show_color&#34;</span>, where <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;.GlobalEnv&#34;</span>, inherits <span style="color:#f92672">=</span> <span style="color:#66d9ef">FALSE</span>)
+[1] FLASE
+<span style="color:#75715e">#可以看到当前全局环境没有这个函数，确实是以包的函数载入</span>
+<span style="color:#f92672">&gt;</span><span style="color:#a6e22e">search</span>()<span style="color:#75715e">#看到载入的包</span>
+</code></pre></div><h3 id="check">check()</h3>
+<p>使用<code>check()</code>检查R包，可以看到是否有报错。</p>
+<h3 id="use_mit_licence">use_mit_licence</h3>
+<p><code>use_mit_licence(&quot;Liripo&quot;)</code>可以生成MIT许可证，具体生成什么许可证可以<code>?use_mit_license()</code></p>
+<h1 id="快捷插入skeleon代码">快捷插入skeleon代码</h1>
+<p>Rstudio可以点击code&ndash;&gt;Inseart roxygen skeleton快速插入，当然函数不规范的话，无法使用这个操作。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">document</span>()
+Updating liripo.R documentation
+Loading liripo.R
+Writing NAMESPACE
+Writing NAMESPACE
+Writing scale.Rd
+</code></pre></div><h1 id="r包中文">R包中文</h1>
+<p>目前来说，不要使用中文。必须使用的可以看看函数<code>?stringi::stri_escape_unicode()</code>使用生成的unicode替代。ps:不过我使用后还是提示我使用ASCII字符编码。</p>
+<h1 id="install">install()</h1>
+<p>install()将包载入到<code>.libpath()</code>路径。看下是否安装上了：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#f92672">&gt;</span> stringr<span style="color:#f92672">::</span><span style="color:#a6e22e">str_detect</span>(<span style="color:#a6e22e">.packages</span>(all.available <span style="color:#f92672">=</span> <span style="color:#66d9ef">TRUE</span>),<span style="color:#e6db74">&#34;liripo.R&#34;</span>,)
+[1] <span style="color:#66d9ef">TRUE</span>
+</code></pre></div><h3 id="check_built和build">check_built()和build()</h3>
+<p><code>check_built()</code>检查tar.gz包。</p>
+<p><code>build()</code>生成tar.gz包，便于分享。</p>
+<h1 id="r包加入数据集">R包加入数据集</h1>
+<p><code>use_data()</code>函数可以对R对象生成/data/*.rda文件，之后使用<code>use_r(&quot;R包名-package&quot;)</code>，在这个新生成的文件加入skeleon，例子：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-R" data-lang="R"><span style="color:#75715e">#&#39; @name Rliripo</span>
+<span style="color:#75715e">#&#39; @docType package</span>
+<span style="color:#75715e">#&#39; @importFrom grDevices colorRampPalette</span>
+<span style="color:#75715e">#&#39; @importFrom stats na.omit</span>
+<span style="color:#66d9ef">NULL</span>
+<span style="color:#75715e">#&#39;It&#39;s the color data of rmb</span>
+<span style="color:#75715e">#&#39;</span>
+<span style="color:#75715e">#&#39;used to this package</span>
+<span style="color:#75715e">#&#39;@docType data</span>
+<span style="color:#75715e">#&#39;@name rmb</span>
+<span style="color:#66d9ef">NULL</span>
+
+<span style="color:#75715e">#&#39;It&#39;s the Codon table</span>
+<span style="color:#75715e">#&#39;</span>
+<span style="color:#75715e">#&#39;used to this package</span>
+<span style="color:#75715e">#&#39;@docType data</span>
+<span style="color:#75715e">#&#39;@name dna_pro_table</span>
+<span style="color:#66d9ef">NULL</span>
+<span style="color:#75715e">#&#39;It&#39;s the seqence data of 2003 SARS</span>
+<span style="color:#75715e">#&#39;</span>
+<span style="color:#75715e">#&#39;used to this package</span>
+<span style="color:#75715e">#&#39;@docType data</span>
+<span style="color:#75715e">#&#39;@name SARS</span>
+<span style="color:#66d9ef">NULL</span>
+<span style="color:#a6e22e">globalVariables</span>(<span style="color:#a6e22e">c</span>(<span style="color:#e6db74">&#34;rmb&#34;</span>,<span style="color:#e6db74">&#34;dna_pro_table&#34;</span>))
+</code></pre></div><p><code>globalVariables</code>使得能在编写的R包中直接使用这些数据集。</p>
+</article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="utterances"></div>
+
+<script>
+    var systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    var systemTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+    var utterancesTheme = systemTheme === 'dark' ? 'github-dark' : 'github-light';
+    var utterancesScript = document.createElement('script');
+    utterancesScript.src = 'https://utteranc.es/client.js';
+    utterancesScript.setAttribute('repo', 'liripo\/liripo.github.io');
+    utterancesScript.setAttribute('issue-term', 'title');
+    utterancesScript.setAttribute('theme', utterancesTheme);
+    utterancesScript.setAttribute('crossorigin', 'anonymous');
+    utterancesScript.setAttribute('async', '');
+    document.querySelector('.utterances').appendChild(utterancesScript);
+</script>
+<noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  <div class="footer container-lg width-full p-responsive" role="contentinfo">
+    <div
+        class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+            <li class="mr-3 mr-lg-0">Liripo</a></li>
+        </ul>
+
+        <a aria-label="Homepage" title="Liripo" class="footer-octicon d-none d-lg-block mx-lg-4"
+            href="https://liripo.github.io">
+            <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                </path>
+            </svg>
+        </a>
+        <ul
+            class="list-style-none d-flex flex-wrap col-12 col-lg-5 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+        </ul>
+    </div>
+    <div class="d-flex flex-justify-center pb-6">
+        <span class="f6 text-gray-light"></span>
+    </div>
+</div>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/frameworks.js"></script>
+
+<script crossorigin="anonymous"
+    type="application/javascript" src="https://liripo.github.io/js/github-bootstrap.js"></script>
+<script src="https://liripo.github.io/js/stop.js"></script>
+<script src="https://liripo.github.io/js/contributions.js"></script>
+
+</body>
+
+</html>

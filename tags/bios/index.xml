@@ -7,17 +7,13 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>Zh-cn</language>
     <copyright>Liripo</copyright>
-    <lastBuildDate>Fri, 08 Nov 2019 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="https://liripo.github.io/tags/bios/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Fri, 08 Nov 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://liripo.github.io/tags/bios/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>生信文件格式汇总</title>
-      <link>https://liripo.github.io/post/%E7%94%9F%E4%BF%A1%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E6%B1%87%E6%80%BB/</link>
+      <link>https://liripo.github.io/posts/2019/%E7%94%9F%E7%89%A9%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F/</link>
       <pubDate>Fri, 08 Nov 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://liripo.github.io/post/%E7%94%9F%E4%BF%A1%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E6%B1%87%E6%80%BB/</guid>
+      <guid>https://liripo.github.io/posts/2019/%E7%94%9F%E7%89%A9%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F/</guid>
       <description>生信数据文件格式。 vcf Variant Call Format（VCF）:是一个用于存储基因序列突变信息的文本格式。可以表示单碱基突变, 插入/缺失, 拷贝数变异和结构变</description>
     </item>
     
