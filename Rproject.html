@@ -1,0 +1,33 @@
+---
+title: "R project"
+author: "Liripo"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<script src="/rmarkdown-libs/jquery/jquery.min.js"></script>
+<link href="/rmarkdown-libs/datatables-css/datatables-crosstalk.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/datatables-binding/datatables.js"></script>
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="/rmarkdown-libs/dt-core/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/dt-core/js/jquery.dataTables.min.js"></script>
+<link href="/rmarkdown-libs/crosstalk/css/crosstalk.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/crosstalk/js/crosstalk.min.js"></script>
+
+
+<div id="r-shiny-web" class="section level1">
+<h1>R shiny web</h1>
+<div id="table-example" class="section level3">
+<h3><span style="font-size: 250%">Table example<span/></h3>
+<pre class="r"><code>DT::datatable(dat)</code></pre>
+<div id="htmlwidget-1" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"],["A","A","A","A","A","A","A","A","A","A","B","B","B","B","B","B","B","B","B","B"],[-4.2523540913161,1.70231797080429,4.32305375264429,1.78062840828558,11.5373483707262,6.6721303879751,0.00429484839917471,9.97140300744114,9.00745603205534,11.7669979720019,8.84021564536606,5.97409378324296,15.0348288493311,10.985009895119,13.5432219611818,11.4357894932451,16.9770633883129,17.2200126978937,17.7933592179153,19.3199091632599],[3.47315727519937,0.00593961194215842,-0.0942524273841228,2.07280827811164,1.21544035750516,3.608111411445,7.52921028893478,6.15615435544134,8.93523814691022,8.92809218735164,13.2024109715517,17.6448907941774,10.485402010084,10.1380430658948,18.6818761141095,19.1434718052458,18.8325049552779,18.9398188644009,19.7185877614054,19.6478998627784]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>cond<\/th>\n      <th>xvar<\/th>\n      <th>yvar<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,3]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>

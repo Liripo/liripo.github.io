@@ -1,0 +1,34 @@
+---
+title: "R project"
+author: "Liripo"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(plotly)
+library(DT)
+library(flexdashboard)
+
+# Make some noisily increasing data
+set.seed(955)
+dat <- data.frame(cond = rep(c("A", "B"), each=10),
+                  xvar = 1:20 + rnorm(20,sd=3),
+                  yvar = 1:20 + rnorm(20,sd=3))
+```
+
+
+R shiny web
+=======================================================================
+
+
+### <span style="font-size: 250%">Table example<span/>
+```{r}
+DT::datatable(dat)
+```
+
+
