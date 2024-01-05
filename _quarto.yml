@@ -1,0 +1,24 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "liripo.github.io"
+  site-url: https://liripo.github.io
+  description: "Liripo Blog"
+  navbar:
+    right:
+      - about.qmd
+      - icon: github
+        href: https://github.com/Liripo
+      - icon: twitter
+        href: https://twitter.com/Liripo_zzz
+      - icon: rss
+        href: index.xml
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+
+
+
