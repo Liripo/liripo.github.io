@@ -20,14 +20,14 @@
 
 
 
-<section id="使用-quarto-创建自己的博客" class="level2">
-<h2 class="anchored" data-anchor-id="使用-quarto-创建自己的博客">使用 quarto 创建自己的博客</h2>
-<section id="quarto的简单介绍" class="level3">
-<h3 class="anchored" data-anchor-id="quarto的简单介绍">quarto的简单介绍</h3>
+<section id="使用-quarto-创建自己的博客" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="使用-quarto-创建自己的博客"><span class="header-section-number">1</span> 使用 quarto 创建自己的博客</h2>
+<section id="quarto的简单介绍" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="quarto的简单介绍"><span class="header-section-number">1.1</span> quarto的简单介绍</h3>
 <p><a href="https://quarto.org/">Quarto®</a> 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。</p>
 </section>
-<section id="安装-quarto" class="level3">
-<h3 class="anchored" data-anchor-id="安装-quarto">安装 quarto</h3>
+<section id="安装-quarto" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">1.2</span> 安装 quarto</h3>
 <p>这里推荐两个选择：</p>
 <ol type="1">
 <li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a> 介绍下载安装即可。</p></li>
@@ -78,17 +78,17 @@ background-color: null;
 font-style: inherit;">/</span>tidyverse</span></code></pre></div>
 <p>这样，你就可以直接打开浏览器，输入网址 <a href="localhost:8787">localhost:8787</a> 开启 Rstudio IDE。 默认用户名：rstudio <img src="https://liripo.github.io/posts/quarto_blog/rstudio.png" class="img-fluid"></p>
 </section>
-<section id="quarto-创建-blog的详细步骤" class="level3">
-<h3 class="anchored" data-anchor-id="quarto-创建-blog的详细步骤">quarto 创建 blog的详细步骤</h3>
+<section id="quarto-创建-blog的详细步骤" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="quarto-创建-blog的详细步骤"><span class="header-section-number">1.3</span> quarto 创建 blog的详细步骤</h3>
 <blockquote class="blockquote">
 <p>没什么资源比官网的步骤更详细了</p>
 </blockquote>
 <p><a href="https://quarto.org/docs/websites/website-blog.html" class="uri">https://quarto.org/docs/websites/website-blog.html</a></p>
 </section>
-<section id="发布博客" class="level3">
-<h3 class="anchored" data-anchor-id="发布博客">发布博客</h3>
-<section id="使用-github-pages-发布" class="level4">
-<h4 class="anchored" data-anchor-id="使用-github-pages-发布">使用 <code>github-pages</code> 发布</h4>
+<section id="发布博客" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="发布博客"><span class="header-section-number">1.4</span> 发布博客</h3>
+<section id="使用-github-pages-发布" class="level4" data-number="1.4.1">
+<h4 data-number="1.4.1" class="anchored" data-anchor-id="使用-github-pages-发布"><span class="header-section-number">1.4.1</span> 使用 <code>github-pages</code> 发布</h4>
 <p>网址前缀如：https://《用户名》.github.io 所示的网址就是使用的<code>github-pages</code>。</p>
 <ol type="1">
 <li><p>首先在 <code>github</code> 新建一个名称为 <code>https://《用户名》.github.io</code> 的仓库。</p></li>
