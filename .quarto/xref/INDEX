@@ -10,5 +10,8 @@
   },
   "posts/welcome/index.qmd": {
     "index.html": "be8cf9ab"
+  },
+  "posts/quarto_blog/index.qmd": {
+    "index.html": "2a6ac13a"
   }
 }

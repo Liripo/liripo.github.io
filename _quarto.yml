@@ -3,7 +3,7 @@ project:
   output-dir: docs
 
 website:
-  title: "liripo.github.io"
+  title: "Liripo"
   site-url: https://liripo.github.io
   description: "Liripo Blog"
   navbar:

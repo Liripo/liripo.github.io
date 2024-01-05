@@ -2,18 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://liripo.github.io/about.html</loc>
-    <lastmod>2024-01-05T01:44:08.383Z</lastmod>
+    <lastmod>2024-01-05T03:11:50.038Z</lastmod>
   </url>
   <url>
     <loc>https://liripo.github.io/index.html</loc>
-    <lastmod>2024-01-05T01:44:09.254Z</lastmod>
+    <lastmod>2024-01-05T03:11:50.648Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/posts/post-with-code/index.html</loc>
-    <lastmod>2024-01-05T01:44:09.641Z</lastmod>
-  </url>
-  <url>
-    <loc>https://liripo.github.io/posts/welcome/index.html</loc>
-    <lastmod>2024-01-05T01:44:10.002Z</lastmod>
+    <loc>https://liripo.github.io/posts/quarto_blog/index.html</loc>
+    <lastmod>2024-01-05T03:11:51.276Z</lastmod>
   </url>
 </urlset>

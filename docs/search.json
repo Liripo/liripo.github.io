@@ -4,20 +4,20 @@
     "href": "index.html",
     "title": "Liripo Blog",
     "section": "",
-    "text": "Post With Code\n\n\n\n\n\n\n\nnews\n\n\ncode\n\n\nanalysis\n\n\n\n\n\n\n\n\n\n\n\nJan 5, 2024\n\n\nHarlow Malloc\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nJan 2, 2024\n\n\nTristan O’Malley\n\n\n\n\n\n\nNo matching items"
+    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Author\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n  \n\n\n\n\nquarto 创建博客\n\n\n\n\n\n\n\nquarto\n\n\n\n\n\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n\n\n\n\n\nNo matching items"
   },
   {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "Post With Code",
+    "objectID": "posts/quarto_blog/index.html",
+    "href": "posts/quarto_blog/index.html",
+    "title": "quarto 创建博客",
     "section": "",
-    "text": "This is a post with executable code."
+    "text": "Quarto® 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。\n\n\n\n这里推荐两个选择：\n\n按照官网 介绍下载安装即可。\n选择一个带 quarto 的 docker 镜像，我比较喜欢使用的是 rocker 项目的 tidyverse镜像。tidyverse镜像的基础镜像是rstudio 镜像，而目前新版本的rstudio 都会包含 quarto 软件。\n\n\nps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。\n\n# pull 镜像\ndocker pull rocker/tidyverse:latest\n# 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。\ndocker run -d -ti -p 8787:8787 -e ROOT=TRUE -e PASSWORD=《你的密码》 -v 《本地路径，可以整个D盘》:《镜像目录》 rocker/tidyverse\n这样，你就可以直接打开浏览器，输入网址 localhost:8787 开启 Rstudio IDE。 默认用户名：rstudio \n\n\n\n\n没什么资源比官网的步骤更详细了\n\nhttps://quarto.org/docs/websites/website-blog.html\n\n\n\n\n\n网址前缀如：https://《用户名》.github.io 所示的网址就是使用的github-pages。\n\n首先在 github 新建一个名称为 https://《用户名》.github.io 的仓库。\n设置好仓库的pages选项，如下图所示：\n\n\n\n按照上面的步骤，博客项目下会有_quarto.yml 文件，修改下此文件的输出目录。\n\n\n\n_quarto.yml\n\nproject:\n  type: website\n  output-dir: docs\n\n\n将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：\n\n\n\nterminal\n\ntouch .nojekyll\n\n\n渲染网站并发布\n\n# quarto 渲染网站\nquarto render\n# 使用 git 将渲染好的网站发送到刚刚创建好的仓库中\ngit push"
   },
   {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog",
+    "objectID": "posts/quarto_blog/index.html#使用-quarto-创建自己的博客",
+    "href": "posts/quarto_blog/index.html#使用-quarto-创建自己的博客",
+    "title": "quarto 创建博客",
     "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
+    "text": "Quarto® 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。\n\n\n\n这里推荐两个选择：\n\n按照官网 介绍下载安装即可。\n选择一个带 quarto 的 docker 镜像，我比较喜欢使用的是 rocker 项目的 tidyverse镜像。tidyverse镜像的基础镜像是rstudio 镜像，而目前新版本的rstudio 都会包含 quarto 软件。\n\n\nps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。\n\n# pull 镜像\ndocker pull rocker/tidyverse:latest\n# 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。\ndocker run -d -ti -p 8787:8787 -e ROOT=TRUE -e PASSWORD=《你的密码》 -v 《本地路径，可以整个D盘》:《镜像目录》 rocker/tidyverse\n这样，你就可以直接打开浏览器，输入网址 localhost:8787 开启 Rstudio IDE。 默认用户名：rstudio \n\n\n\n\n没什么资源比官网的步骤更详细了\n\nhttps://quarto.org/docs/websites/website-blog.html\n\n\n\n\n\n网址前缀如：https://《用户名》.github.io 所示的网址就是使用的github-pages。\n\n首先在 github 新建一个名称为 https://《用户名》.github.io 的仓库。\n设置好仓库的pages选项，如下图所示：\n\n\n\n按照上面的步骤，博客项目下会有_quarto.yml 文件，修改下此文件的输出目录。\n\n\n\n_quarto.yml\n\nproject:\n  type: website\n  output-dir: docs\n\n\n将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：\n\n\n\nterminal\n\ntouch .nojekyll\n\n\n渲染网站并发布\n\n# quarto 渲染网站\nquarto render\n# 使用 git 将渲染好的网站发送到刚刚创建好的仓库中\ngit push"
   }
 ]
