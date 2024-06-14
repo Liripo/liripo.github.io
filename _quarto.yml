@@ -2,6 +2,7 @@ project:
   type: website
   output-dir: docs
 
+
 website:
   title: "Liripo"
   site-url: https://liripo.github.io
@@ -15,9 +16,12 @@ website:
         href: https://twitter.com/Liripo_zzz
       - icon: rss
         href: index.xml
+  google-analytics: "G-78FD7VFZM3"
 format:
   html:
-    theme: cosmo
+    theme: 
+      light: cosmo
+      dark: darkly
     css: styles.css
 
 execute:
