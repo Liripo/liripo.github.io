@@ -16,7 +16,7 @@ website:
         href: https://twitter.com/Liripo_zzz
       - icon: rss
         href: index.xml
-  google-analytics: "G-78FD7VFZM3"
+  google-analytics: "UA-155993181-1"
 format:
   html:
     theme: 
