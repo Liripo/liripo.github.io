@@ -75,7 +75,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -200,6 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#使用" id="toc-使用" class="nav-link" data-scroll-target="#使用"><span class="header-section-number">4.1</span> 使用</a></li>
   </ul></li>
+  <li><a href="#windowns-部署命令" id="toc-windowns-部署命令" class="nav-link" data-scroll-target="#windowns-部署命令"><span class="header-section-number">5</span> windowns 部署命令</a></li>
   </ul>
 </nav>
     </div>
@@ -229,7 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="cadvisor-部署" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="cadvisor-部署"><span class="header-section-number">2</span> cAdvisor 部署</h2>
 <p>对需要监控的主机启动如下容器：</p>
-<div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">sudo</span> docker run <span class="dt">\</span></span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">sudo</span> docker run <span class="dt">\</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a>  <span class="at">--volume</span><span class="op">=</span>/:/rootfs:ro <span class="dt">\</span></span>
 <span id="cb1-3"><a href="#cb1-3"></a>  <span class="at">--volume</span><span class="op">=</span>/var/run:/var/run:ro <span class="dt">\</span></span>
 <span id="cb1-4"><a href="#cb1-4"></a>  <span class="at">--volume</span><span class="op">=</span>/sys:/sys:ro <span class="dt">\</span></span>
@@ -264,14 +264,14 @@ Tip
 <div class="code-with-filename-file">
 <pre><strong>prometheus.yml</strong></pre>
 </div>
-<div class="sourceCode" id="cb2" data-filename="prometheus.yml" data-code-line-numbers=""><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
+<div class="sourceCode" id="cb2" data-filename="prometheus.yml"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
 <span id="cb2-2"><a href="#cb2-2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> cadvisor</span></span>
 <span id="cb2-3"><a href="#cb2-3"></a><span class="at">  </span><span class="fu">scrape_interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
 <span id="cb2-4"><a href="#cb2-4"></a><span class="at">  </span><span class="fu">static_configs</span><span class="kw">:</span></span>
 <span id="cb2-5"><a href="#cb2-5"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span></span>
 <span id="cb2-6"><a href="#cb2-6"></a><span class="at">    </span><span class="kw">-</span><span class="at"> &lt;ip&gt;:8080</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode" id="cb3" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">docker</span> run <span class="at">--name</span> prometheus <span class="at">-d</span> <span class="dt">\</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">docker</span> run <span class="at">--name</span> prometheus <span class="at">-d</span> <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2"></a>    <span class="at">-p</span> 9090:9090 <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3"></a>    <span class="at">-v</span> ./prometheus.yml:/etc/prometheus/prometheus.yml <span class="dt">\</span></span>
 <span id="cb3-4"><a href="#cb3-4"></a>    prom/prometheus <span class="dt">\</span></span>
@@ -291,7 +291,7 @@ Tip
 </section>
 <section id="grafana-部署" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="grafana-部署"><span class="header-section-number">4</span> grafana 部署</h2>
-<div class="sourceCode" id="cb4" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span><span class="op">=</span>grafana <span class="at">-p</span> 3000:3000 grafana/grafana</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span><span class="op">=</span>grafana <span class="at">-p</span> 3000:3000 grafana/grafana</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <section id="使用" class="level3" data-number="4.1">
 <h3 data-number="4.1" class="anchored" data-anchor-id="使用"><span class="header-section-number">4.1</span> 使用</h3>
 <p>打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。</p>
@@ -316,9 +316,29 @@ Tip
 <p><img src="id.png" class="img-fluid"></p>
 <p>然后就可以查看容器资源监控的仪表板，如下所示：</p>
 <p><img src="dashboard.png" class="img-fluid"></p>
-
-
 </section>
+</section>
+<section id="windowns-部署命令" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="windowns-部署命令"><span class="header-section-number">5</span> windowns 部署命令</h2>
+<ol type="1">
+<li>构建 docker 网络, 使得容器之间互相访问</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="ex">docker</span> network create cadvisor</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="2" type="1">
+<li>部署程序</li>
+</ol>
+<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">docker</span> run <span class="at">--network</span> cadvisor <span class="at">--volume</span><span class="op">=</span>/:/rootfs:ro <span class="at">--volume</span><span class="op">=</span>/var/run:/var/run:ro <span class="at">--volume</span><span class="op">=</span>/sys:/sys:ro <span class="at">--volume</span><span class="op">=</span>/var/lib/docker/:/var/lib/docker:ro <span class="at">--volume</span><span class="op">=</span>/dev/disk/:/dev/disk:ro <span class="at">--publish</span><span class="op">=</span>8080:8080 <span class="at">--detach</span><span class="op">=</span>true <span class="at">--name</span><span class="op">=</span>cadvisor <span class="at">--privileged</span> <span class="at">--device</span><span class="op">=</span>/dev/kmsg gcr.io/cadvisor/cadvisor</span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co"># 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="ex">docker</span> inspect <span class="op">&lt;</span>容器id<span class="op">&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co"># 按照上文，生成 prometheus.yml 配置文件</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="ex">docker</span> run <span class="at">--network</span> cadvisor <span class="at">--name</span> prometheus <span class="at">-d</span> <span class="at">-p</span> 9090:9090 <span class="at">-v</span> <span class="va">$PWD</span><span class="dt">\p</span>rometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus <span class="at">--config.file</span><span class="op">=</span>/etc/prometheus/prometheus.yml <span class="at">--web.enable-lifecycle</span> <span class="at">--storage.tsdb.retention.time</span><span class="op">=</span>15d</span>
+<span id="cb6-9"><a href="#cb6-9"></a></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="ex">docker</span> run <span class="at">--network</span> cadvisor <span class="at">-d</span> <span class="at">--name</span><span class="op">=</span>grafana <span class="at">-p</span> 3000:3000 grafana/grafana</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+
+
 </section>
 
 </main> <!-- /main -->
@@ -736,5 +756,4 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
-<script src="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.js" defer="true"></script>
 </body></html>

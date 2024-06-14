@@ -35,6 +35,13 @@
     "text": "4 grafana 部署\ndocker run -d --name=grafana -p 3000:3000 grafana/grafana\n\n4.1 使用\n打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。\n\n中文设置，个人资料中设置：\n\n\n\n添加 prometheus 数据源，在下图红框位置填写 prometheus 地址即可\n\n\n\n仪表板查看容器的相关资源\n\n\n导入仪表板\n\n\n\n选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：14282 ，点击加载按钮后选择刚刚的数据源即可。\n\n\n然后就可以查看容器资源监控的仪表板，如下所示："
   },
   {
+    "objectID": "posts/容器资源监控/index.html#windowns-部署命令",
+    "href": "posts/容器资源监控/index.html#windowns-部署命令",
+    "title": "cadvisor + prometheus + grafana 容器资源监控",
+    "section": "5 windowns 部署命令",
+    "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
+  },
+  {
     "objectID": "posts/gunicorn_dash/index.html",
     "href": "posts/gunicorn_dash/index.html",
     "title": "gunicorn 部署 dash 生产环境",
@@ -53,7 +60,7 @@
     "href": "index.html",
     "title": "Blog",
     "section": "",
-    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Author\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\ncadvisor + prometheus + grafana 容器资源监控\n\n\n\n\n\n\ncadvisor\n\n\nprometheus\n\n\ngrafana\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n\ngranian 部署 dash 生产环境\n\n\n\n\n\n\ndash\n\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n\ngunicorn 部署 dash 生产环境\n\n\n\n\n\n\ndash\n\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n\nquarto 创建博客\n\n\n\n\n\n\nquarto\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
+    "text": "Order By\n       Default\n         \n          Title\n        \n         \n          Date - Oldest\n        \n         \n          Date - Newest\n        \n         \n          Author\n        \n     \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\ncadvisor + prometheus + grafana 容器资源监控\n\n\n\n\n\n\ncadvisor\n\n\nprometheus\n\n\ngrafana\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n\ngranian 部署 dash 生产环境\n\n\n\n\n\n\ndash\n\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n\ngunicorn 部署 dash 生产环境\n\n\n\n\n\n\ndash\n\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n\nquarto 创建博客\n\n\n\n\n\n\nquarto\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n\n1 min\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/granian_dash/index.html",

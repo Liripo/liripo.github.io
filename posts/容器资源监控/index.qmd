@@ -4,8 +4,6 @@ author: "Liripo"
 date: "2024-06-16"
 categories: [cadvisor,prometheus,grafana]
 image: "cadvisor.png"
-filters:
-  - line-highlight
 ---
 
 ## 简介
@@ -114,3 +112,27 @@ docker run -d --name=grafana -p 3000:3000 grafana/grafana
 然后就可以查看容器资源监控的仪表板，如下所示：
 
 ![](dashboard.png)
+
+
+## windowns 部署命令
+1. 构建 docker 网络, 使得容器之间互相访问
+
+```{.bash}
+docker network create cadvisor
+```
+
+2. 部署程序
+
+```{.bash}
+docker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor
+
+
+# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址
+docker inspect <容器id>
+
+# 按照上文，生成 prometheus.yml 配置文件
+docker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d
+
+docker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana
+
+```
