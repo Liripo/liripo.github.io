@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Liripo">
+<meta name="dcterms.date" content="2024-06-16">
 
-<title>Liripo - Blog</title>
+<title>Liripo - cadvisor + prometheus + grafana 容器资源监控</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,27 +22,60 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,77 +103,19 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-posts .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-image','listing-date','listing-title','listing-subtitle','listing-categories','listing-author','listing-reading-time',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-posts'] = new List('listing-posts', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Liripo</span>
     </a>
   </div>
@@ -149,7 +126,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -163,7 +140,7 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="./index.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -175,214 +152,176 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">cadvisor + prometheus + grafana 容器资源监控</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">cadvisor</div>
+                <div class="quarto-category">prometheus</div>
+                <div class="quarto-category">grafana</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Liripo </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 16, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(4)</span></div><div class="category" data-category="cadvisor">cadvisor <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dash">dash <span class="quarto-category-count">(2)</span></div><div class="category" data-category="grafana">grafana <span class="quarto-category-count">(1)</span></div><div class="category" data-category="granian">granian <span class="quarto-category-count">(1)</span></div><div class="category" data-category="gunicorn">gunicorn <span class="quarto-category-count">(1)</span></div><div class="category" data-category="prometheus">prometheus <span class="quarto-category-count">(1)</span></div><div class="category" data-category="quarto">quarto <span class="quarto-category-count">(1)</span></div></div></div>
-<!-- main -->
-<main class="content column-page-left" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Blog</h1>
-</div>
-
-
-
-<div class="quarto-title-meta column-page-left">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-posts">
-<div class="listing-actions-group">
-   <div class="input-group input-group-sm quarto-listing-sort">
-     <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
-     <select id="listing-posts-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-posts'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
-       <option value="" disabled="" selected="" hidden="">Order By</option>
-       <option value="index" data-direction="asc">Default</option>
-         <option value="listing-title" data-direction="asc">
-          Title
-        </option>
-         <option value="listing-date-sort" data-direction="asc">
-          Date - Oldest
-        </option>
-         <option value="listing-date-sort" data-direction="desc">
-          Date - Newest
-        </option>
-         <option value="listing-author" data-direction="asc">
-          Author
-        </option>
-     </select>
-  </div>
-    <div class="input-group input-group-sm quarto-listing-filter">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" class="search form-control" placeholder="Filter">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#简介" id="toc-简介" class="nav-link active" data-scroll-target="#简介"><span class="header-section-number">1</span> 简介</a></li>
+  <li><a href="#cadvisor-部署" id="toc-cadvisor-部署" class="nav-link" data-scroll-target="#cadvisor-部署"><span class="header-section-number">2</span> cAdvisor 部署</a></li>
+  <li><a href="#prometheus-部署" id="toc-prometheus-部署" class="nav-link" data-scroll-target="#prometheus-部署"><span class="header-section-number">3</span> prometheus 部署</a></li>
+  <li><a href="#grafana-部署" id="toc-grafana-部署" class="nav-link" data-scroll-target="#grafana-部署"><span class="header-section-number">4</span> grafana 部署</a>
+  <ul class="collapse">
+  <li><a href="#使用" id="toc-使用" class="nav-link" data-scroll-target="#使用"><span class="header-section-number">4.1</span> 使用</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="简介" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="简介"><span class="header-section-number">1</span> 简介</h2>
+<p>为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./cpu_mem.png" class="img-fluid figure-img"></p>
+<figcaption>资源消耗图</figcaption>
+</figure>
 </div>
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="cadvisor,prometheus,grafana" data-listing-date-sort="1718496000000" data-listing-file-modified-sort="1718354304374" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="160">
-<div class="thumbnail">
-<p><a href="./posts/容器资源监控/index.html" class="no-external"></a></p><a href="./posts/容器资源监控/index.html" class="no-external">
-<p><img src="./posts/容器资源监控/cadvisor.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/容器资源监控/index.html" class="no-external"></a></p>
+<p>为了获取上图结果，我们需要下面三个程序：</p>
+<ul>
+<li><code>cAdvisor</code>：用于收集正在运行的容器资源使用和性能信息。</li>
+<li><code>Prometheus</code>：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。</li>
+<li><code>Grafana</code>：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。</li>
+</ul>
+</section>
+<section id="cadvisor-部署" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="cadvisor-部署"><span class="header-section-number">2</span> cAdvisor 部署</h2>
+<p>对需要监控的主机启动如下容器：</p>
+<div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">sudo</span> docker run <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>  <span class="at">--volume</span><span class="op">=</span>/:/rootfs:ro <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>  <span class="at">--volume</span><span class="op">=</span>/var/run:/var/run:ro <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>  <span class="at">--volume</span><span class="op">=</span>/sys:/sys:ro <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>  <span class="at">--volume</span><span class="op">=</span>/var/lib/docker/:/var/lib/docker:ro <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>  <span class="at">--volume</span><span class="op">=</span>/dev/disk/:/dev/disk:ro <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="at">--publish</span><span class="op">=</span>8080:8080 <span class="dt">\</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>  <span class="at">--detach</span><span class="op">=</span>true <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="at">--name</span><span class="op">=</span>cadvisor <span class="dt">\</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a>  <span class="at">--privileged</span> <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a>  <span class="at">--device</span><span class="op">=</span>/dev/kmsg <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>  gcr.io/cadvisor/cadvisor</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/容器资源监控/index.html" class="no-external">cadvisor + prometheus + grafana 容器资源监控</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/容器资源监控/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('cadvisor'); return false;">
-cadvisor
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('prometheus'); return false;">
-prometheus
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('grafana'); return false;">
-grafana
-</div>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/容器资源监控/index.html" class="no-external">
-<div class="listing-date">
-Jun 16, 2024
-</div>
-<div class="listing-author">
-Liripo
-</div>
-<div class="listing-reading-time">
-1 min
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="dash,granian" data-listing-date-sort="1718409600000" data-listing-file-modified-sort="1718347629315" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1439">
-<div class="thumbnail">
-<p><a href="./posts/granian_dash/index.html" class="no-external"></a></p><a href="./posts/granian_dash/index.html" class="no-external">
-<p><img src="./posts/granian_dash/granian.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/granian_dash/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/granian_dash/index.html" class="no-external">granian 部署 dash 生产环境</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/granian_dash/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('dash'); return false;">
-dash
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('granian'); return false;">
-granian
+<div class="callout-title-container flex-fill">
+Tip
 </div>
 </div>
-</div>
-<div class="metadata">
-<a href="./posts/granian_dash/index.html" class="no-external">
-<div class="listing-date">
-Jun 15, 2024
-</div>
-<div class="listing-author">
-Liripo
-</div>
-<div class="listing-reading-time">
-8 min
-</div>
-</a>
+<div class="callout-body-container callout-body">
+<p>&lt;ip&gt; 记得更换为自己的 ip 地址。</p>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="dash,gunicorn" data-listing-date-sort="1718409600000" data-listing-file-modified-sort="1718336099811" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="212">
-<div class="thumbnail">
-<p><a href="./posts/gunicorn_dash/index.html" class="no-external"></a></p><a href="./posts/gunicorn_dash/index.html" class="no-external">
-<p><img src="./posts/gunicorn_dash/dash.jpg" class="thumbnail-image"></p>
-</a><p><a href="./posts/gunicorn_dash/index.html" class="no-external"></a></p>
+<p><code>cAdvisor</code> 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。</p>
+<p>http://&lt;ip&gt;:8080/metrics 端口可以看到 <code>prometheus</code> 所需要的信息。</p>
+</section>
+<section id="prometheus-部署" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="prometheus-部署"><span class="header-section-number">3</span> prometheus 部署</h2>
+<p>当前文件夹下新建配置文件<code>prometheus.yml</code>：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>prometheus.yml</strong></pre>
 </div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/gunicorn_dash/index.html" class="no-external">gunicorn 部署 dash 生产环境</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/gunicorn_dash/index.html" class="no-external"></a>
+<div class="sourceCode" id="cb2" data-filename="prometheus.yml" data-code-line-numbers=""><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> cadvisor</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="at">  </span><span class="fu">scrape_interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="at">  </span><span class="fu">static_configs</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="at">    </span><span class="kw">-</span><span class="at"> &lt;ip&gt;:8080</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('dash'); return false;">
-dash
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('gunicorn'); return false;">
-gunicorn
-</div>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/gunicorn_dash/index.html" class="no-external">
-<div class="listing-date">
-Jun 15, 2024
-</div>
-<div class="listing-author">
-Liripo
-</div>
-<div class="listing-reading-time">
-2 min
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="quarto" data-listing-date-sort="1704153600000" data-listing-file-modified-sort="1718333814208" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="90">
-<div class="thumbnail">
-<p><a href="./posts/quarto_blog/index.html" class="no-external"></a></p><a href="./posts/quarto_blog/index.html" class="no-external">
-<p><img src="./posts/quarto_blog/quarto.png" class="thumbnail-image"></p>
-</a><p><a href="./posts/quarto_blog/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/quarto_blog/index.html" class="no-external">quarto 创建博客</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/quarto_blog/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('quarto'); return false;">
-quarto
-</div>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/quarto_blog/index.html" class="no-external">
-<div class="listing-date">
-Jan 2, 2024
-</div>
-<div class="listing-author">
-Liripo
-</div>
-<div class="listing-reading-time">
-1 min
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+<div class="sourceCode" id="cb3" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">docker</span> run <span class="at">--name</span> prometheus <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>    <span class="at">-p</span> 9090:9090 <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>    <span class="at">-v</span> ./prometheus.yml:/etc/prometheus/prometheus.yml <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>    prom/prometheus <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>    <span class="at">--config.file</span><span class="op">=</span>/etc/prometheus/prometheus.yml <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>    <span class="at">--web.enable-lifecycle</span> <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>    <span class="at">--storage.tsdb.retention.time</span><span class="op">=</span>15d</span>
+<span id="cb3-8"><a href="#cb3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co"># 参数解释</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="ex">--config.file，指定配置文件</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="ex">--storage.tsdb.path，指定数据存储目录</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="ex">--storage.tsdb.retention，指定数据过期时间，默认</span> 15 天</span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="ex">--query.max-concurrency，最大支持的并发查询量</span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="ex">--web.enable-lifecycle，启用热加载</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。</p>
+<p><img src="./target.jpg" class="img-fluid"></p>
+<p>此时所有监控目标的状态都是 <code>UP</code>，表明 <code>prometheus</code> 可以正常获取到监控数据。</p>
+</section>
+<section id="grafana-部署" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="grafana-部署"><span class="header-section-number">4</span> grafana 部署</h2>
+<div class="sourceCode" id="cb4" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span><span class="op">=</span>grafana <span class="at">-p</span> 3000:3000 grafana/grafana</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="使用" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="使用"><span class="header-section-number">4.1</span> 使用</h3>
+<p>打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。</p>
+<ol type="1">
+<li>中文设置，个人资料中设置：</li>
+</ol>
+<p><img src="set_cn.png" class="img-fluid"></p>
+<ol start="2" type="1">
+<li>添加 <code>prometheus</code> 数据源，在下图红框位置填写 <code>prometheus</code> 地址即可</li>
+</ol>
+<p><img src="./add_source.png" class="img-fluid"></p>
+<ol start="3" type="1">
+<li>仪表板查看容器的相关资源</li>
+</ol>
+<ul>
+<li>导入仪表板</li>
+</ul>
+<p><img src="import.png" class="img-fluid"></p>
+<ul>
+<li>选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：<code>14282</code> ，点击加载按钮后选择刚刚的数据源即可。</li>
+</ul>
+<p><img src="id.png" class="img-fluid"></p>
+<p>然后就可以查看容器资源监控的仪表板，如下所示：</p>
+<p><img src="dashboard.png" class="img-fluid"></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
@@ -797,4 +736,5 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
+<script src="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.js" defer="true"></script>
 </body></html>
