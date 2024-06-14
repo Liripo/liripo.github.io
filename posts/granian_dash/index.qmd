@@ -1,0 +1,138 @@
+---
+title: "granian 部署 dash 生产环境"
+author: "Liripo"
+date: "2024-06-15"
+categories: [dash,granian]
+image: "granian.png"
+filters:
+  - line-highlight
+---
+
+## 使用 [granian](https://github.com/emmett-framework/granian) 部署 dash
+
+> 相比使用 gunicorn 部署 dash 应用，具有更好的性能。性能比较文档：<https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md>
+
+
+1. 下载 [granian](https://github.com/emmett-framework/granian)
+
+```bash
+pip install granian
+```
+
+
+2. dash 示例代码
+
+```{python}
+#| eval: false
+#| source-line-numbers: "10"
+import dash
+from dash import html
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.H1("Dash 示例"),
+])
+
+server = app.server # 这行代码需要包含
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+```
+
+
+2. 启动程序
+
+```bash
+granian --interface wsgi --workers 4 app:server
+```
+
+::: {.callout-tip}
+--interface 参数用于指定应用程序接口类型，如服务器网关接口（WSGI）或异步服务器网关接口（ASGI）来运行。通常 `flask` 或者 `Django` 使用 wsgi，而 `starlette` 或 `fastapi` 构建的应用使用 asgi。
+:::
+
+### 热重载应用程序
+
+想要自己重启 `granian`，可以向 `granian` 主进程发送HUP信号，这会导致 `granian` 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）
+
+1. 查找主进程 pid 
+
+```bash
+ps axjf | grep granian
+```
+
+```bash
+kill -HUP 1674
+```
+
+###  granian 帮助文档
+
+```bash
+使用方式: granian [选项] APP
+
+  APP  服务的应用目标。[必需]
+
+选项:
+  --host TEXT                     绑定的主机地址  [环境变量: GRANIAN_HOST; 默认: (127.0.0.1)]
+  --port INTEGER                  绑定的端口。[环境变量: GRANIAN_PORT; 默认: 8000]
+  --interface [asgi|asginl|rsgi|wsgi]
+                                  应用接口类型  [环境变量: GRANIAN_INTERFACE; 默认: (rsgi)]
+  --http [auto|1|2]               HTTP 版本  [环境变量: GRANIAN_HTTP; 默认: (auto)]
+  --ws / --no-ws                  启用websocket处理  [环境变量: GRANIAN_WEBSOCKETS; 默认: (启用)]
+  --workers INTEGER RANGE         工作进程数量  [环境变量: GRANIAN_WORKERS; 默认: 1; x>=1]
+  --threads INTEGER RANGE         每个工作进程的线程数量  [环境变量: GRANIAN_THREADS; 默认: 1; x>=1]
+  --blocking-threads INTEGER RANGE
+                                  每个工作进程的阻塞线程数量
+                                  [环境变量: GRANIAN_BLOCKING_THREADS; x>=1]
+  --threading-mode [runtime|workers]
+                                  使用的线程模式  [环境变量: GRANIAN_THREADING_MODE; 默认: (workers)]
+  --loop [auto|asyncio|uvloop]    事件循环实现  [环境变量: GRANIAN_LOOP; 默认: (auto)]
+  --opt / --no-opt                启用循环优化  [环境变量: GRANIAN_LOOP_OPT; 默认: (禁用)]
+  --backlog INTEGER RANGE         全局最大连接等待数  [环境变量: GRANIAN_BACKLOG; 默认: 1024; x>=128]
+  --backpressure INTEGER RANGE    每个工作进程并发处理的最大请求数  [环境变量: GRANIAN_BACKPRESSURE; 默认: (backlog/workers); x>=1]
+  --http1-buffer-size INTEGER RANGE
+                                  设置HTTP/1连接的最大缓冲区大小  [环境变量: GRANIAN_HTTP1_BUFFER_SIZE; 默认: 417792; x>=8192]
+  --http1-keep-alive / --no-http1-keep-alive
+                                  启用或禁用HTTP/1保持连接  [环境变量: GRANIAN_HTTP1_KEEP_ALIVE; 默认: (启用)]
+  --http1-pipeline-flush / --no-http1-pipeline-flush
+                                  聚合HTTP/1刷新以更好地支持管线化响应（实验性）  [环境变量: GRANIAN_HTTP1_PIPELINE_FLUSH; 默认: (禁用)]
+  --http2-adaptive-window / --no-http2-adaptive-window
+                                  设置是否对HTTP2使用自适应流控制  [环境变量: GRANIAN_HTTP2_ADAPTIVE_WINDOW; 默认: (禁用)]
+  --http2-initial-connection-window-size INTEGER
+                                  设置HTTP2的最大连接级流控制  [环境变量: GRANIAN_HTTP2_INITIAL_CONNECTION_WINDOW_SIZE; 默认: 1048576]
+  --http2-initial-stream-window-size INTEGER
+                                  设置HTTP2流级流控制的`SETTINGS_INITIAL_WINDOW_SIZE`选项
+                                  [环境变量: GRANIAN_HTTP2_INITIAL_STREAM_WINDOW_SIZE; 默认: 1048576]
+  --http2-keep-alive-interval INTEGER
+                                  设置应发送HTTP2 Ping帧以保持连接存活的间隔
+                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_INTERVAL]
+  --http2-keep-alive-timeout INTEGER
+                                  设置接收HTTP2保持连接ping的确认的超时时间
+                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_TIMEOUT; 默认: 20]
+  --http2-max-concurrent-streams INTEGER
+                                  设置HTTP2连接的SETTINGS_MAX_CONCURRENT_STREAMS选项  [环境变量: GRANIAN_HTTP2_MAX_CONCURRENT_STREAMS; 默认: 200]
+  --http2-max-frame-size INTEGER  设置HTTP2的最大帧大小  [环境变量: GRANIAN_HTTP2_MAX_FRAME_SIZE; 默认: 16384]
+  --http2-max-headers-size INTEGER
+                                  设置接收的头帧的最大大小
+                                  [环境变量: GRANIAN_HTTP2_MAX_HEADERS_SIZE; 默认: 16777216]
+  --http2-max-send-buffer-size INTEGER
+                                  设置每个HTTP/2流的最大写缓冲区大小  [环境变量: GRANIAN_HTTP2_MAX_SEND_BUFFER_SIZE; 默认: 409600]
+  --log / --no-log                启用日志记录  [环境变量: GRANIAN_LOG_ENABLED; 默认: (启用)]
+  --log-level [critical|error|warning|warn|info|debug]
+                                  日志级别  [环境变量: GRANIAN_LOG_LEVEL; 默认: (info)]
+  --log-config FILE               日志配置文件(json)  [环境变量: GRANIAN_LOG_CONFIG]
+  --access-log / --no-access-log  启用访问日志  [环境变量: GRANIAN_LOG_ACCESS_ENABLED; 默认: (禁用)]
+  --access-log-fmt TEXT           访问日志格式  [环境变量: GRANIAN_LOG_ACCESS_FMT]
+  --ssl-keyfile FILE              SSL密钥文件  [环境变量: GRANIAN_SSL_KEYFILE]
+  --ssl-certificate FILE          SSL证书文件  [环境变量: GRANIAN_SSL_CERTIFICATE]
+  --url-path-prefix TEXT          应用挂载的URL路径前缀  [环境变量: GRANIAN_URL_PATH_PREFIX]
+  --respawn-failed-workers / --no-respawn-failed-workers
+                                  启用意外退出的工作进程重生
+                                  [环境变量: GRANIAN_RESPAWN_FAILED_WORKERS; 默认: (禁用)]
+  --respawn-interval FLOAT        工作进程重生间隔秒数  [环境变量: GRANIAN_RESPAWN_INTERVAL; 默认: 3.5]
+  --reload / --no-reload          启用应用文件更改的自动重载（需要granian[reload]额外配置）
+                                  [环境变量: GRANIAN_RELOAD; 默认: (禁用)]
+  --process-name TEXT             设置进程的自定义名称（需要granian[pname]额外配置）  [环境变量: GRANIAN_PROCESS_NAME]
+  --version                       显示版本并退出。
+  --help                          显示这条帮助信息并退出。
+```

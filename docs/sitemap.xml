@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://liripo.github.io/posts/quarto_blog/index.html</loc>
+    <lastmod>2024-06-14T02:56:54.208Z</lastmod>
+  </url>
+  <url>
+    <loc>https://liripo.github.io/posts/granian_dash/index.html</loc>
+    <lastmod>2024-06-14T06:47:09.315Z</lastmod>
+  </url>
+  <url>
     <loc>https://liripo.github.io/about.html</loc>
-    <lastmod>2024-01-05T03:23:46.141Z</lastmod>
+    <lastmod>2024-06-14T02:56:53.803Z</lastmod>
   </url>
   <url>
     <loc>https://liripo.github.io/index.html</loc>
-    <lastmod>2024-01-05T03:23:46.780Z</lastmod>
+    <lastmod>2024-06-14T06:40:45.074Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/posts/quarto_blog/index.html</loc>
-    <lastmod>2024-01-05T03:23:47.372Z</lastmod>
+    <loc>https://liripo.github.io/posts/gunicorn_dash/index.html</loc>
+    <lastmod>2024-06-14T03:34:59.811Z</lastmod>
   </url>
 </urlset>

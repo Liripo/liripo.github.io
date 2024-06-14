@@ -10,3 +10,5 @@ title-block-banner: true
 toc: true
 
 number-sections: true
+
+code-line-numbers: true

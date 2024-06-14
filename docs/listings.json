@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/granian_dash/index.html",
+      "/posts/gunicorn_dash/index.html",
       "/posts/quarto_blog/index.html"
     ]
   }

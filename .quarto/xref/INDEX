@@ -13,5 +13,11 @@
   },
   "posts/quarto_blog/index.qmd": {
     "index.html": "2a6ac13a"
+  },
+  "posts/gunicorn_dash/index.qmd": {
+    "index.html": "2b050e70"
+  },
+  "posts/granian_dash/index.qmd": {
+    "index.html": "1b5b74b9"
   }
 }

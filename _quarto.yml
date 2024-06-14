@@ -5,7 +5,7 @@ project:
 website:
   title: "Liripo"
   site-url: https://liripo.github.io
-  description: "Liripo Blog"
+  description: "Blog"
   navbar:
     right:
       - about.qmd
@@ -20,5 +20,6 @@ format:
     theme: cosmo
     css: styles.css
 
-
+execute:
+  freeze: true
 

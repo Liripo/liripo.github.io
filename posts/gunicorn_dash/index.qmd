@@ -1,0 +1,91 @@
+---
+title: "gunicorn 部署 dash 生产环境"
+author: "Liripo"
+date: "2024-06-15"
+categories: [dash,gunicorn]
+image: "dash.jpg"
+---
+
+## 使用 gunicorn 部署 dash
+
+> 使用 gunicorn 的好处是可以多进程以及热重载。
+
+
+1. 首先 dash的代码，例如 app.py中必须包含下面代码
+
+```py
+app = Dash(__name__)
+server = app.server # 这行代码需要包含在 dash 代码中
+```
+
+2. 设置配置文件，如 `gunicorn.conf.py`
+
+```py
+bind = '127.0.0.1:8000'      #绑定ip和端口号
+# chdir = ''  #gunicorn要切换到的目的工作目录
+timeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒
+# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式
+daemon = False # 后台运行
+workers = 4 #进程数
+threads = 4 #指定每个进程开启的线程数
+loglevel = 'info' #日志级别
+access_log_format = '%(t)s %(p)s %(h)s "%(r)s" %(s)s %(L)s %(b)s %(f)s" "%(a)s"'    #设置gunicorn访问日志格式，错误日志无法设置
+
+
+accesslog = "/tmp/gunicorn/gunicorn_access.log"      #访问日志文件
+errorlog = "/tmp/gunicorn/gunicorn_error.log"        #错误日志文件
+reload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }
+```
+
+3. 启动程序
+
+```bash
+# app表示当前目录下app.py的意思，server则是文件下的变量
+gunicorn app:server -c ./gunicorn.conf.py
+```
+
+### 热重载应用程序
+
+想要自己重启 `gunicorn`，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）
+
+1. 查找主进程 pid 
+
+```bash
+ps axjf | grep gunicorn
+```
+![pid](./pid.png)
+
+例如，上图主进程 pid 为 `1674`
+
+```bash
+kill -HUP 1674
+```
+
+### gunicorn 信号
+
+上面的 HUP即为gunicorn支持的信号，下面为其他信号：
+
+1. QUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。
+2. TERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。
+3. HUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。
+4. TTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。
+5. TTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。
+6. USR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。
+7. USR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。
+8. WINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。
+注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：
+
+::: {.callout-note}
+1. TERM 信号：
+
+    - 作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。
+    - 使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。
+2. WINCH 信号：
+
+    - 作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。
+    - 使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。
+
+
+总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。
+
+:::
