@@ -2,7 +2,7 @@
 title: "granian 部署 dash 生产环境"
 author: "Liripo"
 date: "2024-06-15"
-categories: [dash,granian]
+categories: [dash,web]
 image: "granian.png"
 filters:
   - line-highlight

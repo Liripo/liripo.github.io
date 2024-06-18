@@ -1,0 +1,24 @@
+---
+title: "Umami 分析网站访客"
+author: "Liripo"
+date: "2024-06-16"
+categories: [web]
+image: "https://umami.is/images/preview-session-stats.png"
+---
+
+## **Umami Cloud 监控网站**
+
+![](https://umami.is/images/app.jpg)
+
+如上图所示，我们可以通过 `Umami Cloud` 分析网站访客。
+
+> `Umami Cloud`免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，`Umami` 也支持本地部署。
+
+1.  注册`Umami Cloud`, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；
+2.  给要分析的网站，增加追踪代码：
+
+```         
+<script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
+```
+
+上面代码`data-website-id='*'`记得改为对应的追踪 `id`。

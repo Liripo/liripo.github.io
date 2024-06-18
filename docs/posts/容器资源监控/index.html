@@ -77,6 +77,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -219,7 +222,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./cpu_mem.png" class="img-fluid figure-img"></p>
+<p><a href="./cpu_mem.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" data-glightbox="description: .lightbox-desc-1" title="资源消耗图"><img src="./cpu_mem.png" class="img-fluid figure-img" alt="资源消耗图"></a></p>
 <figcaption>资源消耗图</figcaption>
 </figure>
 </div>
@@ -290,7 +293,7 @@ Tip
 <span id="cb3-13"><a href="#cb3-13"></a><span class="ex">--query.max-concurrency，最大支持的并发查询量</span></span>
 <span id="cb3-14"><a href="#cb3-14"></a><span class="ex">--web.enable-lifecycle，启用热加载</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。</p>
-<p><img src="./target.jpg" class="img-fluid"></p>
+<p><a href="./target.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="./target.jpg" class="img-fluid"></a></p>
 <p>此时所有监控目标的状态都是 <code>UP</code>，表明 <code>prometheus</code> 可以正常获取到监控数据。</p>
 </section>
 <section id="grafana-部署" class="level2" data-number="4">
@@ -302,24 +305,24 @@ Tip
 <ol type="1">
 <li>中文设置，个人资料中设置：</li>
 </ol>
-<p><img src="set_cn.png" class="img-fluid"></p>
+<p><a href="set_cn.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="set_cn.png" class="img-fluid"></a></p>
 <ol start="2" type="1">
 <li>添加 <code>prometheus</code> 数据源，在下图红框位置填写 <code>prometheus</code> 地址即可</li>
 </ol>
-<p><img src="./add_source.png" class="img-fluid"></p>
+<p><a href="./add_source.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="./add_source.png" class="img-fluid"></a></p>
 <ol start="3" type="1">
 <li>仪表板查看容器的相关资源</li>
 </ol>
 <ul>
 <li>导入仪表板</li>
 </ul>
-<p><img src="import.png" class="img-fluid"></p>
+<p><a href="import.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="import.png" class="img-fluid"></a></p>
 <ul>
 <li>选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：<code>14282</code> ，点击加载按钮后选择刚刚的数据源即可。</li>
 </ul>
-<p><img src="id.png" class="img-fluid"></p>
+<p><a href="id.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="id.png" class="img-fluid"></a></p>
 <p>然后就可以查看容器资源监控的仪表板，如下所示：</p>
-<p><img src="dashboard.png" class="img-fluid"></p>
+<p><a href="dashboard.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="dashboard.png" class="img-fluid"></a></p>
 </section>
 </section>
 <section id="windowns-部署命令" class="level2" data-number="5">
@@ -343,6 +346,9 @@ Tip
 <span id="cb6-10"><a href="#cb6-10"></a><span class="ex">docker</span> run <span class="at">--network</span> cadvisor <span class="at">-d</span> <span class="at">--name</span><span class="op">=</span>grafana <span class="at">-p</span> 3000:3000 grafana/grafana</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+<div class="hidden" aria-hidden="true">
+<span class="glightbox-desc lightbox-desc-1">资源消耗图</span>
+</div>
 </section>
 
 </main> <!-- /main -->
@@ -900,6 +906,31 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","closeEffect":"zoom","descPosition":"bottom","selector":".lightbox","loop":false});
+window.onload = () => {
+  lightboxQuarto.on('slide_before_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    const href = trigger.getAttribute('href');
+    if (href !== null) {
+      const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+      if (imgEl !== null) {
+        const srcAttr = imgEl.getAttribute("src");
+        if (srcAttr && srcAttr.startsWith("data:")) {
+          slideConfig.href = srcAttr;
+        }
+      }
+    } 
+  });
+
+  lightboxQuarto.on('slide_after_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    if (window.Quarto?.typesetMath) {
+      window.Quarto.typesetMath(slideNode);
+    }
+  });
+
+};
+          </script>
 
 
 

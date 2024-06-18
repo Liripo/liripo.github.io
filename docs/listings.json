@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/umami/index.html",
       "/posts/容器资源监控/index.html",
       "/posts/granian_dash/index.html",
       "/posts/gunicorn_dash/index.html",

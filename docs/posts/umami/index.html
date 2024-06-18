@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Liripo">
-<meta name="dcterms.date" content="2024-06-15">
+<meta name="dcterms.date" content="2024-06-16">
 
-<title>Liripo - gunicorn 部署 dash 生产环境</title>
+<title>Liripo - Umami 分析网站访客</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,40 +21,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -161,9 +127,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">gunicorn 部署 dash 生产环境</h1>
+      <h1 class="title">Umami 分析网站访客</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">dash</div>
                 <div class="quarto-category">web</div>
               </div>
                   </div>
@@ -182,7 +147,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">June 15, 2024</p>
+        <p class="date">June 16, 2024</p>
       </div>
     </div>
     
@@ -198,11 +163,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#使用-gunicorn-部署-dash" id="toc-使用-gunicorn-部署-dash" class="nav-link active" data-scroll-target="#使用-gunicorn-部署-dash"><span class="header-section-number">1</span> 使用 gunicorn 部署 dash</a>
-  <ul class="collapse">
-  <li><a href="#热重载应用程序" id="toc-热重载应用程序" class="nav-link" data-scroll-target="#热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</a></li>
-  <li><a href="#gunicorn-信号" id="toc-gunicorn-信号" class="nav-link" data-scroll-target="#gunicorn-信号"><span class="header-section-number">1.2</span> gunicorn 信号</a></li>
-  </ul></li>
+  <li><a href="#umami-cloud-监控网站" id="toc-umami-cloud-监控网站" class="nav-link active" data-scroll-target="#umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></a></li>
   </ul>
 </nav>
     </div>
@@ -213,98 +174,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="使用-gunicorn-部署-dash" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-gunicorn-部署-dash"><span class="header-section-number">1</span> 使用 gunicorn 部署 dash</h2>
+<section id="umami-cloud-监控网站" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></h2>
+<p><a href="https://umami.is/images/app.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://umami.is/images/app.jpg" class="img-fluid"></a></p>
+<p>如上图所示，我们可以通过 <code>Umami Cloud</code> 分析网站访客。</p>
 <blockquote class="blockquote">
-<p>使用 gunicorn 的好处是可以多进程以及热重载。</p>
+<p><code>Umami Cloud</code>免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，<code>Umami</code> 也支持本地部署。</p>
 </blockquote>
 <ol type="1">
-<li>首先 dash的代码，例如 app.py中必须包含下面代码</li>
+<li>注册<code>Umami Cloud</code>, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；</li>
+<li>给要分析的网站，增加追踪代码：</li>
 </ol>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a>app <span class="op">=</span> Dash(<span class="va">__name__</span>)</span>
-<span id="cb1-2"><a href="#cb1-2"></a>server <span class="op">=</span> app.server <span class="co"># 这行代码需要包含在 dash 代码中</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<ol start="2" type="1">
-<li>设置配置文件，如 <code>gunicorn.conf.py</code></li>
-</ol>
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>bind <span class="op">=</span> <span class="st">'127.0.0.1:8000'</span>      <span class="co">#绑定ip和端口号</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="co"># chdir = ''  #gunicorn要切换到的目的工作目录</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a>timeout <span class="op">=</span> <span class="dv">30</span> <span class="co">#  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co"># worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a>daemon <span class="op">=</span> <span class="va">False</span> <span class="co"># 后台运行</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a>workers <span class="op">=</span> <span class="dv">4</span> <span class="co">#进程数</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>threads <span class="op">=</span> <span class="dv">4</span> <span class="co">#指定每个进程开启的线程数</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a>loglevel <span class="op">=</span> <span class="st">'info'</span> <span class="co">#日志级别</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a>access_log_format <span class="op">=</span> <span class="st">'</span><span class="sc">%(t)s</span><span class="st"> </span><span class="sc">%(p)s</span><span class="st"> </span><span class="sc">%(h)s</span><span class="st"> "</span><span class="sc">%(r)s</span><span class="st">" </span><span class="sc">%(s)s</span><span class="st"> </span><span class="sc">%(L)s</span><span class="st"> </span><span class="sc">%(b)s</span><span class="st"> </span><span class="sc">%(f)s</span><span class="st">" "</span><span class="sc">%(a)s</span><span class="st">"'</span>    <span class="co">#设置gunicorn访问日志格式，错误日志无法设置</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a></span>
-<span id="cb2-11"><a href="#cb2-11"></a></span>
-<span id="cb2-12"><a href="#cb2-12"></a>accesslog <span class="op">=</span> <span class="st">"/tmp/gunicorn/gunicorn_access.log"</span>      <span class="co">#访问日志文件</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a>errorlog <span class="op">=</span> <span class="st">"/tmp/gunicorn/gunicorn_error.log"</span>        <span class="co">#错误日志文件</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="bu">reload</span> <span class="op">=</span> <span class="va">False</span> <span class="co"># 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<ol start="3" type="1">
-<li>启动程序</li>
-</ol>
-<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># app表示当前目录下app.py的意思，server则是文件下的变量</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="ex">gunicorn</span> app:server <span class="at">-c</span> ./gunicorn.conf.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<section id="热重载应用程序" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
-<p>想要自己重启 <code>gunicorn</code>，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
-<ol type="1">
-<li>查找主进程 pid</li>
-</ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">ps</span> axjf <span class="kw">|</span> <span class="fu">grep</span> gunicorn</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><a href="./pid.png" class="lightbox" data-glightbox="description: .lightbox-desc-1" data-gallery="quarto-lightbox-gallery-1" title="pid"><img src="./pid.png" class="img-fluid figure-img" alt="pid"></a></p>
-<figcaption>pid</figcaption>
-</figure>
-</div>
-<p>例如，上图主进程 pid 为 <code>1674</code></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="bu">kill</span> <span class="at">-HUP</span> 1674</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="gunicorn-信号" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="gunicorn-信号"><span class="header-section-number">1.2</span> gunicorn 信号</h3>
-<p>上面的 HUP即为gunicorn支持的信号，下面为其他信号：</p>
-<ol type="1">
-<li>QUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。</li>
-<li>TERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。</li>
-<li>HUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。</li>
-<li>TTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。</li>
-<li>TTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。</li>
-<li>USR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。</li>
-<li>USR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。</li>
-<li>WINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：</li>
-</ol>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<ol type="1">
-<li><p>TERM 信号：</p>
-<ul>
-<li>作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。</li>
-<li>使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。</li>
-</ul></li>
-<li><p>WINCH 信号：</p>
-<ul>
-<li>作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。</li>
-<li>使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。</li>
-</ul></li>
-</ol>
-<p>总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。</p>
-</div>
-</div>
+<pre><code>&lt;script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"&gt;&lt;/script&gt;</code></pre>
+<p>上面代码<code>data-website-id='*'</code>记得改为对应的追踪 <code>id</code>。</p>
 
 
-<div class="hidden" aria-hidden="true">
-<span class="glightbox-desc lightbox-desc-1">pid</span>
-</div>
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -862,7 +746,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","descPosition":"bottom","selector":".lightbox","loop":false});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","loop":false,"descPosition":"bottom","openEffect":"zoom","closeEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
