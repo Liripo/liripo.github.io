@@ -16,13 +16,15 @@ website:
         href: https://twitter.com/Liripo_zzz
       - icon: rss
         href: index.xml
-  google-analytics: "G-78FD7VFZM3"
 format:
   html:
     theme: 
       light: cosmo
       dark: darkly
     css: styles.css
+    include-in-header: 
+      - text: |
+          <script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
 
 execute:
   freeze: true
