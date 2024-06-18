@@ -1,0 +1,1531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Liripo</title>
+<link>https://liripo.github.io/</link>
+<atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
+<description>Blog</description>
+<generator>quarto-1.4.553</generator>
+<lastBuildDate>Sun, 16 Jun 2024 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Umami 分析网站访客</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/umami/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="umami-cloud-监控网站" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></h2>
+<p><a href="https://umami.is/images/app.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://umami.is/images/app.jpg" class="img-fluid"></a></p>
+<p>如上图所示，我们可以通过 <code>Umami Cloud</code> 分析网站访客。</p>
+<blockquote class="blockquote">
+<p><code>Umami Cloud</code>免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，<code>Umami</code> 也支持本地部署。</p>
+</blockquote>
+<ol type="1">
+<li>注册<code>Umami Cloud</code>, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；</li>
+<li>给要分析的网站，增加追踪代码：</li>
+</ol>
+<pre><code>&lt;script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"&gt;&lt;/script&gt;</code></pre>
+<p>上面代码<code>data-website-id='*'</code>记得改为对应的追踪 <code>id</code>。</p>
+
+
+</section>
+
+ ]]></description>
+  <category>web</category>
+  <guid>https://liripo.github.io/posts/umami/</guid>
+  <pubDate>Sun, 16 Jun 2024 00:00:00 GMT</pubDate>
+  <media:content url="https://umami.is/images/preview-session-stats.png" medium="image" type="image/png"/>
+</item>
+<item>
+  <title>cadvisor + prometheus + grafana 容器资源监控</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/容器资源监控/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="简介" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="简介"><span class="header-section-number">1</span> 简介</h2>
+<p>为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="./cpu_mem.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" data-glightbox="description: .lightbox-desc-1" title="资源消耗图"><img src="https://liripo.github.io/posts/容器资源监控/cpu_mem.png" class="img-fluid figure-img" alt="资源消耗图"></a></p>
+<figcaption>资源消耗图</figcaption>
+</figure>
+</div>
+<p>为了获取上图结果，我们需要下面三个程序：</p>
+<ul>
+<li><code>cAdvisor</code>：用于收集正在运行的容器资源使用和性能信息。</li>
+<li><code>Prometheus</code>：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。</li>
+<li><code>Grafana</code>：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。</li>
+</ul>
+</section>
+<section id="cadvisor-部署" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="cadvisor-部署"><span class="header-section-number">2</span> cAdvisor 部署</h2>
+<p>对需要监控的主机启动如下容器：</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sudo</span> docker run <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-2">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/:/rootfs:ro <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-3">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/var/run:/var/run:ro <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-4">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/sys:/sys:ro <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-5">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/var/lib/docker/:/var/lib/docker:ro <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-6">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/dev/disk/:/dev/disk:ro <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-7">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--publish</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>8080:8080 <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-8">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--detach</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>true <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-9">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cadvisor <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-10">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--privileged</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-11">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--device</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/dev/kmsg <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb1-12">  gcr.io/cadvisor/cadvisor</span></code></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>&lt;ip&gt; 记得更换为自己的 ip 地址。</p>
+</div>
+</div>
+<p><code>cAdvisor</code> 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。</p>
+<p>http://&lt;ip&gt;:8080/metrics 端口可以看到 <code>prometheus</code> 所需要的信息。</p>
+</section>
+<section id="prometheus-部署" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="prometheus-部署"><span class="header-section-number">3</span> prometheus 部署</h2>
+<p>当前文件夹下新建配置文件<code>prometheus.yml</code>：</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>prometheus.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb2" data-filename="prometheus.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scrape_configs</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">job_name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> cadvisor</span></span>
+<span id="cb2-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scrape_interval</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> 5s</span></span>
+<span id="cb2-4"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">static_configs</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-5"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">targets</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">:</span></span>
+<span id="cb2-6"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> &lt;ip&gt;:8080</span></span></code></pre></div>
+</div>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span> prometheus <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-d</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-2">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> 9090:9090 <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-3">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-v</span> ./prometheus.yml:/etc/prometheus/prometheus.yml <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-4">    prom/prometheus <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-5">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--config.file</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/etc/prometheus/prometheus.yml <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-6">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--web.enable-lifecycle</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\</span></span>
+<span id="cb3-7">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--storage.tsdb.retention.time</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>15d</span>
+<span id="cb3-8"></span>
+<span id="cb3-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 参数解释</span></span>
+<span id="cb3-10"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--config.file，指定配置文件</span></span>
+<span id="cb3-11"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--storage.tsdb.path，指定数据存储目录</span></span>
+<span id="cb3-12"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--storage.tsdb.retention，指定数据过期时间，默认</span> 15 天</span>
+<span id="cb3-13"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--query.max-concurrency，最大支持的并发查询量</span></span>
+<span id="cb3-14"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--web.enable-lifecycle，启用热加载</span></span></code></pre></div>
+<p>打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。</p>
+<p><a href="./target.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://liripo.github.io/posts/容器资源监控/target.jpg" class="img-fluid"></a></p>
+<p>此时所有监控目标的状态都是 <code>UP</code>，表明 <code>prometheus</code> 可以正常获取到监控数据。</p>
+</section>
+<section id="grafana-部署" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="grafana-部署"><span class="header-section-number">4</span> grafana 部署</h2>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-d</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>grafana <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div>
+<section id="使用" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="使用"><span class="header-section-number">4.1</span> 使用</h3>
+<p>打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。</p>
+<ol type="1">
+<li>中文设置，个人资料中设置：</li>
+</ol>
+<p><a href="set_cn.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="https://liripo.github.io/posts/容器资源监控/set_cn.png" class="img-fluid"></a></p>
+<ol start="2" type="1">
+<li>添加 <code>prometheus</code> 数据源，在下图红框位置填写 <code>prometheus</code> 地址即可</li>
+</ol>
+<p><a href="./add_source.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="https://liripo.github.io/posts/容器资源监控/add_source.png" class="img-fluid"></a></p>
+<ol start="3" type="1">
+<li>仪表板查看容器的相关资源</li>
+</ol>
+<ul>
+<li>导入仪表板</li>
+</ul>
+<p><a href="import.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="https://liripo.github.io/posts/容器资源监控/import.png" class="img-fluid"></a></p>
+<ul>
+<li>选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：<code>14282</code> ，点击加载按钮后选择刚刚的数据源即可。</li>
+</ul>
+<p><a href="id.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="https://liripo.github.io/posts/容器资源监控/id.png" class="img-fluid"></a></p>
+<p>然后就可以查看容器资源监控的仪表板，如下所示：</p>
+<p><a href="dashboard.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="https://liripo.github.io/posts/容器资源监控/dashboard.png" class="img-fluid"></a></p>
+</section>
+</section>
+<section id="windowns-部署命令" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="windowns-部署命令"><span class="header-section-number">5</span> windowns 部署命令</h2>
+<ol type="1">
+<li>构建 docker 网络, 使得容器之间互相访问</li>
+</ol>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> network create cadvisor</span></code></pre></div>
+<ol start="2" type="1">
+<li>部署程序</li>
+</ol>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--network</span> cadvisor <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/:/rootfs:ro <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/var/run:/var/run:ro <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/sys:/sys:ro <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/var/lib/docker/:/var/lib/docker:ro <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--volume</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/dev/disk/:/dev/disk:ro <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--publish</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>8080:8080 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--detach</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>true <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cadvisor <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--privileged</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--device</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/dev/kmsg gcr.io/cadvisor/cadvisor</span>
+<span id="cb6-2"></span>
+<span id="cb6-3"></span>
+<span id="cb6-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址</span></span>
+<span id="cb6-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> inspect <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span>容器id<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span></span>
+<span id="cb6-6"></span>
+<span id="cb6-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 按照上文，生成 prometheus.yml 配置文件</span></span>
+<span id="cb6-8"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--network</span> cadvisor <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span> prometheus <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-d</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> 9090:9090 <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-v</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">$PWD</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">\p</span>rometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--config.file</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>/etc/prometheus/prometheus.yml <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--web.enable-lifecycle</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--storage.tsdb.retention.time</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>15d</span>
+<span id="cb6-9"></span>
+<span id="cb6-10"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--network</span> cadvisor <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-d</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>grafana <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div>
+
+
+
+</section>
+
+ ]]></description>
+  <category>cadvisor</category>
+  <category>prometheus</category>
+  <category>grafana</category>
+  <guid>https://liripo.github.io/posts/容器资源监控/</guid>
+  <pubDate>Sun, 16 Jun 2024 00:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/容器资源监控/cadvisor.png" medium="image" type="image/png" height="63" width="144"/>
+</item>
+<item>
+  <title>granian 部署 dash 生产环境</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/granian_dash/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="使用-granian-部署-dash" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 <a href="https://github.com/emmett-framework/granian">granian</a> 部署 dash</h2>
+<blockquote class="blockquote">
+<p>相比使用 gunicorn 部署 dash 应用，具有更好的性能。性能比较文档：<a href="https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md" class="uri">https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md</a></p>
+</blockquote>
+<ol type="1">
+<li>下载 <a href="https://github.com/emmett-framework/granian">granian</a></li>
+</ol>
+<div class="sourceCode" id="cb1" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install granian</span></code></pre></div>
+<ol start="2" type="1">
+<li>dash 示例代码</li>
+</ol>
+<div id="0f481b03" class="cell" data-source-line-numbers="10" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> dash</span>
+<span id="cb2-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> dash <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> html</span>
+<span id="cb2-3"></span>
+<span id="cb2-4">app <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> dash.Dash(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">__name__</span>)</span>
+<span id="cb2-5"></span>
+<span id="cb2-6">app.layout <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> html.Div([</span>
+<span id="cb2-7">    html.H1(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Dash 示例"</span>),</span>
+<span id="cb2-8">])</span>
+<span id="cb2-9"></span>
+<span id="cb2-10">server <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> app.server <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 这行代码需要包含</span></span>
+<span id="cb2-11"></span>
+<span id="cb2-12"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">if</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">__name__</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'__main__'</span>:</span>
+<span id="cb2-13">    app.run_server(debug<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span></code></pre></div>
+</div>
+<ol start="2" type="1">
+<li>启动程序</li>
+</ol>
+<div class="sourceCode" id="cb3" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">granian</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--interface</span> wsgi <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--workers</span> 4 app:server</span></code></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>–interface 参数用于指定应用程序接口类型，如服务器网关接口（WSGI）或异步服务器网关接口（ASGI）来运行。通常 <code>flask</code> 或者 <code>Django</code> 使用 wsgi，而 <code>starlette</code> 或 <code>fastapi</code> 构建的应用使用 asgi。</p>
+</div>
+</div>
+<section id="热重载应用程序" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
+<p>想要自己重启 <code>granian</code>，可以向 <code>granian</code> 主进程发送HUP信号，这会导致 <code>granian</code> 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
+<ol type="1">
+<li>查找主进程 pid</li>
+</ol>
+<div class="sourceCode" id="cb4" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">grep</span> granian</span></code></pre></div>
+<div class="sourceCode" id="cb5" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">kill</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-HUP</span> 1674</span></code></pre></div>
+</section>
+<section id="granian-帮助文档" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="granian-帮助文档"><span class="header-section-number">1.2</span> granian 帮助文档</h3>
+<div class="sourceCode" id="cb6" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">使用方式:</span> granian <span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">[</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">选项</span><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">]</span> APP</span>
+<span id="cb6-2"></span>
+<span id="cb6-3">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">APP</span>  服务的应用目标。<span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">[</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">必需</span><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-4"></span>
+<span id="cb6-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">选项:</span></span>
+<span id="cb6-6">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--host</span> TEXT                     绑定的主机地址  [环境变量: GRANIAN_HOST<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">127.0.0.1</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-7">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--port</span> INTEGER                  绑定的端口。[环境变量: GRANIAN_PORT<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 8000]</span>
+<span id="cb6-8">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--interface</span> [asgi<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">asginl</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">rsgi</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">wsgi]</span></span>
+<span id="cb6-9">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">应用接口类型</span>  [环境变量: GRANIAN_INTERFACE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">rsgi</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-10">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http</span> [auto<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">1</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">2]</span>               HTTP 版本  [环境变量: GRANIAN_HTTP<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">auto</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-11">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--ws</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-ws</span>                  启用websocket处理  [环境变量: GRANIAN_WEBSOCKETS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-12">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--workers</span> INTEGER RANGE         工作进程数量  [环境变量: GRANIAN_WORKERS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 1<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=1]</span>
+<span id="cb6-13">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--threads</span> INTEGER RANGE         每个工作进程的线程数量  [环境变量: GRANIAN_THREADS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 1<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=1]</span>
+<span id="cb6-14">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--blocking-threads</span> INTEGER RANGE</span>
+<span id="cb6-15">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">每个工作进程的阻塞线程数量</span></span>
+<span id="cb6-16">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_BLOCKING_THREADS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=1]</span>
+<span id="cb6-17">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--threading-mode</span> [runtime<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">workers]</span></span>
+<span id="cb6-18">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">使用的线程模式</span>  [环境变量: GRANIAN_THREADING_MODE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">workers</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-19">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--loop</span> [auto<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">asyncio</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">uvloop]</span>    事件循环实现  [环境变量: GRANIAN_LOOP<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">auto</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-20">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--opt</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-opt</span>                启用循环优化  [环境变量: GRANIAN_LOOP_OPT<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-21">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--backlog</span> INTEGER RANGE         全局最大连接等待数  [环境变量: GRANIAN_BACKLOG<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 1024<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=128]</span>
+<span id="cb6-22">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--backpressure</span> INTEGER RANGE    每个工作进程并发处理的最大请求数  [环境变量: GRANIAN_BACKPRESSURE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">backlog/workers</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">);</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=1]</span>
+<span id="cb6-23">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http1-buffer-size</span> INTEGER RANGE</span>
+<span id="cb6-24">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置HTTP/1连接的最大缓冲区大小</span>  [环境变量: GRANIAN_HTTP1_BUFFER_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 417792<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span>=8192]</span>
+<span id="cb6-25">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http1-keep-alive</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-http1-keep-alive</span></span>
+<span id="cb6-26">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">启用或禁用HTTP/1保持连接</span>  [环境变量: GRANIAN_HTTP1_KEEP_ALIVE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-27">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http1-pipeline-flush</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-http1-pipeline-flush</span></span>
+<span id="cb6-28">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">聚合HTTP/1刷新以更好地支持管线化响应（实验性）</span>  [环境变量: GRANIAN_HTTP1_PIPELINE_FLUSH<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-29">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-adaptive-window</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-http2-adaptive-window</span></span>
+<span id="cb6-30">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置是否对HTTP2使用自适应流控制</span>  [环境变量: GRANIAN_HTTP2_ADAPTIVE_WINDOW<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-31">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-initial-connection-window-size</span> INTEGER</span>
+<span id="cb6-32">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置HTTP2的最大连接级流控制</span>  [环境变量: GRANIAN_HTTP2_INITIAL_CONNECTION_WINDOW_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 1048576]</span>
+<span id="cb6-33">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-initial-stream-window-size</span> INTEGER</span>
+<span id="cb6-34">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置HTTP2流级流控制的</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">`</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">SETTINGS_INITIAL_WINDOW_SIZE</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">`</span>选项</span>
+<span id="cb6-35">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_INITIAL_STREAM_WINDOW_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 1048576]</span>
+<span id="cb6-36">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-keep-alive-interval</span> INTEGER</span>
+<span id="cb6-37">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置应发送HTTP2</span> Ping帧以保持连接存活的间隔</span>
+<span id="cb6-38">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_KEEP_ALIVE_INTERVAL]</span>
+<span id="cb6-39">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-keep-alive-timeout</span> INTEGER</span>
+<span id="cb6-40">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置接收HTTP2保持连接ping的确认的超时时间</span></span>
+<span id="cb6-41">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_KEEP_ALIVE_TIMEOUT<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 20]</span>
+<span id="cb6-42">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-max-concurrent-streams</span> INTEGER</span>
+<span id="cb6-43">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置HTTP2连接的SETTINGS_MAX_CONCURRENT_STREAMS选项</span>  [环境变量: GRANIAN_HTTP2_MAX_CONCURRENT_STREAMS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 200]</span>
+<span id="cb6-44">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-max-frame-size</span> INTEGER  设置HTTP2的最大帧大小  [环境变量: GRANIAN_HTTP2_MAX_FRAME_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 16384]</span>
+<span id="cb6-45">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-max-headers-size</span> INTEGER</span>
+<span id="cb6-46">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置接收的头帧的最大大小</span></span>
+<span id="cb6-47">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_MAX_HEADERS_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 16777216]</span>
+<span id="cb6-48">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--http2-max-send-buffer-size</span> INTEGER</span>
+<span id="cb6-49">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">设置每个HTTP/2流的最大写缓冲区大小</span>  [环境变量: GRANIAN_HTTP2_MAX_SEND_BUFFER_SIZE<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 409600]</span>
+<span id="cb6-50">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--log</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-log</span>                启用日志记录  [环境变量: GRANIAN_LOG_ENABLED<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-51">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--log-level</span> [critical<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">error</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">warning</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">warn</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">info</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">debug]</span></span>
+<span id="cb6-52">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">日志级别</span>  [环境变量: GRANIAN_LOG_LEVEL<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">info</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-53">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--log-config</span> FILE               日志配置文件<span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">json</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span>  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_LOG_CONFIG]</span>
+<span id="cb6-54">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--access-log</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-access-log</span>  启用访问日志  [环境变量: GRANIAN_LOG_ACCESS_ENABLED<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-55">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--access-log-fmt</span> TEXT           访问日志格式  [环境变量: GRANIAN_LOG_ACCESS_FMT]</span>
+<span id="cb6-56">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--ssl-keyfile</span> FILE              SSL密钥文件  [环境变量: GRANIAN_SSL_KEYFILE]</span>
+<span id="cb6-57">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--ssl-certificate</span> FILE          SSL证书文件  [环境变量: GRANIAN_SSL_CERTIFICATE]</span>
+<span id="cb6-58">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--url-path-prefix</span> TEXT          应用挂载的URL路径前缀  [环境变量: GRANIAN_URL_PATH_PREFIX]</span>
+<span id="cb6-59">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--respawn-failed-workers</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-respawn-failed-workers</span></span>
+<span id="cb6-60">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">启用意外退出的工作进程重生</span></span>
+<span id="cb6-61">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_RESPAWN_FAILED_WORKERS<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-62">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--respawn-interval</span> FLOAT        工作进程重生间隔秒数  [环境变量: GRANIAN_RESPAWN_INTERVAL<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> 3.5]</span>
+<span id="cb6-63">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--reload</span> / <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--no-reload</span>          启用应用文件更改的自动重载（需要granian<span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">[</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">reload</span><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">]</span>额外配置）</span>
+<span id="cb6-64">                                  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">[环境变量:</span> GRANIAN_RELOAD<span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">)</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">]</span></span>
+<span id="cb6-65">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--process-name</span> TEXT             设置进程的自定义名称（需要granian<span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">[</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">pname</span><span class="pp" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">]</span>额外配置）  [环境变量: GRANIAN_PROCESS_NAME]</span>
+<span id="cb6-66">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--version</span>                       显示版本并退出。</span>
+<span id="cb6-67">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">--help</span>                          显示这条帮助信息并退出。</span></code></pre></div>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>dash</category>
+  <category>web</category>
+  <guid>https://liripo.github.io/posts/granian_dash/</guid>
+  <pubDate>Sat, 15 Jun 2024 00:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/granian_dash/granian.png" medium="image" type="image/png" height="90" width="144"/>
+</item>
+<item>
+  <title>gunicorn 部署 dash 生产环境</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/gunicorn_dash/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="使用-gunicorn-部署-dash" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="使用-gunicorn-部署-dash"><span class="header-section-number">1</span> 使用 gunicorn 部署 dash</h2>
+<blockquote class="blockquote">
+<p>使用 gunicorn 的好处是可以多进程以及热重载。</p>
+</blockquote>
+<ol type="1">
+<li>首先 dash的代码，例如 app.py中必须包含下面代码</li>
+</ol>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1">app <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Dash(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">__name__</span>)</span>
+<span id="cb1-2">server <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> app.server <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 这行代码需要包含在 dash 代码中</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>设置配置文件，如 <code>gunicorn.conf.py</code></li>
+</ol>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1">bind <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'127.0.0.1:8000'</span>      <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#绑定ip和端口号</span></span>
+<span id="cb2-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># chdir = ''  #gunicorn要切换到的目的工作目录</span></span>
+<span id="cb2-3">timeout <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒</span></span>
+<span id="cb2-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式</span></span>
+<span id="cb2-5">daemon <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 后台运行</span></span>
+<span id="cb2-6">workers <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#进程数</span></span>
+<span id="cb2-7">threads <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#指定每个进程开启的线程数</span></span>
+<span id="cb2-8">loglevel <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'info'</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#日志级别</span></span>
+<span id="cb2-9">access_log_format <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(t)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(p)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(h)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> "</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(r)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(s)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(L)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(b)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(f)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" "</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">%(a)s</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"'</span>    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#设置gunicorn访问日志格式，错误日志无法设置</span></span>
+<span id="cb2-10"></span>
+<span id="cb2-11"></span>
+<span id="cb2-12">accesslog <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/tmp/gunicorn/gunicorn_access.log"</span>      <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#访问日志文件</span></span>
+<span id="cb2-13">errorlog <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/tmp/gunicorn/gunicorn_error.log"</span>        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#错误日志文件</span></span>
+<span id="cb2-14"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">reload</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span> <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }</span></span></code></pre></div>
+<ol start="3" type="1">
+<li>启动程序</li>
+</ol>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># app表示当前目录下app.py的意思，server则是文件下的变量</span></span>
+<span id="cb3-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">gunicorn</span> app:server <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> ./gunicorn.conf.py</span></code></pre></div>
+<section id="热重载应用程序" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
+<p>想要自己重启 <code>gunicorn</code>，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
+<ol type="1">
+<li>查找主进程 pid</li>
+</ol>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">grep</span> gunicorn</span></code></pre></div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="./pid.png" class="lightbox" data-glightbox="description: .lightbox-desc-1" data-gallery="quarto-lightbox-gallery-1" title="pid"><img src="https://liripo.github.io/posts/gunicorn_dash/pid.png" class="img-fluid figure-img" alt="pid"></a></p>
+<figcaption>pid</figcaption>
+</figure>
+</div>
+<p>例如，上图主进程 pid 为 <code>1674</code></p>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">kill</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-HUP</span> 1674</span></code></pre></div>
+</section>
+<section id="gunicorn-信号" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="gunicorn-信号"><span class="header-section-number">1.2</span> gunicorn 信号</h3>
+<p>上面的 HUP即为gunicorn支持的信号，下面为其他信号：</p>
+<ol type="1">
+<li>QUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。</li>
+<li>TERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。</li>
+<li>HUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。</li>
+<li>TTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。</li>
+<li>TTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。</li>
+<li>USR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。</li>
+<li>USR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。</li>
+<li>WINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><p>TERM 信号：</p>
+<ul>
+<li>作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。</li>
+<li>使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。</li>
+</ul></li>
+<li><p>WINCH 信号：</p>
+<ul>
+<li>作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。</li>
+<li>使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。</li>
+</ul></li>
+</ol>
+<p>总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。</p>
+</div>
+</div>
+
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>dash</category>
+  <category>web</category>
+  <guid>https://liripo.github.io/posts/gunicorn_dash/</guid>
+  <pubDate>Sat, 15 Jun 2024 00:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/gunicorn_dash/dash.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>quarto 创建博客</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/quarto_blog/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<section id="使用-quarto-创建自己的博客" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="使用-quarto-创建自己的博客"><span class="header-section-number">1</span> 使用 quarto 创建自己的博客</h2>
+<section id="quarto的简单介绍" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="quarto的简单介绍"><span class="header-section-number">1.1</span> quarto的简单介绍</h3>
+<p><a href="https://quarto.org/">Quarto®</a> 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。</p>
+</section>
+<section id="安装-quarto" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">1.2</span> 安装 quarto</h3>
+<p>这里推荐两个选择：</p>
+<ol type="1">
+<li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a> 介绍下载安装即可。</p></li>
+<li><p>选择一个带 <code>quarto</code> 的 <code>docker</code> 镜像，我比较喜欢使用的是 <a href="https://rocker-project.org/images/versioned/rstudio.html">rocker</a> 项目的 <code>tidyverse</code>镜像。<code>tidyverse</code>镜像的基础镜像是<code>rstudio</code> 镜像，而目前新版本的<code>rstudio</code> 都会包含 <code>quarto</code> 软件。</p></li>
+</ol>
+<blockquote class="blockquote">
+<p>ps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。</p>
+</blockquote>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pull 镜像</span></span>
+<span id="cb1-2">docker pull rocker<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span>tidyverse<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span>latest</span>
+<span id="cb1-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。</span></span>
+<span id="cb1-4">docker run <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>d <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>ti <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>p <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8787</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8787</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>e ROOT<span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">TRUE</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>e PASSWORD<span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span>《你的密码》 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>v 《本地路径，可以整个D盘》<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span>《镜像目录》 rocker<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span>tidyverse</span></code></pre></div>
+<p>这样，你就可以直接打开浏览器，输入网址 <a href="localhost:8787">localhost:8787</a> 开启 Rstudio IDE。 默认用户名：rstudio <img src="https://liripo.github.io/posts/quarto_blog/rstudio.png" class="img-fluid"></p>
+</section>
+<section id="quarto-创建-blog的详细步骤" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="quarto-创建-blog的详细步骤"><span class="header-section-number">1.3</span> quarto 创建 blog的详细步骤</h3>
+<blockquote class="blockquote">
+<p>没什么资源比官网的步骤更详细了</p>
+</blockquote>
+<p><a href="https://quarto.org/docs/websites/website-blog.html" class="uri">https://quarto.org/docs/websites/website-blog.html</a></p>
+</section>
+<section id="发布博客" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="发布博客"><span class="header-section-number">1.4</span> 发布博客</h3>
+<section id="使用-github-pages-发布" class="level4" data-number="1.4.1">
+<h4 data-number="1.4.1" class="anchored" data-anchor-id="使用-github-pages-发布"><span class="header-section-number">1.4.1</span> 使用 <code>github-pages</code> 发布</h4>
+<p>网址前缀如：https://《用户名》.github.io 所示的网址就是使用的<code>github-pages</code>。</p>
+<ol type="1">
+<li><p>首先在 <code>github</code> 新建一个名称为 <code>https://《用户名》.github.io</code> 的仓库。</p></li>
+<li><p>设置好仓库的<code>pages</code>选项，如下图所示：</p></li>
+</ol>
+<p><a href="./github.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://liripo.github.io/posts/quarto_blog/github.png" class="img-fluid"></a></p>
+<ol start="3" type="1">
+<li>按照上面的步骤，博客项目下会有<code>_quarto.yml</code> 文件，修改下此文件的输出目录。</li>
+</ol>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>_quarto.yml</strong></pre>
+</div>
+<div class="sourceCode" id="cb2" data-filename="_quarto.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">project:</span></span>
+<span id="cb2-2">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">type:</span> website</span>
+<span id="cb2-3">  <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">output-dir:</span> docs</span></code></pre></div>
+</div>
+<ol start="4" type="1">
+<li>将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：</li>
+</ol>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>terminal</strong></pre>
+</div>
+<div class="sourceCode" id="cb3" data-filename="terminal" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">touch</span> .nojekyll</span></code></pre></div>
+</div>
+<ol start="5" type="1">
+<li>渲染网站并发布</li>
+</ol>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># quarto 渲染网站</span></span>
+<span id="cb4-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">quarto</span> render</span>
+<span id="cb4-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 使用 git 将渲染好的网站发送到刚刚创建好的仓库中</span></span>
+<span id="cb4-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> push</span></code></pre></div>
+
+
+</section>
+</section>
+</section>
+
+ ]]></description>
+  <category>quarto</category>
+  <guid>https://liripo.github.io/posts/quarto_blog/</guid>
+  <pubDate>Tue, 02 Jan 2024 00:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/quarto_blog/quarto.png" medium="image" type="image/png" height="72" width="144"/>
+</item>
+</channel>
+</rss>
