@@ -9,13 +9,882 @@
 <link>https://liripo.github.io/</link>
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
-<generator>quarto-1.4.553</generator>
-<lastBuildDate>Sun, 16 Jun 2024 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.7.32</generator>
+<lastBuildDate>Thu, 28 May 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>pi-agent 源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/pi-agent/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p><a href="https://github.com/earendil-works/pi">pi</a>（styled as “π”）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：<strong>不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现</strong>。</p>
+<p>这种”极简核心 + 扩展系统”的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。</p>
+<blockquote class="blockquote">
+<p>项目地址：<a href="https://github.com/earendil-works/pi" class="uri">https://github.com/earendil-works/pi</a> 官方网站：<a href="https://pi.dev" class="uri">https://pi.dev</a></p>
+</blockquote>
+</section>
+<section id="三层架构" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="三层架构"><span class="header-section-number">2</span> 三层架构</h2>
+<p>pi 的核心设计原则是：<strong>分离不稳定的外部世界与稳定的核心循环</strong>。整个项目采用三层架构：</p>
+<section id="三层职责" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="三层职责"><span class="header-section-number">2.1</span> 三层职责</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>层级</th>
+<th>包名</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>pi-ai</strong></td>
+<td><code>@earendil-works/pi-ai</code></td>
+<td>统一的多提供商 LLM API，屏蔽 Provider 差异</td>
+</tr>
+<tr class="even">
+<td><strong>pi-agent-core</strong></td>
+<td><code>@earendil-works/pi-agent-core</code></td>
+<td>Agent 运行时，处理工具调用、状态管理</td>
+</tr>
+<tr class="odd">
+<td><strong>pi-coding-agent</strong></td>
+<td><code>@earendil-works/pi-coding-agent</code></td>
+<td>产品运行时，TUI、会话管理、扩展系统</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="关键边界" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="关键边界"><span class="header-section-number">2.2</span> 关键边界</h3>
+<p>理解 pi 的架构，需要识别两个关键边界：</p>
+<ol type="1">
+<li><strong>LLM 边界</strong>：什么穿过 Provider 接口（统一消息进，统一事件出）</li>
+<li><strong>副作用边界</strong>：模型只能提议工具调用，实际执行在本地发生，可以被拦截</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>这种分层设计使得 pi-ai 可以独立于 Agent 循环进行测试，而 pi-agent-core 可以独立于产品 UI 进行测试。每一层都有清晰的职责边界。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="核心组件" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="核心组件"><span class="header-section-number">3</span> 核心组件</h2>
+<section id="agentsession核心抽象" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="agentsession核心抽象"><span class="header-section-number">3.1</span> AgentSession：核心抽象</h3>
+<p><code>AgentSession</code> 是 pi 的核心抽象，管理整个 Agent 的生命周期。</p>
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
+<span id="cb1-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">export</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> AgentSession {</span>
+<span id="cb1-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 核心职责：</span></span>
+<span id="cb1-4">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 1. Agent 状态访问（模型、消息、流式状态）</span></span>
+<span id="cb1-5">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 2. 事件订阅（自动会话持久化）</span></span>
+<span id="cb1-6">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 3. 模型和思考级别管理</span></span>
+<span id="cb1-7">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 4. 压缩（手动和自动）</span></span>
+<span id="cb1-8">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 5. 工具注册管理</span></span>
+<span id="cb1-9">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 6. 系统提示构建</span></span>
+<span id="cb1-10">}</span></code></pre></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>AgentSession 的设计体现了”关注点分离”：它不直接处理磁盘 I/O，而是通过 SessionManager 进行持久化。这种设计使得 Agent 循环可以独立于存储层。</p>
+</div>
+</div>
+</section>
+<section id="agent-类循环驱动" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="agent-类循环驱动"><span class="header-section-number">3.2</span> Agent 类：循环驱动</h3>
+<p><code>Agent</code> 类（来自 <code>pi-agent-core</code>）负责驱动整个 Agent 循环：</p>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/agent/src/agent.ts</span></span>
+<span id="cb2-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">export</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> Agent {</span>
+<span id="cb2-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 职责：</span></span>
+<span id="cb2-4">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 1. 流式 LLM 响应</span></span>
+<span id="cb2-5">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 2. 工具调用执行</span></span>
+<span id="cb2-6">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 3. 消息队列管理（steering 和 follow-up）</span></span>
+<span id="cb2-7">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 4. 中止处理</span></span>
+<span id="cb2-8">}</span></code></pre></div>
+</section>
+<section id="工具系统" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="工具系统"><span class="header-section-number">3.3</span> 工具系统</h3>
+<p>pi 内置了 7 个核心工具：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>工具</th>
+<th>文件</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>read</code></td>
+<td><code>tools/read.ts</code></td>
+<td>读取文件内容，支持行范围</td>
+</tr>
+<tr class="even">
+<td><code>bash</code></td>
+<td><code>tools/bash.ts</code></td>
+<td>执行 shell 命令</td>
+</tr>
+<tr class="odd">
+<td><code>edit</code></td>
+<td><code>tools/edit.ts</code></td>
+<td>编辑文件（old/new 替换）</td>
+</tr>
+<tr class="even">
+<td><code>write</code></td>
+<td><code>tools/write.ts</code></td>
+<td>写入/创建文件</td>
+</tr>
+<tr class="odd">
+<td><code>grep</code></td>
+<td><code>tools/grep.ts</code></td>
+<td>正则搜索文件内容</td>
+</tr>
+<tr class="even">
+<td><code>find</code></td>
+<td><code>tools/find.ts</code></td>
+<td>按 glob 模式查找文件</td>
+</tr>
+<tr class="odd">
+<td><code>ls</code></td>
+<td><code>tools/ls.ts</code></td>
+<td>列出目录内容</td>
+</tr>
+</tbody>
+</table>
+<p>每个工具都是一个 <code>ToolDefinition</code> 对象：</p>
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">interface</span> ToolDefinition {</span>
+<span id="cb3-2">  name<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span></span>
+<span id="cb3-3">  label<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span></span>
+<span id="cb3-4">  description<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span></span>
+<span id="cb3-5">  parameters<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> TSchema  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// TypeBox schema</span></span>
+<span id="cb3-6">  execute<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> (params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">any</span>) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">=&gt;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">Promise</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span>ToolResult<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span></span>
+<span id="cb3-7">  render<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">?:</span> (params<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">any</span>) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">=&gt;</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span>  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// TUI 渲染</span></span>
+<span id="cb3-8">}</span></code></pre></div>
+</section>
+</section>
+<section id="agent-循环" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="agent-循环"><span class="header-section-number">4</span> Agent 循环</h2>
+<p>Agent 循环是 pi 的核心。下图展示了从用户输入到响应的完整流程：</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[用户输入] --&gt; B[prompt text]
+    B --&gt; C{扩展命令?}
+    C --&gt;|是| D[处理 /command]
+    C --&gt;|否| E{技能模板?}
+    E --&gt;|是| F[展开 /skill:name]
+    E --&gt;|否| G[调用 agent.prompt]
+    D --&gt; G
+    F --&gt; G
+    G --&gt; H[流式 LLM 响应]
+    H --&gt; I{工具调用?}
+    I --&gt;|是| J[执行工具]
+    J --&gt; K[消息持久化]
+    K --&gt; H
+    I --&gt;|否| L[后处理]
+    L --&gt; M{需要压缩?}
+    M --&gt;|是| N[执行压缩]
+    M --&gt;|否| O[返回响应]
+    N --&gt; O
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<section id="主循环流程" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="主循环流程"><span class="header-section-number">4.1</span> 主循环流程</h3>
+<p>让我们深入分析 <code>AgentSession.prompt()</code> 的实现：</p>
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
+<span id="cb4-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">async</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">prompt</span>(text<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> options<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">?:</span> PromptOptions) {</span>
+<span id="cb4-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 1. 处理扩展命令（/command）</span></span>
+<span id="cb4-4">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 2. 发射 input 事件供扩展拦截</span></span>
+<span id="cb4-5">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 3. 展开技能命令（/skill:name）</span></span>
+<span id="cb4-6">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 4. 展开提示模板</span></span>
+<span id="cb4-7">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 5. 如果正在流式处理，排队等待</span></span>
+<span id="cb4-8">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 6. 验证模型和 API 密钥</span></span>
+<span id="cb4-9">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 7. 构建消息数组</span></span>
+<span id="cb4-10">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 8. 发射 before_agent_start 事件</span></span>
+<span id="cb4-11">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 9. 调用 _runAgentPrompt()</span></span>
+<span id="cb4-12">}</span></code></pre></div>
+</section>
+<section id="核心循环" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="核心循环"><span class="header-section-number">4.2</span> 核心循环</h3>
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
+<span id="cb5-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">private</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">async</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">_runAgentPrompt</span>(messages<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> Message[]) {</span>
+<span id="cb5-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 核心循环</span></span>
+<span id="cb5-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">this</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">agent</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">prompt</span>(messages)</span>
+<span id="cb5-5">  </span>
+<span id="cb5-6">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 后处理：重试和压缩检查</span></span>
+<span id="cb5-7">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">while</span> (<span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">this</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">_handlePostAgentRun</span>()) {</span>
+<span id="cb5-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">await</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">this</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">agent</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">continue</span>()</span>
+<span id="cb5-9">  }</span>
+<span id="cb5-10">}</span></code></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>这个设计非常巧妙：核心循环只负责调用 LLM 和执行工具，而重试、压缩等复杂逻辑都在后处理中完成。这保持了核心循环的简洁性。</p>
+</div>
+</div>
+</section>
+<section id="后处理逻辑" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="后处理逻辑"><span class="header-section-number">4.3</span> 后处理逻辑</h3>
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
+<span id="cb6-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">private</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">async</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">_handlePostAgentRun</span>()<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">Promise</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">boolean</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> {</span>
+<span id="cb6-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 1. 检查可重试错误（自动重试并退避）</span></span>
+<span id="cb6-4">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 2. 检查是否需要压缩（上下文溢出或阈值）</span></span>
+<span id="cb6-5">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 3. 返回 true 继续循环，false 退出</span></span>
+<span id="cb6-6">}</span></code></pre></div>
+</section>
+</section>
+<section id="扩展系统" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="扩展系统"><span class="header-section-number">5</span> 扩展系统</h2>
+<p>pi 的扩展系统是其”极简核心 + 扩展系统”哲学的体现。</p>
+<section id="extension-api" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="extension-api"><span class="header-section-number">5.1</span> Extension API</h3>
+<p>扩展是 TypeScript 模块，导出一个接收 <code>ExtensionAPI</code> 的工厂函数：</p>
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/extensions/types.ts</span></span>
+<span id="cb7-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">export</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">interface</span> ExtensionAPI {</span>
+<span id="cb7-3">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 订阅 30+ 生命周期事件</span></span>
+<span id="cb7-4">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">on</span>(event<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> handler<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">Function</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-5">  </span>
+<span id="cb7-6">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 注册自定义工具</span></span>
+<span id="cb7-7">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">registerTool</span>(tool<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> ToolDefinition)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-8">  </span>
+<span id="cb7-9">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 注册命令、快捷键、CLI 标志</span></span>
+<span id="cb7-10">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">registerCommand</span>(command<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> Command)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-11">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">registerShortcut</span>(shortcut<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> Shortcut)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-12">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">registerCliFlag</span>(flag<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> CliFlag)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-13">  </span>
+<span id="cb7-14">  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// UI 交互原语</span></span>
+<span id="cb7-15">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">showSelector</span>(options<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> SelectorOptions)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">Promise</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span></span>
+<span id="cb7-16">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">showConfirmation</span>(message<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">Promise</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">boolean</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span></span>
+<span id="cb7-17">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">showNotification</span>(message<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">void</span></span>
+<span id="cb7-18">}</span></code></pre></div>
+</section>
+<section id="关键生命周期事件" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="关键生命周期事件"><span class="header-section-number">5.2</span> 关键生命周期事件</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>事件</th>
+<th>触发时机</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>session_start</code></td>
+<td>会话开始</td>
+<td>初始化扩展状态</td>
+</tr>
+<tr class="even">
+<td><code>before_agent_start</code></td>
+<td>Agent 循环开始前</td>
+<td>修改系统提示、注入上下文</td>
+</tr>
+<tr class="odd">
+<td><code>agent_end</code></td>
+<td>Agent 循环结束</td>
+<td>清理资源</td>
+</tr>
+<tr class="even">
+<td><code>tool_call</code></td>
+<td>工具调用前</td>
+<td>拦截、修改、阻止调用</td>
+</tr>
+<tr class="odd">
+<td><code>tool_result</code></td>
+<td>工具执行后</td>
+<td>修改工具结果</td>
+</tr>
+<tr class="even">
+<td><code>context</code></td>
+<td>LLM 调用前</td>
+<td>修改消息数组</td>
+</tr>
+<tr class="odd">
+<td><code>input</code></td>
+<td>用户输入时</td>
+<td>拦截输入</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>扩展系统的设计使得 pi 可以在不修改核心代码的情况下，通过扩展实现子代理、计划模式、MCP 等功能。这正是”极简核心 + 扩展系统”哲学的体现。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="会话管理" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="会话管理"><span class="header-section-number">6</span> 会话管理</h2>
+<section id="jsonl-会话存储" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="jsonl-会话存储"><span class="header-section-number">6.1</span> JSONL 会话存储</h3>
+<p>pi 使用 JSONL 格式存储会话，采用树形结构：</p>
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb8-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">interface</span> SessionEntry {</span>
+<span id="cb8-2">  id<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span></span>
+<span id="cb8-3">  parentId<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">?:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">string</span>  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 父节点 ID，形成树形结构</span></span>
+<span id="cb8-4">  type<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'message'</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'thinking_level_change'</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'model_change'</span> </span>
+<span id="cb8-5">        <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'compaction'</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'branch_summary'</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'custom'</span></span>
+<span id="cb8-6">  data<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">any</span></span>
+<span id="cb8-7">}</span></code></pre></div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TD
+    A[根节点] --&gt; B[消息 1]
+    B --&gt; C[消息 2]
+    C --&gt; D[消息 3]
+    C --&gt; E[分支消息 3a]
+    E --&gt; F[分支消息 4a]
+    D --&gt; G[消息 4]
+    
+    style A fill:#f9f,stroke:#333
+    style E fill:#bbf,stroke:#333
+    style F fill:#bbf,stroke:#333
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="叶子节点与上下文" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="叶子节点与上下文"><span class="header-section-number">6.2</span> 叶子节点与上下文</h3>
+<p>关键概念：<strong><code>leafId</code> 决定模型看到的上下文路径</strong>。</p>
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// packages/coding-agent/src/core/session-manager.ts</span></span>
+<span id="cb9-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 叶子节点是当前会话路径的终点</span></span>
+<span id="cb9-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">// 模型只看到从根节点到叶子节点的路径上的消息</span></span></code></pre></div>
+<p>这种设计使得会话支持分支和切换，而不需要复制整个历史记录。</p>
+</section>
+<section id="压缩机制" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="压缩机制"><span class="header-section-number">6.3</span> 压缩机制</h3>
+<p>当上下文窗口接近限制时，pi 会自动压缩：</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    A[完整历史] --&gt; B{需要压缩?}
+    B --&gt;|是| C[摘要旧消息]
+    C --&gt; D[保留最近消息]
+    D --&gt; E[压缩后上下文]
+    B --&gt;|否| F[原始上下文]
+    
+    style C fill:#fbb,stroke:#333
+    style D fill:#bfb,stroke:#333
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<ul>
+<li><strong>自动压缩</strong>：上下文溢出或达到阈值时触发</li>
+<li><strong>手动压缩</strong>：<code>/compact</code> 命令</li>
+<li><strong>无损压缩</strong>：完整历史保留在 JSONL 文件中，压缩只是创建摘要</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>压缩是无损的，因为完整历史仍然保存在 JSONL 文件中。压缩只是创建一个摘要条目，用于替代旧消息，从而减少上下文长度。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="配置与扩展" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="配置与扩展"><span class="header-section-number">7</span> 配置与扩展</h2>
+<section id="配置文件" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="配置文件"><span class="header-section-number">7.1</span> 配置文件</h3>
+<p>pi 使用多个配置文件：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>文件</th>
+<th>位置</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>settings.json</code></td>
+<td><code>~/.pi/agent/</code> 或 <code>.pi/</code></td>
+<td>全局/项目设置</td>
+</tr>
+<tr class="even">
+<td><code>auth.json</code></td>
+<td><code>~/.pi/agent/</code></td>
+<td>API 密钥和 OAuth 凭证</td>
+</tr>
+<tr class="odd">
+<td><code>models.json</code></td>
+<td><code>~/.pi/agent/</code></td>
+<td>自定义提供商和模型</td>
+</tr>
+<tr class="even">
+<td><code>keybindings.json</code></td>
+<td><code>~/.pi/agent/</code></td>
+<td>快捷键自定义</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="技能系统" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="技能系统"><span class="header-section-number">7.2</span> 技能系统</h3>
+<p>技能是按需加载的能力包，遵循 Agent Skills 标准：</p>
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"># SKILL.md 格式</span></span>
+<span id="cb10-2">---</span>
+<span id="cb10-3">name: my-skill</span>
+<span id="cb10-4">description: 描述技能功能</span>
+<span id="cb10-5">---</span>
+<span id="cb10-6"></span>
+<span id="cb10-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">## 使用说明</span></span>
+<span id="cb10-8">...</span></code></pre></div>
+<ul>
+<li>通过 <code>/skill:name</code> 调用</li>
+<li>或由 Agent 自动加载</li>
+<li>在系统提示中显示为可用能力</li>
+</ul>
+</section>
+<section id="上下文文件" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="上下文文件"><span class="header-section-number">7.3</span> 上下文文件</h3>
+<p>pi 会自动加载 <code>AGENTS.md</code>（或 <code>CLAUDE.md</code>）：</p>
+<ul>
+<li>全局配置目录</li>
+<li>父目录</li>
+<li>当前目录</li>
+</ul>
+<p>所有匹配的文件会连接到系统提示中。</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>agent</category>
+  <category>typescript</category>
+  <guid>https://liripo.github.io/posts/pi-agent/</guid>
+  <pubDate>Thu, 28 May 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/pi-agent/pi-agent.png" medium="image" type="image/png" height="93" width="144"/>
+</item>
 <item>
   <title>Umami 分析网站访客</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/umami/</link>
   <description><![CDATA[ 
+
 
 
 
@@ -41,8 +910,8 @@
  ]]></description>
   <category>web</category>
   <guid>https://liripo.github.io/posts/umami/</guid>
-  <pubDate>Sun, 16 Jun 2024 00:00:00 GMT</pubDate>
-  <media:content url="https://umami.is/images/preview-session-stats.png" medium="image" type="image/png"/>
+  <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
+  <media:content url="https://umami.is/images/app.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
   <title>cadvisor + prometheus + grafana 容器资源监控</title>
@@ -54,12 +923,13 @@
 
 
 
+
 <section id="简介" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="简介"><span class="header-section-number">1</span> 简介</h2>
 <p>为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="./cpu_mem.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" data-glightbox="description: .lightbox-desc-1" title="资源消耗图"><img src="https://liripo.github.io/posts/容器资源监控/cpu_mem.png" class="img-fluid figure-img" alt="资源消耗图"></a></p>
+<p><a href="./cpu_mem.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="资源消耗图"><img src="https://liripo.github.io/posts/容器资源监控/cpu_mem.png" class="img-fluid figure-img" alt="资源消耗图"></a></p>
 <figcaption>资源消耗图</figcaption>
 </figure>
 </div>
@@ -174,15 +1044,18 @@ Tip
 background-color: null;
 font-style: inherit;">scrape_configs</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">:</span></span>
 <span id="cb2-2"><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">job_name</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> cadvisor</span></span>
@@ -192,6 +1065,7 @@ font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">scrape_interval</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">:</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> 5s</span></span>
@@ -201,22 +1075,26 @@ font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">static_configs</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">:</span></span>
 <span id="cb2-5"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">targets</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">:</span></span>
 <span id="cb2-6"><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">    </span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;"> &lt;ip&gt;:8080</span></span></code></pre></div>
@@ -435,7 +1313,6 @@ background-color: null;
 font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div>
 
 
-
 </section>
 
  ]]></description>
@@ -443,7 +1320,7 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
   <category>prometheus</category>
   <category>grafana</category>
   <guid>https://liripo.github.io/posts/容器资源监控/</guid>
-  <pubDate>Sun, 16 Jun 2024 00:00:00 GMT</pubDate>
+  <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/容器资源监控/cadvisor.png" medium="image" type="image/png" height="63" width="144"/>
 </item>
 <item>
@@ -451,6 +1328,7 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/granian_dash/</link>
   <description><![CDATA[ 
+
 
 
 
@@ -502,6 +1380,7 @@ font-style: inherit;"># 这行代码需要包含</span></span>
 <span id="cb2-11"></span>
 <span id="cb2-12"><span class="cf" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">if</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">__name__</span> <span class="op" style="color: #5E5E5E;
@@ -548,6 +1427,7 @@ Tip
 background-color: null;
 font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">grep</span> granian</span></code></pre></div>
@@ -586,6 +1466,7 @@ font-style: inherit;">选项:</span></span>
 background-color: null;
 font-style: inherit;">--host</span> TEXT                     绑定的主机地址  [环境变量: GRANIAN_HOST<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -594,6 +1475,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">127.0.0.1</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -601,6 +1483,7 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--port</span> INTEGER                  绑定的端口。[环境变量: GRANIAN_PORT<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 8000]</span>
@@ -608,14 +1491,17 @@ font-style: inherit;">默认:</span> 8000]</span>
 background-color: null;
 font-style: inherit;">--interface</span> [asgi<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">asginl</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">rsgi</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">wsgi]</span></span>
@@ -623,6 +1509,7 @@ font-style: inherit;">wsgi]</span></span>
 background-color: null;
 font-style: inherit;">应用接口类型</span>  [环境变量: GRANIAN_INTERFACE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -631,6 +1518,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">rsgi</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -638,14 +1526,17 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--http</span> [auto<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">1</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">2]</span>               HTTP 版本  [环境变量: GRANIAN_HTTP<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -654,6 +1545,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">auto</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -663,6 +1555,7 @@ font-style: inherit;">--ws</span> / <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">--no-ws</span>                  启用websocket处理  [环境变量: GRANIAN_WEBSOCKETS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -671,6 +1564,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -678,10 +1572,12 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--workers</span> INTEGER RANGE         工作进程数量  [环境变量: GRANIAN_WORKERS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 1<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -691,10 +1587,12 @@ font-style: inherit;">&gt;</span>=1]</span>
 background-color: null;
 font-style: inherit;">--threads</span> INTEGER RANGE         每个工作进程的线程数量  [环境变量: GRANIAN_THREADS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 1<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -710,6 +1608,7 @@ font-style: inherit;">每个工作进程的阻塞线程数量</span></span>
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_BLOCKING_THREADS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -719,6 +1618,7 @@ font-style: inherit;">&gt;</span>=1]</span>
 background-color: null;
 font-style: inherit;">--threading-mode</span> [runtime<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">workers]</span></span>
@@ -726,6 +1626,7 @@ font-style: inherit;">workers]</span></span>
 background-color: null;
 font-style: inherit;">使用的线程模式</span>  [环境变量: GRANIAN_THREADING_MODE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -734,6 +1635,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">workers</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -741,14 +1643,17 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--loop</span> [auto<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">asyncio</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">uvloop]</span>    事件循环实现  [环境变量: GRANIAN_LOOP<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -757,6 +1662,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">auto</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -766,6 +1672,7 @@ font-style: inherit;">--opt</span> / <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">--no-opt</span>                启用循环优化  [环境变量: GRANIAN_LOOP_OPT<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -774,6 +1681,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -781,10 +1689,12 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--backlog</span> INTEGER RANGE         全局最大连接等待数  [环境变量: GRANIAN_BACKLOG<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 1024<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -794,6 +1704,7 @@ font-style: inherit;">&gt;</span>=128]</span>
 background-color: null;
 font-style: inherit;">--backpressure</span> INTEGER RANGE    每个工作进程并发处理的最大请求数  [环境变量: GRANIAN_BACKPRESSURE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -802,6 +1713,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">backlog/workers</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">);</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -814,10 +1726,12 @@ font-style: inherit;">--http1-buffer-size</span> INTEGER RANGE</span>
 background-color: null;
 font-style: inherit;">设置HTTP/1连接的最大缓冲区大小</span>  [环境变量: GRANIAN_HTTP1_BUFFER_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 417792<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">x</span><span class="op" style="color: #5E5E5E;
@@ -832,6 +1746,7 @@ font-style: inherit;">--no-http1-keep-alive</span></span>
 background-color: null;
 font-style: inherit;">启用或禁用HTTP/1保持连接</span>  [环境变量: GRANIAN_HTTP1_KEEP_ALIVE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -840,6 +1755,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -852,6 +1768,7 @@ font-style: inherit;">--no-http1-pipeline-flush</span></span>
 background-color: null;
 font-style: inherit;">聚合HTTP/1刷新以更好地支持管线化响应（实验性）</span>  [环境变量: GRANIAN_HTTP1_PIPELINE_FLUSH<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -860,6 +1777,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -872,6 +1790,7 @@ font-style: inherit;">--no-http2-adaptive-window</span></span>
 background-color: null;
 font-style: inherit;">设置是否对HTTP2使用自适应流控制</span>  [环境变量: GRANIAN_HTTP2_ADAPTIVE_WINDOW<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -880,6 +1799,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -890,6 +1810,7 @@ font-style: inherit;">--http2-initial-connection-window-size</span> INTEGER</spa
 background-color: null;
 font-style: inherit;">设置HTTP2的最大连接级流控制</span>  [环境变量: GRANIAN_HTTP2_INITIAL_CONNECTION_WINDOW_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 1048576]</span>
@@ -900,15 +1821,18 @@ font-style: inherit;">--http2-initial-stream-window-size</span> INTEGER</span>
 background-color: null;
 font-style: inherit;">设置HTTP2流级流控制的</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">`</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">SETTINGS_INITIAL_WINDOW_SIZE</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">`</span>选项</span>
 <span id="cb6-35">                                  <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_INITIAL_STREAM_WINDOW_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 1048576]</span>
@@ -931,6 +1855,7 @@ font-style: inherit;">设置接收HTTP2保持连接ping的确认的超时时间<
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_KEEP_ALIVE_TIMEOUT<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 20]</span>
@@ -941,6 +1866,7 @@ font-style: inherit;">--http2-max-concurrent-streams</span> INTEGER</span>
 background-color: null;
 font-style: inherit;">设置HTTP2连接的SETTINGS_MAX_CONCURRENT_STREAMS选项</span>  [环境变量: GRANIAN_HTTP2_MAX_CONCURRENT_STREAMS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 200]</span>
@@ -948,6 +1874,7 @@ font-style: inherit;">默认:</span> 200]</span>
 background-color: null;
 font-style: inherit;">--http2-max-frame-size</span> INTEGER  设置HTTP2的最大帧大小  [环境变量: GRANIAN_HTTP2_MAX_FRAME_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 16384]</span>
@@ -961,6 +1888,7 @@ font-style: inherit;">设置接收的头帧的最大大小</span></span>
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_HTTP2_MAX_HEADERS_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 16777216]</span>
@@ -971,6 +1899,7 @@ font-style: inherit;">--http2-max-send-buffer-size</span> INTEGER</span>
 background-color: null;
 font-style: inherit;">设置每个HTTP/2流的最大写缓冲区大小</span>  [环境变量: GRANIAN_HTTP2_MAX_SEND_BUFFER_SIZE<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 409600]</span>
@@ -980,6 +1909,7 @@ font-style: inherit;">--log</span> / <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">--no-log</span>                启用日志记录  [环境变量: GRANIAN_LOG_ENABLED<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -988,6 +1918,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">启用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -995,22 +1926,27 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--log-level</span> [critical<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">error</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">warning</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">warn</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">info</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">debug]</span></span>
@@ -1018,6 +1954,7 @@ font-style: inherit;">debug]</span></span>
 background-color: null;
 font-style: inherit;">日志级别</span>  [环境变量: GRANIAN_LOG_LEVEL<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -1026,6 +1963,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">info</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -1037,6 +1975,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">json</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span>  <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_LOG_CONFIG]</span>
@@ -1046,6 +1985,7 @@ font-style: inherit;">--access-log</span> / <span class="at" style="color: #6574
 background-color: null;
 font-style: inherit;">--no-access-log</span>  启用访问日志  [环境变量: GRANIAN_LOG_ACCESS_ENABLED<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -1054,6 +1994,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -1081,6 +2022,7 @@ font-style: inherit;">启用意外退出的工作进程重生</span></span>
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_RESPAWN_FAILED_WORKERS<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -1089,6 +2031,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -1096,6 +2039,7 @@ font-style: inherit;">]</span></span>
 background-color: null;
 font-style: inherit;">--respawn-interval</span> FLOAT        工作进程重生间隔秒数  [环境变量: GRANIAN_RESPAWN_INTERVAL<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> 3.5]</span>
@@ -1114,6 +2058,7 @@ font-style: inherit;">]</span>额外配置）</span>
 background-color: null;
 font-style: inherit;">[环境变量:</span> GRANIAN_RELOAD<span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">;</span> <span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">默认:</span> <span class="er" style="color: #AD0000;
@@ -1122,6 +2067,7 @@ font-style: inherit;">(</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">禁用</span><span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">)</span><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">]</span></span>
@@ -1149,7 +2095,7 @@ font-style: inherit;">--help</span>                          显示这条帮助�
   <category>dash</category>
   <category>web</category>
   <guid>https://liripo.github.io/posts/granian_dash/</guid>
-  <pubDate>Sat, 15 Jun 2024 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/granian_dash/granian.png" medium="image" type="image/png" height="90" width="144"/>
 </item>
 <item>
@@ -1157,6 +2103,7 @@ font-style: inherit;">--help</span>                          显示这条帮助�
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/gunicorn_dash/</link>
   <description><![CDATA[ 
+
 
 
 
@@ -1320,12 +2267,13 @@ font-style: inherit;">-c</span> ./gunicorn.conf.py</span></code></pre></div>
 background-color: null;
 font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
 background-color: null;
+font-weight: bold;
 font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">grep</span> gunicorn</span></code></pre></div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><a href="./pid.png" class="lightbox" data-glightbox="description: .lightbox-desc-1" data-gallery="quarto-lightbox-gallery-1" title="pid"><img src="https://liripo.github.io/posts/gunicorn_dash/pid.png" class="img-fluid figure-img" alt="pid"></a></p>
+<p><a href="./pid.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="pid"><img src="https://liripo.github.io/posts/gunicorn_dash/pid.png" class="img-fluid figure-img" alt="pid"></a></p>
 <figcaption>pid</figcaption>
 </figure>
 </div>
@@ -1376,7 +2324,6 @@ Note
 </div>
 
 
-
 </section>
 </section>
 
@@ -1384,7 +2331,7 @@ Note
   <category>dash</category>
   <category>web</category>
   <guid>https://liripo.github.io/posts/gunicorn_dash/</guid>
-  <pubDate>Sat, 15 Jun 2024 00:00:00 GMT</pubDate>
+  <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/gunicorn_dash/dash.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
@@ -1392,6 +2339,7 @@ Note
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/quarto_blog/</link>
   <description><![CDATA[ 
+
 
 
 
@@ -1524,7 +2472,7 @@ font-style: inherit;">git</span> push</span></code></pre></div>
  ]]></description>
   <category>quarto</category>
   <guid>https://liripo.github.io/posts/quarto_blog/</guid>
-  <pubDate>Tue, 02 Jan 2024 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 01 Jan 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/quarto_blog/quarto.png" medium="image" type="image/png" height="72" width="144"/>
 </item>
 </channel>

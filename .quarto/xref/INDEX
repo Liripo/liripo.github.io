@@ -25,5 +25,8 @@
   },
   "posts/umami/index.qmd": {
     "index.html": "4b891040"
+  },
+  "posts/pi-agent/index.qmd": {
+    "index.html": "81bf764f"
   }
 }

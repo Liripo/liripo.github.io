@@ -3,7 +3,7 @@ title: "Umami 分析网站访客"
 author: "Liripo"
 date: "2024-06-16"
 categories: [web]
-image: "https://umami.is/images/preview-session-stats.png"
+image: "https://umami.is/images/app.jpg"
 ---
 
 ## **Umami Cloud 监控网站**

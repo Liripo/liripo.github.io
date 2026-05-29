@@ -1,0 +1,333 @@
+---
+title: "pi-agent 源码解读"
+author: "Liripo"
+date: "2026-05-29"
+categories: [agent, typescript]
+image: "pi-agent.png"
+---
+
+## 引言
+
+[pi](https://github.com/earendil-works/pi)（styled as "π"）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：**不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现**。
+
+这种"极简核心 + 扩展系统"的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。
+
+> 项目地址：<https://github.com/earendil-works/pi>
+> 官方网站：<https://pi.dev>
+
+## 三层架构
+
+pi 的核心设计原则是：**分离不稳定的外部世界与稳定的核心循环**。整个项目采用三层架构：
+
+### 三层职责
+
+| 层级 | 包名 | 职责 |
+|------|------|------|
+| **pi-ai** | `@earendil-works/pi-ai` | 统一的多提供商 LLM API，屏蔽 Provider 差异 |
+| **pi-agent-core** | `@earendil-works/pi-agent-core` | Agent 运行时，处理工具调用、状态管理 |
+| **pi-coding-agent** | `@earendil-works/pi-coding-agent` | 产品运行时，TUI、会话管理、扩展系统 |
+
+### 关键边界
+
+理解 pi 的架构，需要识别两个关键边界：
+
+1. **LLM 边界**：什么穿过 Provider 接口（统一消息进，统一事件出）
+2. **副作用边界**：模型只能提议工具调用，实际执行在本地发生，可以被拦截
+
+::: {.callout-tip}
+这种分层设计使得 pi-ai 可以独立于 Agent 循环进行测试，而 pi-agent-core 可以独立于产品 UI 进行测试。每一层都有清晰的职责边界。
+:::
+
+## 核心组件
+
+### AgentSession：核心抽象
+
+`AgentSession` 是 pi 的核心抽象，管理整个 Agent 的生命周期。
+
+```typescript
+// packages/coding-agent/src/core/agent-session.ts
+export class AgentSession {
+  // 核心职责：
+  // 1. Agent 状态访问（模型、消息、流式状态）
+  // 2. 事件订阅（自动会话持久化）
+  // 3. 模型和思考级别管理
+  // 4. 压缩（手动和自动）
+  // 5. 工具注册管理
+  // 6. 系统提示构建
+}
+```
+
+::: {.callout-note}
+AgentSession 的设计体现了"关注点分离"：它不直接处理磁盘 I/O，而是通过 SessionManager 进行持久化。这种设计使得 Agent 循环可以独立于存储层。
+:::
+
+### Agent 类：循环驱动
+
+`Agent` 类（来自 `pi-agent-core`）负责驱动整个 Agent 循环：
+
+```typescript
+// packages/agent/src/agent.ts
+export class Agent {
+  // 职责：
+  // 1. 流式 LLM 响应
+  // 2. 工具调用执行
+  // 3. 消息队列管理（steering 和 follow-up）
+  // 4. 中止处理
+}
+```
+
+### 工具系统
+
+pi 内置了 7 个核心工具：
+
+| 工具 | 文件 | 用途 |
+|------|------|------|
+| `read` | `tools/read.ts` | 读取文件内容，支持行范围 |
+| `bash` | `tools/bash.ts` | 执行 shell 命令 |
+| `edit` | `tools/edit.ts` | 编辑文件（old/new 替换） |
+| `write` | `tools/write.ts` | 写入/创建文件 |
+| `grep` | `tools/grep.ts` | 正则搜索文件内容 |
+| `find` | `tools/find.ts` | 按 glob 模式查找文件 |
+| `ls` | `tools/ls.ts` | 列出目录内容 |
+
+每个工具都是一个 `ToolDefinition` 对象：
+
+```typescript
+interface ToolDefinition {
+  name: string
+  label: string
+  description: string
+  parameters: TSchema  // TypeBox schema
+  execute: (params: any) => Promise<ToolResult>
+  render?: (params: any) => string  // TUI 渲染
+}
+```
+
+## Agent 循环
+
+Agent 循环是 pi 的核心。下图展示了从用户输入到响应的完整流程：
+
+```{mermaid}
+flowchart TD
+    A[用户输入] --> B[prompt text]
+    B --> C{扩展命令?}
+    C -->|是| D[处理 /command]
+    C -->|否| E{技能模板?}
+    E -->|是| F[展开 /skill:name]
+    E -->|否| G[调用 agent.prompt]
+    D --> G
+    F --> G
+    G --> H[流式 LLM 响应]
+    H --> I{工具调用?}
+    I -->|是| J[执行工具]
+    J --> K[消息持久化]
+    K --> H
+    I -->|否| L[后处理]
+    L --> M{需要压缩?}
+    M -->|是| N[执行压缩]
+    M -->|否| O[返回响应]
+    N --> O
+```
+
+### 主循环流程
+
+让我们深入分析 `AgentSession.prompt()` 的实现：
+
+```typescript
+// packages/coding-agent/src/core/agent-session.ts
+async prompt(text: string, options?: PromptOptions) {
+  // 1. 处理扩展命令（/command）
+  // 2. 发射 input 事件供扩展拦截
+  // 3. 展开技能命令（/skill:name）
+  // 4. 展开提示模板
+  // 5. 如果正在流式处理，排队等待
+  // 6. 验证模型和 API 密钥
+  // 7. 构建消息数组
+  // 8. 发射 before_agent_start 事件
+  // 9. 调用 _runAgentPrompt()
+}
+```
+
+### 核心循环
+
+```typescript
+// packages/coding-agent/src/core/agent-session.ts
+private async _runAgentPrompt(messages: Message[]) {
+  // 核心循环
+  await this.agent.prompt(messages)
+  
+  // 后处理：重试和压缩检查
+  while (await this._handlePostAgentRun()) {
+    await this.agent.continue()
+  }
+}
+```
+
+::: {.callout-tip}
+这个设计非常巧妙：核心循环只负责调用 LLM 和执行工具，而重试、压缩等复杂逻辑都在后处理中完成。这保持了核心循环的简洁性。
+:::
+
+### 后处理逻辑
+
+```typescript
+// packages/coding-agent/src/core/agent-session.ts
+private async _handlePostAgentRun(): Promise<boolean> {
+  // 1. 检查可重试错误（自动重试并退避）
+  // 2. 检查是否需要压缩（上下文溢出或阈值）
+  // 3. 返回 true 继续循环，false 退出
+}
+```
+
+## 扩展系统
+
+pi 的扩展系统是其"极简核心 + 扩展系统"哲学的体现。
+
+### Extension API
+
+扩展是 TypeScript 模块，导出一个接收 `ExtensionAPI` 的工厂函数：
+
+```typescript
+// packages/coding-agent/src/core/extensions/types.ts
+export interface ExtensionAPI {
+  // 订阅 30+ 生命周期事件
+  on(event: string, handler: Function): void
+  
+  // 注册自定义工具
+  registerTool(tool: ToolDefinition): void
+  
+  // 注册命令、快捷键、CLI 标志
+  registerCommand(command: Command): void
+  registerShortcut(shortcut: Shortcut): void
+  registerCliFlag(flag: CliFlag): void
+  
+  // UI 交互原语
+  showSelector(options: SelectorOptions): Promise<string>
+  showConfirmation(message: string): Promise<boolean>
+  showNotification(message: string): void
+}
+```
+
+### 关键生命周期事件
+
+| 事件 | 触发时机 | 用途 |
+|------|----------|------|
+| `session_start` | 会话开始 | 初始化扩展状态 |
+| `before_agent_start` | Agent 循环开始前 | 修改系统提示、注入上下文 |
+| `agent_end` | Agent 循环结束 | 清理资源 |
+| `tool_call` | 工具调用前 | 拦截、修改、阻止调用 |
+| `tool_result` | 工具执行后 | 修改工具结果 |
+| `context` | LLM 调用前 | 修改消息数组 |
+| `input` | 用户输入时 | 拦截输入 |
+
+::: {.callout-note}
+扩展系统的设计使得 pi 可以在不修改核心代码的情况下，通过扩展实现子代理、计划模式、MCP 等功能。这正是"极简核心 + 扩展系统"哲学的体现。
+:::
+
+## 会话管理
+
+### JSONL 会话存储
+
+pi 使用 JSONL 格式存储会话，采用树形结构：
+
+```typescript
+interface SessionEntry {
+  id: string
+  parentId?: string  // 父节点 ID，形成树形结构
+  type: 'message' | 'thinking_level_change' | 'model_change' 
+        | 'compaction' | 'branch_summary' | 'custom'
+  data: any
+}
+```
+
+```{mermaid}
+graph TD
+    A[根节点] --> B[消息 1]
+    B --> C[消息 2]
+    C --> D[消息 3]
+    C --> E[分支消息 3a]
+    E --> F[分支消息 4a]
+    D --> G[消息 4]
+    
+    style A fill:#f9f,stroke:#333
+    style E fill:#bbf,stroke:#333
+    style F fill:#bbf,stroke:#333
+```
+
+### 叶子节点与上下文
+
+关键概念：**`leafId` 决定模型看到的上下文路径**。
+
+```typescript
+// packages/coding-agent/src/core/session-manager.ts
+// 叶子节点是当前会话路径的终点
+// 模型只看到从根节点到叶子节点的路径上的消息
+```
+
+这种设计使得会话支持分支和切换，而不需要复制整个历史记录。
+
+### 压缩机制
+
+当上下文窗口接近限制时，pi 会自动压缩：
+
+```{mermaid}
+flowchart LR
+    A[完整历史] --> B{需要压缩?}
+    B -->|是| C[摘要旧消息]
+    C --> D[保留最近消息]
+    D --> E[压缩后上下文]
+    B -->|否| F[原始上下文]
+    
+    style C fill:#fbb,stroke:#333
+    style D fill:#bfb,stroke:#333
+```
+
+- **自动压缩**：上下文溢出或达到阈值时触发
+- **手动压缩**：`/compact` 命令
+- **无损压缩**：完整历史保留在 JSONL 文件中，压缩只是创建摘要
+
+::: {.callout-tip}
+压缩是无损的，因为完整历史仍然保存在 JSONL 文件中。压缩只是创建一个摘要条目，用于替代旧消息，从而减少上下文长度。
+:::
+
+## 配置与扩展
+
+### 配置文件
+
+pi 使用多个配置文件：
+
+| 文件 | 位置 | 用途 |
+|------|------|------|
+| `settings.json` | `~/.pi/agent/` 或 `.pi/` | 全局/项目设置 |
+| `auth.json` | `~/.pi/agent/` | API 密钥和 OAuth 凭证 |
+| `models.json` | `~/.pi/agent/` | 自定义提供商和模型 |
+| `keybindings.json` | `~/.pi/agent/` | 快捷键自定义 |
+
+### 技能系统
+
+技能是按需加载的能力包，遵循 Agent Skills 标准：
+
+```markdown
+# SKILL.md 格式
+---
+name: my-skill
+description: 描述技能功能
+---
+
+## 使用说明
+...
+```
+
+- 通过 `/skill:name` 调用
+- 或由 Agent 自动加载
+- 在系统提示中显示为可用能力
+
+### 上下文文件
+
+pi 会自动加载 `AGENTS.md`（或 `CLAUDE.md`）：
+
+- 全局配置目录
+- 父目录
+- 当前目录
+
+所有匹配的文件会连接到系统提示中。
+
