@@ -9,8 +9,721 @@
 <link>https://liripo.github.io/</link>
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
-<generator>quarto-1.7.32</generator>
-<lastBuildDate>Thu, 28 May 2026 16:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.37</generator>
+<lastBuildDate>Sun, 31 May 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>Biomni 源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/biomni/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p><a href="https://github.com/snap-stanford/Biomni">Biomni</a> 是 Stanford SNAP 实验室开源的生医 AI Agent，目标是让 LLM 像一个真正的研究者那样：拿到一个问题，自己去查数据库、跑代码、调工具，最后把结果整理好交出来。围绕这个目标，Biomni 做了三件事：</p>
+<ol type="1">
+<li><strong>打包一切</strong>：把生信工具、数据库、Python/R 包全部塞进一个环境里，让 Agent 有东西可用。</li>
+<li><strong>ReAct 循环</strong>：通过 <code>&lt;execute&gt;</code> / <code>&lt;solution&gt;</code> 两个标签，让 LLM 自己决定”继续干活”还是”该交作业了”。</li>
+<li><strong>动态 prompt</strong>：用 <code>use_tool_retriever</code> 按需筛选工具，避免把 200+ 工具一股脑塞进上下文。</li>
+</ol>
+<blockquote class="blockquote">
+<p>项目地址：<a href="https://github.com/snap-stanford/Biomni" class="uri">https://github.com/snap-stanford/Biomni</a></p>
+</blockquote>
+</section>
+<section id="数据湖" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="数据湖"><span class="header-section-number">2</span> 数据湖</h2>
+<p>第一次跑 Biomni，最耗时的不是启动，而是等它把数据湖下载完。README 里写的”约 11 GB”不是吓人的，光是 <code>BindingDB_All_202409.tsv</code> 这一个文件就有 <strong>6.25 G</strong>——蛋白-小分子结合亲和力数据，体量确实离谱。</p>
+<p>数据湖落在 <code>biomni_data/data_lake/</code> 下面，按主题大致分了这么几类：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>类别</th>
+<th style="text-align: right;">文件名</th>
+<th>简短描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>affinity_capture-ms.parquet</code></td>
+<td>通过亲和捕获 + 质谱检测到的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>affinity_capture-rna.parquet</code></td>
+<td>通过亲和捕获检测到的蛋白-RNA 相互作用</td>
+</tr>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>co-fractionation.parquet</code></td>
+<td>共分馏实验得到的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>proximity_label-ms.parquet</code></td>
+<td>通过近邻标记 + 质谱检测的蛋白相互作用</td>
+</tr>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>two-hybrid.parquet</code></td>
+<td>酵母双杂交检测的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>reconstituted_complex.parquet</code></td>
+<td>体外重构的蛋白复合体数据</td>
+</tr>
+<tr class="odd">
+<td>病毒/宿主相互作用</td>
+<td style="text-align: right;"><code>Virus-Host_PPI_P-HIPSTER_2020.parquet</code></td>
+<td>P-HIPSTER 提供的病毒-宿主蛋白互作数据</td>
+</tr>
+<tr class="even">
+<td>蛋白表达</td>
+<td style="text-align: right;"><code>proteinatlas.tsv</code></td>
+<td>人类蛋白表达数据（Human Protein Atlas）</td>
+</tr>
+<tr class="odd">
+<td><strong>小分子 / 药物发现</strong></td>
+<td style="text-align: right;"><strong><code>BindingDB_All_202409.tsv</code></strong></td>
+<td><strong>蛋白-小分子结合亲和力测量数据（6.25 G）</strong></td>
+</tr>
+<tr class="even">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>broad_repurposing_hub_molecule_with_smiles.parquet</code></td>
+<td>Broad 重定位库分子及 SMILES 注释</td>
+</tr>
+<tr class="odd">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>broad_repurposing_hub_phase_moa_target_info.parquet</code></td>
+<td>药物阶段、作用机制与靶点信息</td>
+</tr>
+<tr class="even">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>enamine_cloud_library_smiles.pkl</code></td>
+<td>Enamine REAL 化合物库（含 SMILES）</td>
+</tr>
+<tr class="odd">
+<td>筛选 / 实验结果（EveBio）</td>
+<td style="text-align: right;"><code>evebio_*.csv</code>（8 个文件）</td>
+<td>筛选/分型实验的元数据、化合物、对照、原始点、结果汇总等</td>
+</tr>
+<tr class="even">
+<td>药物相互作用（DDInter）</td>
+<td style="text-align: right;"><code>ddinter_*.csv</code>（8 个文件）</td>
+<td>按药物分类的药物-药物相互作用</td>
+</tr>
+<tr class="odd">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>go-plus.json</code></td>
+<td>基因本体（GO）本体数据</td>
+</tr>
+<tr class="even">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>msigdb_human_*.parquet</code></td>
+<td>MSigDB 人类 C1-C8 及 Hallmark 基因集</td>
+</tr>
+<tr class="odd">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>mousemine_*.parquet</code></td>
+<td>MouseMine M1/M2/M3/M5/M8/MH 基因集</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>variant_table.parquet</code></td>
+<td>注释过的基因变异表</td>
+</tr>
+<tr class="odd">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>genebass_*.pkl</code></td>
+<td>GeneBass 过滤后的 missense / pLoF / synonymous 变体</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>gwas_catalog.pkl</code></td>
+<td>全基因组关联研究（GWAS）结果集合</td>
+</tr>
+<tr class="odd">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>omim.parquet</code></td>
+<td>OMIM 遗传疾病与相关基因</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>DisGeNET.parquet</code></td>
+<td>多源的基因-疾病关联</td>
+</tr>
+<tr class="odd">
+<td>表型 / 本体</td>
+<td style="text-align: right;"><code>hp.obo</code></td>
+<td>人类表型本体（HPO） obographs 格式</td>
+</tr>
+<tr class="even">
+<td>基因 / 表达</td>
+<td style="text-align: right;"><code>gene_info.parquet</code></td>
+<td>基因综合信息</td>
+</tr>
+<tr class="odd">
+<td>基因 / 表达</td>
+<td style="text-align: right;"><code>gtex_tissue_gene_tpm.parquet</code></td>
+<td>GTEx 各组织基因表达（TPM）</td>
+</tr>
+<tr class="even">
+<td>细胞系 / 癌症依赖性 (DepMap)</td>
+<td style="text-align: right;"><code>DepMap_*.csv</code>（4 个文件）</td>
+<td>DepMap 细胞系 CRISPR 依赖性、效应、模型元数据、表达</td>
+</tr>
+<tr class="odd">
+<td>细胞 / 单细胞资源</td>
+<td style="text-align: right;"><code>czi_census_datasets_v4.parquet</code></td>
+<td>CZI Cell Census 数据集合集</td>
+</tr>
+<tr class="even">
+<td>细胞 / 标记</td>
+<td style="text-align: right;"><code>marker_celltype.parquet</code></td>
+<td>细胞类型标记基因集合</td>
+</tr>
+<tr class="odd">
+<td>免疫 / TCR</td>
+<td style="text-align: right;"><code>McPAS-TCR.parquet</code></td>
+<td>T 细胞受体序列与特异性数据（McPAS）</td>
+</tr>
+<tr class="even">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRDB_v6.0_results.parquet</code></td>
+<td>miRDB 预测的 microRNA 靶点</td>
+</tr>
+<tr class="odd">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRTarBase_*.parquet</code></td>
+<td>经验证的 miRNA-靶基因互作及结合位点</td>
+</tr>
+<tr class="even">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRTarBase_microRNA_target_interaction_pubmed_abtract.txt</code></td>
+<td>miRTarBase 互作对应的 PubMed 摘要文本</td>
+</tr>
+<tr class="odd">
+<td>知识图谱 / 综合资源</td>
+<td style="text-align: right;"><code>kg.csv</code></td>
+<td>精准医学知识图谱（疾病与多尺度关系）</td>
+</tr>
+<tr class="even">
+<td>CRISPR / sgRNA 库</td>
+<td style="text-align: right;"><code>sgRNA_KO_SP_mouse.txt</code></td>
+<td>小鼠 sgRNA 敲除（KO）库</td>
+</tr>
+<tr class="odd">
+<td>CRISPR / sgRNA 库</td>
+<td style="text-align: right;"><code>sgRNA_KO_SP_human.txt</code></td>
+<td>人类 sgRNA 敲除（KO）库</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>genetic_interaction.parquet</code></td>
+<td>基因间遗传互作</td>
+</tr>
+<tr class="odd">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>dosage_growth_defect.parquet</code></td>
+<td>剂量变化影响生长的基因</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_growth_defect.parquet</code></td>
+<td>合成生长缺陷数据</td>
+</tr>
+<tr class="odd">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_lethality.parquet</code></td>
+<td>合成致死相互作用</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_rescue.parquet</code></td>
+<td>恢复表型的遗传互作</td>
+</tr>
+<tr class="odd">
+<td>机器学习 / 预测 (TXGNN)</td>
+<td style="text-align: right;"><code>txgnn_name_mapping.pkl</code></td>
+<td>TXGNN 名称映射</td>
+</tr>
+<tr class="even">
+<td>机器学习 / 预测 (TXGNN)</td>
+<td style="text-align: right;"><code>txgnn_prediction.pkl</code></td>
+<td>TXGNN 模型预测结果</td>
+</tr>
+</tbody>
+</table>
+<p>磁盘空间宽裕的话就全部下完，紧张的话可以按需跳过——不过我个人建议还是全下，省得后面跑到一半发现缺数据。</p>
+<p>除了数据文件，Biomni 还维护了一份 <code>library_content_dict</code>，把预先装好的 Python / R 包名和简介整理成一份清单，在 System Prompt 里一并告诉 LLM，这样 Agent 在调用工具的时候就能准确 import 正确的包，不用自己瞎猜该 <code>import</code> 什么。</p>
+</section>
+<section id="benchmark" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="benchmark"><span class="header-section-number">3</span> Benchmark</h2>
+<p>光有工具和数据还不够，怎么证明 Agent 真的”学会了”？Biomni 在 <code>data/biomni_data/benchmark/</code> 下面准备了三套题：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>数据集</th>
+<th>题目数</th>
+<th>原始格式</th>
+<th>评估格式</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>hle</code></td>
+<td>52</td>
+<td>原生多选题</td>
+<td>多选题</td>
+<td>Humanity’s Last Exam</td>
+</tr>
+<tr class="even">
+<td><code>DbQA</code></td>
+<td>60（测试集）</td>
+<td>问答题 + 干扰项</td>
+<td>多选题</td>
+<td>Lab Bench（数据库 QA）</td>
+</tr>
+<tr class="odd">
+<td><code>SeqQA</code></td>
+<td>70（测试集）</td>
+<td>问答题 + 干扰项</td>
+<td>多选题</td>
+<td>Lab Bench（序列 QA）</td>
+</tr>
+</tbody>
+</table>
+<p><code>DbQA</code> 和 <code>SeqQA</code> 各自有三个 parquet 文件：完整集（520/600 题）、采样集（65/75 题）、测试集（60/70 题）。实际跑分用的是 <code>_test.parquet</code>，别一不小心把完整集当测试集拿来算分，那结果就没意义了。</p>
+<section id="hle" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="hle"><span class="header-section-number">3.1</span> HLE</h3>
+<p><code>test_sampled_biology_medicine.parquet</code> 这个文件来自 Humanity’s Last Exam，题目字段比较丰富：<code>id</code>、<code>question</code>、<code>answer</code>、<code>rationale</code>、<code>category</code> 都有，甚至还有图片相关字段。其中 <code>canary</code> 字段是一个数据集水印，用来检测 benchmark 有没有泄露到训练数据里，评估流程本身不依赖它。</p>
+<p>随手放一道题：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb1-1">Which of the following mechanisms most accurately describes the role of intron </span>
+<span id="cb1-2">length variability in influencing eukaryotic gene expression efficiency?</span>
+<span id="cb1-3"></span>
+<span id="cb1-4">A. Intron length variability impacts gene expression by altering the DNA </span>
+<span id="cb1-5">   methylation patterns, thereby influencing transcriptional silencing.</span>
+<span id="cb1-6">B. Variable intron lengths change the DNA torsional stress distribution, </span>
+<span id="cb1-7">   indirectly affecting RNA polymerase II elongation speed and efficiency.</span>
+<span id="cb1-8">C. Longer introns increase the probability of alternative splicing events </span>
+<span id="cb1-9">   by providing more splice site positions.</span>
+<span id="cb1-10">D. Intron variability primarily affects the spatial configuration of </span>
+<span id="cb1-11">   enhancers, thereby modifying gene expression through changes in </span>
+<span id="cb1-12">   enhancer-promoter interactions.</span>
+<span id="cb1-13">E. Shorter introns enhance transcriptional efficiency by facilitating RNA </span>
+<span id="cb1-14">   polymerase II access to promoter regions more quickly.</span></code></pre></div></div>
+<p>正确答案 <strong>B</strong>，选项设计一看就是故意埋坑的那种。</p>
+</section>
+<section id="dbqa-和-seqqa" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="dbqa-和-seqqa"><span class="header-section-number">3.2</span> DbQA 和 SeqQA</h3>
+<p>DbQA 侧重”数据库查到了什么”，SeqQA 侧重”序列分析做对了没有”。两个数据集字段结构一样：<code>id</code>、<code>question</code>、<code>ideal</code>（标准答案）、<code>distractors</code>（干扰项列表）、<code>canary</code>、<code>subtask</code>。</p>
+<p>DbQA 覆盖的子任务包括：多序列变异分析（11 题）、小鼠肿瘤基因集（10 题）、病毒蛋白质互作（7 题）、差异基因分析、基因定位、miRNA 靶点预测等等。SeqQA 则是限制性内切酶片段数、PCR 引物设计、ORF 氨基酸识别、GC 含量计算这一类序列分析题。</p>
+<p>一道 DbQA 的例子：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb2-1">Which of the following genes is associated with achromatopsia according to </span>
+<span id="cb2-2">DisGeNet but not according to OMIM?</span>
+<span id="cb2-3"></span>
+<span id="cb2-4">ideal: CNGA3</span>
+<span id="cb2-5">distractors: ["CNGB3", "GNAT2", "PDE6C", "ATF7IP"]</span></code></pre></div></div>
+</section>
+<section id="评估方法" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="评估方法"><span class="header-section-number">3.3</span> 评估方法</h3>
+<p>评估流程很直白：<strong>把开放式问答转成多选题，然后算分</strong>。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1">options <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> shuffle(distractors <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> [ideal, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Insufficient information to answer the question."</span>])</span></code></pre></div></div>
+<p>每道题最后长这样：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb4-1">Question: {question}</span>
+<span id="cb4-2">Options:</span>
+<span id="cb4-3">A. {option1}</span>
+<span id="cb4-4">B. {option2}</span>
+<span id="cb4-5">C. {option3}</span>
+<span id="cb4-6">D. {option4}</span>
+<span id="cb4-7">E. {option5}</span>
+<span id="cb4-8">F. Insufficient information to answer the question.</span></code></pre></div></div>
+<p>其中那个 <strong>“Insufficient information to answer the question.”</strong> 是关键——它允许 Agent 在信息不够时”体面地”拒答，而不是硬猜。这样一来，评估就能同时看三个维度：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>accuracy</strong></td>
+<td>答对了多少</td>
+</tr>
+<tr class="even">
+<td><strong>coverage</strong></td>
+<td>敢于回答多少（而不是全选”信息不足”）</td>
+</tr>
+<tr class="odd">
+<td><strong>precision</strong></td>
+<td>回答的部分里，有几个是对的</td>
+</tr>
+</tbody>
+</table>
+<p>答对得 <code>1.0</code>，答错得 <code>0.0</code>，没有部分分。</p>
+<p>我个人挺喜欢这种设计：它把”会不会答”和”敢不敢答”拆开衡量了，光看 accuracy 根本看不出来 Agent 是不是在”躺平拒答”。</p>
+</section>
+</section>
+<section id="工具列表" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="工具列表"><span class="header-section-number">4</span> 工具列表</h2>
+<p>Biomni 内置了 <strong>224 个工具</strong>，分布在 <strong>22 个模块</strong>里。第一次看到这个数字的时候我愣了一下——这也太多了吧。</p>
+<p>把 200+ 工具全塞进 System Prompt，光是工具描述就能吃掉一大半上下文。Biomni 给出的折中方案是 <code>use_tool_retriever</code>，但说实话，把工具做成按需加载的 Skills 应该会更优雅一些。</p>
+<p>工具模块分布如下：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>模块</th>
+<th style="text-align: right;">工具数</th>
+<th>主要功能</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>database</code></td>
+<td style="text-align: right;">40</td>
+<td>生物医学数据库查询（UniProt、PDB、KEGG、ClinVar、GEO、Ensembl、gnomAD、ChEMBL、PubChem 等）</td>
+</tr>
+<tr class="even">
+<td><code>pharmacology</code></td>
+<td style="text-align: right;">25</td>
+<td>药物研发（分子对接、ADMET 预测、药物重定位、药物相互作用、FDA 不良反应等）</td>
+</tr>
+<tr class="odd">
+<td><code>genomics</code></td>
+<td style="text-align: right;">19</td>
+<td>基因组学（scRNA-seq 注释、嵌入生成、ChIP-seq、基因集富集、物种间基因转换等）</td>
+</tr>
+<tr class="even">
+<td><code>molecular_biology</code></td>
+<td style="text-align: right;">18</td>
+<td>分子生物学（ORF 注释、质粒注释、PCR 模拟、限制性酶切、CRISPR sgRNA 设计、引物设计等）</td>
+</tr>
+<tr class="odd">
+<td><code>microbiology</code></td>
+<td style="text-align: right;">12</td>
+<td>微生物学（细菌生长建模、生物膜分析、基因组注释、RNA 二级结构预测等）</td>
+</tr>
+<tr class="even">
+<td><code>physiology</code></td>
+<td style="text-align: right;">11</td>
+<td>生理学（血流动力学分析、脑 ADC 图、昼夜节律分析、脂肪酸组成分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>bioimaging</code></td>
+<td style="text-align: right;">10</td>
+<td>生物成像（医学图像分割、图像配准、相似性度量等）</td>
+</tr>
+<tr class="even">
+<td><code>immunology</code></td>
+<td style="text-align: right;">10</td>
+<td>免疫学（ATAC-seq、免疫细胞分选、细胞因子分析、抗体滴度分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>genetics</code></td>
+<td style="text-align: right;">9</td>
+<td>遗传学（基因组坐标转换、贝叶斯精细定位、CRISPR 分析、群体模拟等）</td>
+</tr>
+<tr class="even">
+<td><strong>literature</strong></td>
+<td style="text-align: right;"><strong>8</strong></td>
+<td><strong>文献检索（PubMed、arXiv、Google Scholar、PDF 提取、网页搜索等）</strong></td>
+</tr>
+<tr class="odd">
+<td><code>synthetic_biology</code></td>
+<td style="text-align: right;">8</td>
+<td>合成生物学（细菌基因组工程、密码子优化、基因线路模拟等）</td>
+</tr>
+<tr class="even">
+<td><code>cancer_biology</code></td>
+<td style="text-align: right;">6</td>
+<td>癌症生物学（DDR 网络分析、体细胞突变检测、结构变异检测、NMF 分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>biochemistry</code></td>
+<td style="text-align: right;">6</td>
+<td>生物化学（CD 光谱分析、酶动力学、ITC 结合热力学、蛋白保守性分析等）</td>
+</tr>
+<tr class="even">
+<td><code>cell_biology</code></td>
+<td style="text-align: right;">5</td>
+<td>细胞生物学（细胞周期分析、细胞迁移分析、流式细胞术、线粒体形态分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>systems_biology</code></td>
+<td style="text-align: right;">7</td>
+<td>系统生物学（通量平衡分析、信号网络模拟、代谢网络扰动分析等）</td>
+</tr>
+<tr class="even">
+<td><code>bioengineering</code></td>
+<td style="text-align: right;">7</td>
+<td>生物工程（细胞迁移分析、CRISPR 模拟、钙成像分析、ODE 模型模拟等）</td>
+</tr>
+<tr class="odd">
+<td><code>pathology</code></td>
+<td style="text-align: right;">7</td>
+<td>病理学（主动脉分析、血栓组织学、骨微 CT 分析、多重图像分析等）</td>
+</tr>
+<tr class="even">
+<td><code>protocols</code></td>
+<td style="text-align: right;">4</td>
+<td>实验方案（protocols.io 搜索、本地方案读取）</td>
+</tr>
+<tr class="odd">
+<td><code>biophysics</code></td>
+<td style="text-align: right;">3</td>
+<td>生物物理（蛋白无序区域预测、细胞形态分析、组织形变分析）</td>
+</tr>
+<tr class="even">
+<td><code>glycoengineering</code></td>
+<td style="text-align: right;">3</td>
+<td>糖工程（N-糖基化位点预测、O-糖基化预测）</td>
+</tr>
+<tr class="odd">
+<td><code>support_tools</code></td>
+<td style="text-align: right;">3</td>
+<td>支持工具（Python REPL 执行、源码读取、Synapse 数据下载）</td>
+</tr>
+<tr class="even">
+<td><code>lab_automation</code></td>
+<td style="text-align: right;">3</td>
+<td>实验室自动化（PyLabRobot 脚本测试、文档获取）</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="system-prompt-结构" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="system-prompt-结构"><span class="header-section-number">5</span> System Prompt 结构</h2>
+<p>Biomni 的 System Prompt 本质上就是把”你有什么能力”写成一份说明书，交给 LLM。拆开来看，主要由这几段拼成：</p>
+<section id="核心指令" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="核心指令"><span class="header-section-number">5.1</span> 1. 核心指令</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb5-1">You are a helpful biomedical assistant assigned with the task of problem-solving.</span>
+<span id="cb5-2">To achieve this, you will be using an interactive coding environment equipped</span>
+<span id="cb5-3">with a variety of tool functions, data, and softwares to assist you throughout</span>
+<span id="cb5-4">the process.</span>
+<span id="cb5-5"></span>
+<span id="cb5-6">Given a task, make a plan first. The plan should be a numbered list of steps</span>
+<span id="cb5-7">that you will take to solve the task. Be specific and detailed.</span>
+<span id="cb5-8">Format your plan as a checklist with empty checkboxes like this:</span>
+<span id="cb5-9"></span>
+<span id="cb5-10">- [ ] First step</span>
+<span id="cb5-11">- [ ] Second step</span>
+<span id="cb5-12">- [ ] Third step</span>
+<span id="cb5-13"></span>
+<span id="cb5-14">Follow the plan step by step. After completing each step, update the checklist</span>
+<span id="cb5-15">by replacing the empty checkbox with a checkmark:</span>
+<span id="cb5-16"></span>
+<span id="cb5-17">1. [✓] First step (completed)</span>
+<span id="cb5-18">- [ ] Second step</span>
+<span id="cb5-19">...</span>
+<span id="cb5-20"></span>
+<span id="cb5-21">If a step fails or needs modification, mark it with an X and explain why:</span>
+<span id="cb5-22">...</span>
+<span id="cb5-23"></span>
+<span id="cb5-24">At each turn, you should first provide your thinking and reasoning given the</span>
+<span id="cb5-25">conversation history.</span>
+<span id="cb5-26">After that, you have two options:</span>
+<span id="cb5-27"></span>
+<span id="cb5-28">1. Interact with a programming environment and receive the corresponding</span>
+<span id="cb5-29">   output within . Your code should be enclosed using "" tag, for example:</span>
+<span id="cb5-30">   print("Hello World!") .</span>
+<span id="cb5-31">   - For Python code (default):  print("Hello World!")</span>
+<span id="cb5-32">   - For R code:  #!R\nlibrary(ggplot2)\nprint("Hello from R")</span>
+<span id="cb5-33">   - For Bash scripts:  #!BASH\necho "Hello from Bash"\nls -la</span>
+<span id="cb5-34">2. When you think it is ready, directly provide a solution that adheres to</span>
+<span id="cb5-35">   the required format for the given task to the user. Your solution should</span>
+<span id="cb5-36">   be enclosed using ""  tag, for example: The answer is  A .</span>
+<span id="cb5-37"></span>
+<span id="cb5-38">In each response, you must include EITHER  or  tag. Not both at the</span>
+<span id="cb5-39">same time. Do not respond with messages without any tags. No empty messages.</span></code></pre></div></div>
+<p>两个核心标签，用口诀记就是”execute 是干活，solution 是收尾”：</p>
+<ul>
+<li><code>&lt;execute&gt;...&lt;/execute&gt;</code>：Agent 要跑代码了，把 Python / R / Bash 写进去。</li>
+<li><code>&lt;solution&gt;...&lt;/solution&gt;</code>：Agent 觉得可以交作业了，把最终答案放进去。</li>
+</ul>
+<p>每轮回复里<strong>必须二选一</strong>，不能同时出现，也不能完全没有——Biomni 就靠这两个标签来解析 Agent 的输出。少了任何一个，解析直接报错或者把这一轮丢掉。</p>
+</section>
+<section id="self-critic可选" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="self-critic可选"><span class="header-section-number">5.2</span> 2. Self-Critic（可选）</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb6-1">You may or may not receive feedbacks from human. If so, address the feedbacks</span>
+<span id="cb6-2">by following the same procedure of multiple rounds of thinking, execution,</span>
+<span id="cb6-3">and then coming up with a new solution.</span></code></pre></div></div>
+<p>意思很简单：如果有人类反馈，就按同样的流程（思考→执行→给答案）重新来一遍。</p>
+</section>
+<section id="protocol-generation" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="protocol-generation"><span class="header-section-number">5.3</span> 3. Protocol Generation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb7-1">PROTOCOL GENERATION:</span>
+<span id="cb7-2">If the user requests an experimental protocol, use search_protocols(),</span>
+<span id="cb7-3">advanced_web_search_claude(), list_local_protocols(), and read_local_protocol()</span>
+<span id="cb7-4">to generate an accurate protocol. Include details such as reagents (with</span>
+<span id="cb7-5">catalog numbers if available), equipment specifications, replicate</span>
+<span id="cb7-6">requirements, error handling, and troubleshooting - but ONLY include</span>
+<span id="cb7-7">information found in these resources. Do not make up specifications, catalog</span>
+<span id="cb7-8">numbers, or equipment details.</span>
+<span id="cb7-9">Prioritize accuracy over completeness.</span></code></pre></div></div>
+<p>生成实验方案时，只能用搜到的信息，不能瞎编货号和设备参数——这一点倒是挺严谨的。</p>
+</section>
+<section id="自定义资源如果有" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="自定义资源如果有"><span class="header-section-number">5.4</span> 4. 自定义资源（如果有）</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb8-1">PRIORITY CUSTOM RESOURCES</span>
+<span id="cb8-2">==============================</span>
+<span id="cb8-3">IMPORTANT: The following custom resources have been specifically added for</span>
+<span id="cb8-4">your use. PRIORITIZE using these resources as they are directly relevant to</span>
+<span id="cb8-5">your task. Always consider these FIRST and in the meantime using default</span>
+<span id="cb8-6">resources.</span></code></pre></div></div>
+<p>这一段是可选的，用来注入项目特定的 know-how 文档、自定义工具、数据集和软件库。相当于给 Agent 开了个”小灶”。</p>
+</section>
+<section id="环境资源" class="level3" data-number="5.5">
+<h3 data-number="5.5" class="anchored" data-anchor-id="环境资源"><span class="header-section-number">5.5</span> 5. 环境资源</h3>
+<p>最后是把实验室里有什么明确告诉 LLM：</p>
+<ul>
+<li><strong>Function Dictionary</strong>：224 个工具的函数签名（模块路径、方法名、参数、默认值），按模块分组列出来。</li>
+<li><strong>Biological Data Lake</strong>：100+ 数据集的简介，告诉 Agent 数据在哪里、长什么样。</li>
+<li><strong>Software Library</strong>：约 50 个可以直接 import 的 Python 包（scanpy、anndata、pysam、biopython 等），让 Agent 知道哪些包已经装好了。</li>
+<li><strong>R 包与 Bash</strong>：说明 R 代码用 <code>#!R</code> 标记，Bash 用 <code>#!BASH</code> 标记。</li>
+</ul>
+</section>
+</section>
+<section id="动态-promptuse_tool_retriever" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="动态-promptuse_tool_retriever"><span class="header-section-number">6</span> 动态 Prompt：<code>use_tool_retriever</code></h2>
+<p>把所有工具、数据、库一股脑塞进 System Prompt 的代价是——<strong>prompt 长度爆炸</strong>。空载就接近 3 万 token，光是”把所有工具摆上桌”这一件事就能吃掉不少额度。</p>
+<p>Biomni 提供了一个开关 <code>use_tool_retriever</code>：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>模式</th>
+<th><code>use_tool_retriever=False</code></th>
+<th><code>use_tool_retriever=True</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>System prompt</td>
+<td>包含所有 224 个工具 + 全部数据集</td>
+<td>只包含检索到的相关工具/数据集</td>
+</tr>
+<tr class="even">
+<td>Prompt 长度</td>
+<td>~30K+ tokens</td>
+<td>~5K tokens</td>
+</tr>
+<tr class="odd">
+<td>适用场景</td>
+<td>简单查询、短对话</td>
+<td>复杂查询、长对话</td>
+</tr>
+<tr class="even">
+<td>初始化速度</td>
+<td>快</td>
+<td>需要额外一次 LLM 调用做检索</td>
+</tr>
+</tbody>
+</table>
+<p>两种模式的本质区别是：<code>False</code> 模式把”工具菜单”全摆出来让 LLM 自己挑，<code>True</code> 模式先用一次 LLM 调用预估任务可能用到的工具和数据集，再把精简后的菜单塞进 prompt。</p>
+<p>这其实就是 RAG 思路在”工具选择”上的迁移——跟 Toolformer / ToolLLM 那一脉是一脉相承的。工程上怎么选，还是要看”准确性”和”成本”哪个对你更重要。</p>
+</section>
+<section id="执行流程" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="执行流程"><span class="header-section-number">7</span> 执行流程</h2>
+<p>光看 Prompt 还是太抽象，下面以一个”BRCA1 突变分析”任务为例，把跑通过程铺开看：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb9-1">轮次 1:</span>
+<span id="cb9-2">  LLM:&lt;execute&gt;</span>
+<span id="cb9-3">       from biomni.tool.genetics import analyze_crispr_genome_editing</span>
+<span id="cb9-4">       # ... 代码</span>
+<span id="cb9-5">       &lt;/execute&gt;</span>
+<span id="cb9-6">  执行: 运行 Python 代码 → 返回结果</span>
+<span id="cb9-7"></span>
+<span id="cb9-8">轮次 2:</span>
+<span id="cb9-9">  LLM:&lt;execute&gt;</span>
+<span id="cb9-10">       # 可视化代码</span>
+<span id="cb9-11">       &lt;/execute&gt;</span>
+<span id="cb9-12">  执行: 生成图表</span>
+<span id="cb9-13"></span>
+<span id="cb9-14">轮次 3:</span>
+<span id="cb9-15">  LLM:&lt;solution&gt;</span>
+<span id="cb9-16">       BRCA1 基因分析结果：</span>
+<span id="cb9-17">       - 检测到 12 个突变位点</span>
+<span id="cb9-18">       - 其中 5 个为致病性突变</span>
+<span id="cb9-19">       - ...</span>
+<span id="cb9-20">       &lt;/solution&gt;</span>
+<span id="cb9-21">  终止</span></code></pre></div></div>
+<p>翻译成流程图：</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[用户任务] --&gt; B[LLM 思考 + 制定计划]
+    B --&gt; C{继续执行?}
+    C --&gt;|是| D[发出 execute 标签]
+    D --&gt; E[执行 Python / R / Bash]
+    E --&gt; F[把输出追加到上下文]
+    F --&gt; B
+    C --&gt;|否| G[发出 solution 标签]
+    G --&gt; H[返回最终答案]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>整个循环就是一个”判断要不要继续”的 loop，直到 Agent 觉得信息够了，发出 <code>&lt;solution&gt;</code> 才停下来。</p>
+</section>
+<section id="使用体验" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="使用体验"><span class="header-section-number">8</span> 使用体验</h2>
+<ol type="1">
+<li><strong>环境准备成本不低</strong>。Python 和 R 两条线都得自己处理好，第一次用非常容易报错（依赖冲突、系统库缺失、R 包编译失败都很常见）。建议直接用 Biomni 提供的 <code>biomni_env</code> 目录或者上游 Docker 镜像起手。</li>
+<li><strong>Prompt 偏长</strong>。空载就接近 3 万 token，即使开了 <code>use_tool_retriever</code> 也有 5K 左右。更优雅的做法是把工具改造成按需加载的 Skills——这也是 Anthropic / Claude Code 现在在推的方向。</li>
+<li><strong>LLM 模型接入可以更灵活</strong>。<code>llm.py</code> 目前主要对接了 Claude，用 litellm 统一接入的话会方便很多。</li>
+<li><strong>数据湖首次下载耗时</strong>。<code>BindingDB_All_202409.tsv</code> 单文件 6.25 G，磁盘空间和网络都得提前规划好。</li>
+</ol>
+
+
+</section>
+
+ ]]></description>
+  <category>agent</category>
+  <category>biomni</category>
+  <category>python</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/biomni/</guid>
+  <pubDate>Sun, 31 May 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/biomni/biomni.png" medium="image" type="image/png" height="36" width="144"/>
+</item>
 <item>
   <title>pi-agent 源码解读</title>
   <dc:creator>Liripo </dc:creator>
@@ -94,7 +807,7 @@ Tip
 <section id="agentsession核心抽象" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="agentsession核心抽象"><span class="header-section-number">3.1</span> AgentSession：核心抽象</h3>
 <p><code>AgentSession</code> 是 pi 的核心抽象，管理整个 Agent 的生命周期。</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
 <span id="cb1-2"><span class="im" style="color: #00769E;
@@ -124,7 +837,7 @@ font-style: inherit;">// 5. 工具注册管理</span></span>
 <span id="cb1-9">  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// 6. 系统提示构建</span></span>
-<span id="cb1-10">}</span></code></pre></div>
+<span id="cb1-10">}</span></code></pre></div></div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -142,7 +855,7 @@ Note
 <section id="agent-类循环驱动" class="level3" data-number="3.2">
 <h3 data-number="3.2" class="anchored" data-anchor-id="agent-类循环驱动"><span class="header-section-number">3.2</span> Agent 类：循环驱动</h3>
 <p><code>Agent</code> 类（来自 <code>pi-agent-core</code>）负责驱动整个 Agent 循环：</p>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/agent/src/agent.ts</span></span>
 <span id="cb2-2"><span class="im" style="color: #00769E;
@@ -166,7 +879,7 @@ font-style: inherit;">// 3. 消息队列管理（steering 和 follow-up）</span
 <span id="cb2-7">  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// 4. 中止处理</span></span>
-<span id="cb2-8">}</span></code></pre></div>
+<span id="cb2-8">}</span></code></pre></div></div>
 </section>
 <section id="工具系统" class="level3" data-number="3.3">
 <h3 data-number="3.3" class="anchored" data-anchor-id="工具系统"><span class="header-section-number">3.3</span> 工具系统</h3>
@@ -218,7 +931,7 @@ font-style: inherit;">// 4. 中止处理</span></span>
 </tbody>
 </table>
 <p>每个工具都是一个 <code>ToolDefinition</code> 对象：</p>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb3-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb3-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">interface</span> ToolDefinition {</span>
@@ -272,7 +985,7 @@ background-color: null;
 font-style: inherit;">string</span>  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// TUI 渲染</span></span>
-<span id="cb3-8">}</span></code></pre></div>
+<span id="cb3-8">}</span></code></pre></div></div>
 </section>
 </section>
 <section id="agent-循环" class="level2" data-number="4">
@@ -311,7 +1024,7 @@ font-style: inherit;">// TUI 渲染</span></span>
 <section id="主循环流程" class="level3" data-number="4.1">
 <h3 data-number="4.1" class="anchored" data-anchor-id="主循环流程"><span class="header-section-number">4.1</span> 主循环流程</h3>
 <p>让我们深入分析 <code>AgentSession.prompt()</code> 的实现：</p>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
 <span id="cb4-2"><span class="kw" style="color: #003B4F;
@@ -355,11 +1068,11 @@ font-style: inherit;">// 8. 发射 before_agent_start 事件</span></span>
 <span id="cb4-11">  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// 9. 调用 _runAgentPrompt()</span></span>
-<span id="cb4-12">}</span></code></pre></div>
+<span id="cb4-12">}</span></code></pre></div></div>
 </section>
 <section id="核心循环" class="level3" data-number="4.2">
 <h3 data-number="4.2" class="anchored" data-anchor-id="核心循环"><span class="header-section-number">4.2</span> 核心循环</h3>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
 <span id="cb5-2"><span class="kw" style="color: #003B4F;
@@ -425,7 +1138,7 @@ font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">continue</span>()</span>
 <span id="cb5-9">  }</span>
-<span id="cb5-10">}</span></code></pre></div>
+<span id="cb5-10">}</span></code></pre></div></div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -442,7 +1155,7 @@ Tip
 </section>
 <section id="后处理逻辑" class="level3" data-number="4.3">
 <h3 data-number="4.3" class="anchored" data-anchor-id="后处理逻辑"><span class="header-section-number">4.3</span> 后处理逻辑</h3>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/agent-session.ts</span></span>
 <span id="cb6-2"><span class="kw" style="color: #003B4F;
@@ -473,7 +1186,7 @@ font-style: inherit;">// 2. 检查是否需要压缩（上下文溢出或阈值�
 <span id="cb6-5">  <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// 3. 返回 true 继续循环，false 退出</span></span>
-<span id="cb6-6">}</span></code></pre></div>
+<span id="cb6-6">}</span></code></pre></div></div>
 </section>
 </section>
 <section id="扩展系统" class="level2" data-number="5">
@@ -482,7 +1195,7 @@ font-style: inherit;">// 3. 返回 true 继续循环，false 退出</span></span
 <section id="extension-api" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="extension-api"><span class="header-section-number">5.1</span> Extension API</h3>
 <p>扩展是 TypeScript 模块，导出一个接收 <code>ExtensionAPI</code> 的工厂函数：</p>
-<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/extensions/types.ts</span></span>
 <span id="cb7-2"><span class="im" style="color: #00769E;
@@ -602,7 +1315,7 @@ background-color: null;
 font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">void</span></span>
-<span id="cb7-18">}</span></code></pre></div>
+<span id="cb7-18">}</span></code></pre></div></div>
 </section>
 <section id="关键生命周期事件" class="level3" data-number="5.2">
 <h3 data-number="5.2" class="anchored" data-anchor-id="关键生命周期事件"><span class="header-section-number">5.2</span> 关键生命周期事件</h3>
@@ -672,7 +1385,7 @@ Note
 <section id="jsonl-会话存储" class="level3" data-number="6.1">
 <h3 data-number="6.1" class="anchored" data-anchor-id="jsonl-会话存储"><span class="header-section-number">6.1</span> JSONL 会话存储</h3>
 <p>pi 使用 JSONL 格式存储会话，采用树形结构：</p>
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb8-1"><span class="kw" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb8-1"><span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">interface</span> SessionEntry {</span>
@@ -719,7 +1432,7 @@ background-color: null;
 font-style: inherit;">:</span> <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">any</span></span>
-<span id="cb8-7">}</span></code></pre></div>
+<span id="cb8-7">}</span></code></pre></div></div>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
@@ -746,7 +1459,7 @@ font-style: inherit;">any</span></span>
 <section id="叶子节点与上下文" class="level3" data-number="6.2">
 <h3 data-number="6.2" class="anchored" data-anchor-id="叶子节点与上下文"><span class="header-section-number">6.2</span> 叶子节点与上下文</h3>
 <p>关键概念：<strong><code>leafId</code> 决定模型看到的上下文路径</strong>。</p>
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource typescript number-lines code-with-copy"><code class="sourceCode typescript"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">// packages/coding-agent/src/core/session-manager.ts</span></span>
 <span id="cb9-2"><span class="co" style="color: #5E5E5E;
@@ -754,7 +1467,7 @@ background-color: null;
 font-style: inherit;">// 叶子节点是当前会话路径的终点</span></span>
 <span id="cb9-3"><span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">// 模型只看到从根节点到叶子节点的路径上的消息</span></span></code></pre></div>
+font-style: inherit;">// 模型只看到从根节点到叶子节点的路径上的消息</span></span></code></pre></div></div>
 <p>这种设计使得会话支持分支和切换，而不需要复制整个历史记录。</p>
 </section>
 <section id="压缩机制" class="level3" data-number="6.3">
@@ -840,7 +1553,7 @@ Tip
 <section id="技能系统" class="level3" data-number="7.2">
 <h3 data-number="7.2" class="anchored" data-anchor-id="技能系统"><span class="header-section-number">7.2</span> 技能系统</h3>
 <p>技能是按需加载的能力包，遵循 Agent Skills 标准：</p>
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"># SKILL.md 格式</span></span>
 <span id="cb10-2">---</span>
@@ -851,7 +1564,7 @@ font-style: inherit;"># SKILL.md 格式</span></span>
 <span id="cb10-7"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">## 使用说明</span></span>
-<span id="cb10-8">...</span></code></pre></div>
+<span id="cb10-8">...</span></code></pre></div></div>
 <ul>
 <li>通过 <code>/skill:name</code> 调用</li>
 <li>或由 Agent 自动加载</li>
@@ -875,12 +1588,13 @@ font-style: inherit;">## 使用说明</span></span>
  ]]></description>
   <category>agent</category>
   <category>typescript</category>
+  <category>source-reading</category>
   <guid>https://liripo.github.io/posts/pi-agent/</guid>
   <pubDate>Thu, 28 May 2026 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/pi-agent/pi-agent.png" medium="image" type="image/png" height="93" width="144"/>
 </item>
 <item>
-  <title>Umami 分析网站访客</title>
+  <title>用 Umami 分析网站访客</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/umami/</link>
   <description><![CDATA[ 
@@ -890,31 +1604,86 @@ font-style: inherit;">## 使用说明</span></span>
 
 
 
-<section id="umami-cloud-监控网站" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></h2>
+<section id="umami-cloud" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud"><span class="header-section-number">1</span> Umami Cloud</h2>
 <p><a href="https://umami.is/images/app.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://umami.is/images/app.jpg" class="img-fluid"></a></p>
-<p>如上图所示，我们可以通过 <code>Umami Cloud</code> 分析网站访客。</p>
-<blockquote class="blockquote">
-<p><code>Umami Cloud</code>免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，<code>Umami</code> 也支持本地部署。</p>
-</blockquote>
+<p>如果只是给个人博客看访问趋势，<code>Umami Cloud</code> 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。</p>
+</div>
+</div>
+</section>
+<section id="接入步骤" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="接入步骤"><span class="header-section-number">2</span> 接入步骤</h2>
 <ol type="1">
 <li>注册<code>Umami Cloud</code>, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；</li>
 <li>给要分析的网站，增加追踪代码：</li>
 </ol>
 <pre><code>&lt;script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"&gt;&lt;/script&gt;</code></pre>
 <p>上面代码<code>data-website-id='*'</code>记得改为对应的追踪 <code>id</code>。</p>
+</section>
+<section id="放到-quarto-配置中" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="放到-quarto-配置中"><span class="header-section-number">3</span> 放到 Quarto 配置中</h2>
+<p>对 Quarto 网站来说，可以把脚本放到 <code>_quarto.yml</code> 的 <code>include-in-header</code> 中，这样每个页面都会自动带上统计脚本：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">format</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-2"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">html</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-3"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">    </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">include-in-header</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb2-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">      - </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">text</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|</span></span>
+<span id="cb2-5">          &lt;script defer src="https://cloud.umami.is/script.js" data-website-id="你的站点 ID"&gt;&lt;/script&gt;</span></code></pre></div></div>
 
 
 </section>
 
  ]]></description>
   <category>web</category>
+  <category>analytics</category>
+  <category>quarto</category>
   <guid>https://liripo.github.io/posts/umami/</guid>
   <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
-  <media:content url="https://umami.is/images/app.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://liripo.github.io/posts/umami/app.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
-  <title>cadvisor + prometheus + grafana 容器资源监控</title>
+  <title>cAdvisor + Prometheus + Grafana 容器资源监控</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/容器资源监控/</link>
   <description><![CDATA[ 
@@ -943,7 +1712,7 @@ font-style: inherit;">## 使用说明</span></span>
 <section id="cadvisor-部署" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="cadvisor-部署"><span class="header-section-number">2</span> cAdvisor 部署</h2>
 <p>对需要监控的主机启动如下容器：</p>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">sudo</span> docker run <span class="dt" style="color: #AD0000;
 background-color: null;
@@ -1016,7 +1785,7 @@ background-color: null;
 font-style: inherit;">=</span>/dev/kmsg <span class="dt" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">\</span></span>
-<span id="cb1-12">  gcr.io/cadvisor/cadvisor</span></code></pre></div>
+<span id="cb1-12">  gcr.io/cadvisor/cadvisor</span></code></pre></div></div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1040,7 +1809,7 @@ Tip
 <div class="code-with-filename-file">
 <pre><strong>prometheus.yml</strong></pre>
 </div>
-<div class="sourceCode" id="cb2" data-filename="prometheus.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="prometheus.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">scrape_configs</span><span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1097,9 +1866,9 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">-</span><span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;"> &lt;ip&gt;:8080</span></span></code></pre></div>
+font-style: inherit;"> &lt;ip&gt;:8080</span></span></code></pre></div></div>
 </div>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
 background-color: null;
@@ -1156,14 +1925,14 @@ background-color: null;
 font-style: inherit;">--query.max-concurrency，最大支持的并发查询量</span></span>
 <span id="cb3-14"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">--web.enable-lifecycle，启用热加载</span></span></code></pre></div>
+font-style: inherit;">--web.enable-lifecycle，启用热加载</span></span></code></pre></div></div>
 <p>打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。</p>
 <p><a href="./target.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://liripo.github.io/posts/容器资源监控/target.jpg" class="img-fluid"></a></p>
 <p>此时所有监控目标的状态都是 <code>UP</code>，表明 <code>prometheus</code> 可以正常获取到监控数据。</p>
 </section>
 <section id="grafana-部署" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="grafana-部署"><span class="header-section-number">4</span> grafana 部署</h2>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
 background-color: null;
@@ -1173,7 +1942,7 @@ font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>grafana <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div>
+font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div></div>
 <section id="使用" class="level3" data-number="4.1">
 <h3 data-number="4.1" class="anchored" data-anchor-id="使用"><span class="header-section-number">4.1</span> 使用</h3>
 <p>打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。</p>
@@ -1205,13 +1974,13 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
 <ol type="1">
 <li>构建 docker 网络, 使得容器之间互相访问</li>
 </ol>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">docker</span> network create cadvisor</span></code></pre></div>
+font-style: inherit;">docker</span> network create cadvisor</span></code></pre></div></div>
 <ol start="2" type="1">
 <li>部署程序</li>
 </ol>
-<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">docker</span> run <span class="at" style="color: #657422;
 background-color: null;
@@ -1310,7 +2079,7 @@ font-style: inherit;">--name</span><span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span>grafana <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div>
+font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></div></div>
 
 
 </section>
@@ -1319,12 +2088,14 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
   <category>cadvisor</category>
   <category>prometheus</category>
   <category>grafana</category>
+  <category>docker</category>
+  <category>observability</category>
   <guid>https://liripo.github.io/posts/容器资源监控/</guid>
   <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/容器资源监控/cadvisor.png" medium="image" type="image/png" height="63" width="144"/>
 </item>
 <item>
-  <title>granian 部署 dash 生产环境</title>
+  <title>用 Granian 部署 Dash 生产环境</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/granian_dash/</link>
   <description><![CDATA[ 
@@ -1335,21 +2106,19 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
 
 
 <section id="使用-granian-部署-dash" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 <a href="https://github.com/emmett-framework/granian">granian</a> 部署 dash</h2>
-<blockquote class="blockquote">
-<p>相比使用 gunicorn 部署 dash 应用，具有更好的性能。性能比较文档：<a href="https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md" class="uri">https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md</a></p>
-</blockquote>
+<h2 data-number="1" class="anchored" data-anchor-id="使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 <a href="https://github.com/emmett-framework/granian">Granian</a> 部署 Dash</h2>
+<p>相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：<a href="https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md" class="uri">https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md</a>。</p>
 <ol type="1">
-<li>下载 <a href="https://github.com/emmett-framework/granian">granian</a></li>
+<li>安装 <a href="https://github.com/emmett-framework/granian">Granian</a></li>
 </ol>
-<div class="sourceCode" id="cb1" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">pip</span> install granian</span></code></pre></div>
+font-style: inherit;">pip</span> install granian</span></code></pre></div></div>
 <ol start="2" type="1">
-<li>dash 示例代码</li>
+<li>Dash 示例代码</li>
 </ol>
-<div id="0f481b03" class="cell" data-source-line-numbers="10" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
+<div id="6605f2f9" class="cell" data-source-line-numbers="10" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> dash</span>
 <span id="cb2-2"><span class="im" style="color: #00769E;
@@ -1376,7 +2145,7 @@ font-style: inherit;">"Dash 示例"</span>),</span>
 background-color: null;
 font-style: inherit;">=</span> app.server <span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;"># 这行代码需要包含</span></span>
+font-style: inherit;"># Granian 通过这个 WSGI server 对象启动应用</span></span>
 <span id="cb2-11"></span>
 <span id="cb2-12"><span class="cf" style="color: #003B4F;
 background-color: null;
@@ -1392,18 +2161,18 @@ font-style: inherit;">'__main__'</span>:</span>
 background-color: null;
 font-style: inherit;">=</span><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">True</span>)</span></code></pre></div>
+font-style: inherit;">True</span>)</span></code></pre></div></div>
 </div>
-<ol start="2" type="1">
+<ol start="3" type="1">
 <li>启动程序</li>
 </ol>
-<div class="sourceCode" id="cb3" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">granian</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">--interface</span> wsgi <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">--workers</span> 4 app:server</span></code></pre></div>
+font-style: inherit;">--workers</span> 4 app:server</span></code></pre></div></div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1414,32 +2183,32 @@ Tip
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>–interface 参数用于指定应用程序接口类型，如服务器网关接口（WSGI）或异步服务器网关接口（ASGI）来运行。通常 <code>flask</code> 或者 <code>Django</code> 使用 wsgi，而 <code>starlette</code> 或 <code>fastapi</code> 构建的应用使用 asgi。</p>
+<p><code>--interface</code> 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 <code>wsgi</code>；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 <code>asgi</code>。</p>
 </div>
 </div>
-<section id="热重载应用程序" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
+</section>
+<section id="热重载应用程序" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">2</span> 热重载应用程序</h2>
 <p>想要自己重启 <code>granian</code>，可以向 <code>granian</code> 主进程发送HUP信号，这会导致 <code>granian</code> 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
 <ol type="1">
 <li>查找主进程 pid</li>
 </ol>
-<div class="sourceCode" id="cb4" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">grep</span> granian</span></code></pre></div>
-<div class="sourceCode" id="cb5" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
+font-style: inherit;">grep</span> granian</span></code></pre></div></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">kill</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">-HUP</span> 1674</span></code></pre></div>
-</section>
-<section id="granian-帮助文档" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="granian-帮助文档"><span class="header-section-number">1.2</span> granian 帮助文档</h3>
-<div class="sourceCode" id="cb6" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
+font-style: inherit;">-HUP</span> 1674</span></code></pre></div></div>
+<section id="granian-帮助文档" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="granian-帮助文档"><span class="header-section-number">2.1</span> granian 帮助文档</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-code-line-numbers="" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">使用方式:</span> granian <span class="pp" style="color: #AD0000;
 background-color: null;
@@ -2085,7 +2854,7 @@ background-color: null;
 font-style: inherit;">--version</span>                       显示版本并退出。</span>
 <span id="cb6-67">  <span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">--help</span>                          显示这条帮助信息并退出。</span></code></pre></div>
+font-style: inherit;">--help</span>                          显示这条帮助信息并退出。</span></code></pre></div></div>
 
 
 </section>
@@ -2094,12 +2863,14 @@ font-style: inherit;">--help</span>                          显示这条帮助�
  ]]></description>
   <category>dash</category>
   <category>web</category>
+  <category>python</category>
+  <category>granian</category>
   <guid>https://liripo.github.io/posts/granian_dash/</guid>
   <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/granian_dash/granian.png" medium="image" type="image/png" height="90" width="144"/>
 </item>
 <item>
-  <title>gunicorn 部署 dash 生产环境</title>
+  <title>用 Gunicorn 部署 Dash 生产环境</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/gunicorn_dash/</link>
   <description><![CDATA[ 
@@ -2110,14 +2881,12 @@ font-style: inherit;">--help</span>                          显示这条帮助�
 
 
 <section id="使用-gunicorn-部署-dash" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-gunicorn-部署-dash"><span class="header-section-number">1</span> 使用 gunicorn 部署 dash</h2>
-<blockquote class="blockquote">
-<p>使用 gunicorn 的好处是可以多进程以及热重载。</p>
-</blockquote>
+<h2 data-number="1" class="anchored" data-anchor-id="使用-gunicorn-部署-dash"><span class="header-section-number">1</span> 使用 Gunicorn 部署 Dash</h2>
+<p>Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。</p>
 <ol type="1">
-<li>首先 dash的代码，例如 app.py中必须包含下面代码</li>
+<li>首先，Dash 的代码中需要暴露 Flask <code>server</code> 对象。例如 <code>app.py</code> 中必须包含下面代码：</li>
 </ol>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1">app <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1">app <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> Dash(<span class="va" style="color: #111111;
 background-color: null;
@@ -2126,11 +2895,11 @@ font-style: inherit;">__name__</span>)</span>
 background-color: null;
 font-style: inherit;">=</span> app.server <span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;"># 这行代码需要包含在 dash 代码中</span></span></code></pre></div>
+font-style: inherit;"># Gunicorn 会加载这个对象</span></span></code></pre></div></div>
 <ol start="2" type="1">
-<li>设置配置文件，如 <code>gunicorn.conf.py</code></li>
+<li>设置配置文件，如 <code>gunicorn.conf.py</code>。</li>
 </ol>
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1">bind <span class="op" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource py number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1">bind <span class="op" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">=</span> <span class="st" style="color: #20794D;
 background-color: null;
@@ -2245,32 +3014,32 @@ font-style: inherit;">=</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">False</span> <span class="co" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;"># 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }</span></span></code></pre></div>
+font-style: inherit;"># 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }</span></span></code></pre></div></div>
 <ol start="3" type="1">
-<li>启动程序</li>
+<li>启动程序。</li>
 </ol>
-<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># app表示当前目录下app.py的意思，server则是文件下的变量</span></span>
 <span id="cb3-2"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">gunicorn</span> app:server <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">-c</span> ./gunicorn.conf.py</span></code></pre></div>
+font-style: inherit;">-c</span> ./gunicorn.conf.py</span></code></pre></div></div>
 <section id="热重载应用程序" class="level3" data-number="1.1">
 <h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
 <p>想要自己重启 <code>gunicorn</code>，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
 <ol type="1">
 <li>查找主进程 pid</li>
 </ol>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">ps</span> axjf <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">|</span> <span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">grep</span> gunicorn</span></code></pre></div>
+font-style: inherit;">grep</span> gunicorn</span></code></pre></div></div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><a href="./pid.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="pid"><img src="https://liripo.github.io/posts/gunicorn_dash/pid.png" class="img-fluid figure-img" alt="pid"></a></p>
@@ -2278,11 +3047,11 @@ font-style: inherit;">grep</span> gunicorn</span></code></pre></div>
 </figure>
 </div>
 <p>例如，上图主进程 pid 为 <code>1674</code></p>
-<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">kill</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">-HUP</span> 1674</span></code></pre></div>
+font-style: inherit;">-HUP</span> 1674</span></code></pre></div></div>
 </section>
 <section id="gunicorn-信号" class="level3" data-number="1.2">
 <h3 data-number="1.2" class="anchored" data-anchor-id="gunicorn-信号"><span class="header-section-number">1.2</span> gunicorn 信号</h3>
@@ -2330,12 +3099,14 @@ Note
  ]]></description>
   <category>dash</category>
   <category>web</category>
+  <category>python</category>
+  <category>gunicorn</category>
   <guid>https://liripo.github.io/posts/gunicorn_dash/</guid>
   <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/gunicorn_dash/dash.jpg" medium="image" type="image/jpeg"/>
 </item>
 <item>
-  <title>quarto 创建博客</title>
+  <title>用 Quarto 创建个人博客</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/quarto_blog/</link>
   <description><![CDATA[ 
@@ -2345,23 +3116,22 @@ Note
 
 
 
-<section id="使用-quarto-创建自己的博客" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-quarto-创建自己的博客"><span class="header-section-number">1</span> 使用 quarto 创建自己的博客</h2>
-<section id="quarto的简单介绍" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="quarto的简单介绍"><span class="header-section-number">1.1</span> quarto的简单介绍</h3>
-<p><a href="https://quarto.org/">Quarto®</a> 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。</p>
+<section id="简介" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="简介"><span class="header-section-number">1</span> 简介</h2>
+<p><a href="https://quarto.org/">Quarto</a> 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。</p>
+<p>这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 <code>docs/</code>，最后交给 GitHub Pages 发布。</p>
 </section>
-<section id="安装-quarto" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">1.2</span> 安装 quarto</h3>
+<section id="安装-quarto" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">2</span> 安装 Quarto</h2>
 <p>这里推荐两个选择：</p>
 <ol type="1">
-<li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a> 介绍下载安装即可。</p></li>
-<li><p>选择一个带 <code>quarto</code> 的 <code>docker</code> 镜像，我比较喜欢使用的是 <a href="https://rocker-project.org/images/versioned/rstudio.html">rocker</a> 项目的 <code>tidyverse</code>镜像。<code>tidyverse</code>镜像的基础镜像是<code>rstudio</code> 镜像，而目前新版本的<code>rstudio</code> 都会包含 <code>quarto</code> 软件。</p></li>
+<li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a>介绍下载安装。</p></li>
+<li><p>使用带 <code>quarto</code> 的 Docker 镜像。我比较喜欢 <a href="https://rocker-project.org/images/versioned/rstudio.html">rocker</a> 项目的 <code>tidyverse</code> 镜像，它基于 RStudio 镜像，适合作为 R 相关开发的基础环境。</p></li>
 </ol>
 <blockquote class="blockquote">
 <p>ps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。</p>
 </blockquote>
-<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># pull 镜像</span></span>
 <span id="cb1-2">docker pull rocker<span class="sc" style="color: #5E5E5E;
@@ -2400,34 +3170,31 @@ font-style: inherit;">-</span>v 《本地路径，可以整个D盘》<span class
 background-color: null;
 font-style: inherit;">:</span>《镜像目录》 rocker<span class="sc" style="color: #5E5E5E;
 background-color: null;
-font-style: inherit;">/</span>tidyverse</span></code></pre></div>
-<p>这样，你就可以直接打开浏览器，输入网址 <a href="localhost:8787">localhost:8787</a> 开启 Rstudio IDE。 默认用户名：rstudio <img src="https://liripo.github.io/posts/quarto_blog/rstudio.png" class="img-fluid"></p>
+font-style: inherit;">/</span>tidyverse</span></code></pre></div></div>
+<p>这样就可以打开浏览器，访问 <a href="http://localhost:8787" class="uri">http://localhost:8787</a> 进入 RStudio IDE。默认用户名是 <code>rstudio</code>。</p>
+<p><a href="./rstudio.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://liripo.github.io/posts/quarto_blog/rstudio.png" class="img-fluid"></a></p>
 </section>
-<section id="quarto-创建-blog的详细步骤" class="level3" data-number="1.3">
-<h3 data-number="1.3" class="anchored" data-anchor-id="quarto-创建-blog的详细步骤"><span class="header-section-number">1.3</span> quarto 创建 blog的详细步骤</h3>
-<blockquote class="blockquote">
-<p>没什么资源比官网的步骤更详细了</p>
-</blockquote>
+<section id="创建博客" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="创建博客"><span class="header-section-number">3</span> 创建博客</h2>
+<p>Quarto 官方文档已经把博客项目的初始化步骤写得很清楚，可以直接参考：</p>
 <p><a href="https://quarto.org/docs/websites/website-blog.html" class="uri">https://quarto.org/docs/websites/website-blog.html</a></p>
 </section>
-<section id="发布博客" class="level3" data-number="1.4">
-<h3 data-number="1.4" class="anchored" data-anchor-id="发布博客"><span class="header-section-number">1.4</span> 发布博客</h3>
-<section id="使用-github-pages-发布" class="level4" data-number="1.4.1">
-<h4 data-number="1.4.1" class="anchored" data-anchor-id="使用-github-pages-发布"><span class="header-section-number">1.4.1</span> 使用 <code>github-pages</code> 发布</h4>
-<p>网址前缀如：https://《用户名》.github.io 所示的网址就是使用的<code>github-pages</code>。</p>
+<section id="发布到-github-pages" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="发布到-github-pages"><span class="header-section-number">4</span> 发布到 GitHub Pages</h2>
+<p>网址形如 <code>https://&lt;用户名&gt;.github.io</code> 的站点通常可以直接用 GitHub Pages 托管。</p>
 <ol type="1">
-<li><p>首先在 <code>github</code> 新建一个名称为 <code>https://《用户名》.github.io</code> 的仓库。</p></li>
-<li><p>设置好仓库的<code>pages</code>选项，如下图所示：</p></li>
+<li><p>在 GitHub 新建一个名为 <code>&lt;用户名&gt;.github.io</code> 的仓库。</p></li>
+<li><p>设置仓库的 Pages 选项，如下图所示：</p></li>
 </ol>
-<p><a href="./github.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://liripo.github.io/posts/quarto_blog/github.png" class="img-fluid"></a></p>
+<p><a href="./github.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="https://liripo.github.io/posts/quarto_blog/github.png" class="img-fluid"></a></p>
 <ol start="3" type="1">
-<li>按照上面的步骤，博客项目下会有<code>_quarto.yml</code> 文件，修改下此文件的输出目录。</li>
+<li>修改博客项目下的 <code>_quarto.yml</code>，将输出目录设置为 <code>docs/</code>。</li>
 </ol>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>_quarto.yml</strong></pre>
 </div>
-<div class="sourceCode" id="cb2" data-filename="_quarto.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="ex" style="color: null;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="_quarto.yml" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="ex" style="color: null;
 background-color: null;
 font-style: inherit;">project:</span></span>
 <span id="cb2-2">  <span class="ex" style="color: null;
@@ -2435,23 +3202,23 @@ background-color: null;
 font-style: inherit;">type:</span> website</span>
 <span id="cb2-3">  <span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">output-dir:</span> docs</span></code></pre></div>
+font-style: inherit;">output-dir:</span> docs</span></code></pre></div></div>
 </div>
 <ol start="4" type="1">
-<li>将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：</li>
+<li>在仓库根目录添加 <code>.nojekyll</code> 文件，告诉 GitHub Pages 不要再用 Jekyll 处理已经渲染好的站点。</li>
 </ol>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>terminal</strong></pre>
 </div>
-<div class="sourceCode" id="cb3" data-filename="terminal" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="fu" style="color: #4758AB;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="terminal" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">touch</span> .nojekyll</span></code></pre></div>
+font-style: inherit;">touch</span> .nojekyll</span></code></pre></div></div>
 </div>
 <ol start="5" type="1">
-<li>渲染网站并发布</li>
+<li>渲染网站并发布。</li>
 </ol>
-<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;"># quarto 渲染网站</span></span>
 <span id="cb4-2"><span class="ex" style="color: null;
@@ -2462,15 +3229,15 @@ background-color: null;
 font-style: inherit;"># 使用 git 将渲染好的网站发送到刚刚创建好的仓库中</span></span>
 <span id="cb4-4"><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;">git</span> push</span></code></pre></div>
+font-style: inherit;">git</span> push</span></code></pre></div></div>
 
 
-</section>
-</section>
 </section>
 
  ]]></description>
   <category>quarto</category>
+  <category>blog</category>
+  <category>github-pages</category>
   <guid>https://liripo.github.io/posts/quarto_blog/</guid>
   <pubDate>Mon, 01 Jan 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/quarto_blog/quarto.png" medium="image" type="image/png" height="72" width="144"/>

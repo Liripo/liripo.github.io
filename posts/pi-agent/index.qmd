@@ -1,8 +1,11 @@
 ---
 title: "pi-agent 源码解读"
+subtitle: "一个极简终端编程代理的核心循环、工具系统和扩展机制"
+description: "从源码角度梳理 pi-agent 的三层架构、AgentSession、工具调用、会话存储和扩展系统。"
 author: "Liripo"
 date: "2026-05-29"
-categories: [agent, typescript]
+date-modified: "2026-06-01"
+categories: [agent, typescript, source-reading]
 image: "pi-agent.png"
 ---
 
@@ -330,4 +333,3 @@ pi 会自动加载 `AGENTS.md`（或 `CLAUDE.md`）：
 - 当前目录
 
 所有匹配的文件会连接到系统提示中。
-

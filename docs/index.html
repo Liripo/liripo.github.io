@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
 <title>Blog – Liripo</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -38,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-2fef5ea3f8957b3e4ecc936fc74692ca.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-08799928d293638fe9563d5c5a2794e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -85,7 +88,7 @@ ul.task-list li input[type="checkbox"] {
     const options = {
       valueNames: ['listing-image','listing-date','listing-title','listing-subtitle','listing-categories','listing-author','listing-reading-time',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
+      searchColumns: ["listing-date","listing-title","listing-author","listing-subtitle","listing-image","listing-description","listing-categories"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -105,7 +108,7 @@ ul.task-list li input[type="checkbox"] {
 <script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -118,7 +121,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -349,7 +352,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(6)</span></div><div class="category" data-category="YWdlbnQ=">agent <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2Fkdmlzb3I=">cadvisor <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGFzaA==">dash <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Z3JhZmFuYQ==">grafana <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHJvbWV0aGV1cw==">prometheus <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cXVhcnRv">quarto <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dHlwZXNjcmlwdA==">typescript <span class="quarto-category-count">(1)</span></div><div class="category" data-category="d2Vi">web <span class="quarto-category-count">(3)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(7)</span></div><div class="category" data-category="YWdlbnQ=">agent <span class="quarto-category-count">(2)</span></div><div class="category" data-category="YW5hbHl0aWNz">analytics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YmlvaW5mb3JtYXRpY3M=">bioinformatics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YmlvbW5p">biomni <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YmxvZw==">blog <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2Fkdmlzb3I=">cadvisor <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGFzaA==">dash <span class="quarto-category-count">(2)</span></div><div class="category" data-category="ZG9ja2Vy">docker <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z2l0aHViLXBhZ2Vz">github-pages <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z3JhZmFuYQ==">grafana <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z3Jhbmlhbg==">granian <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Z3VuaWNvcm4=">gunicorn <span class="quarto-category-count">(1)</span></div><div class="category" data-category="b2JzZXJ2YWJpbGl0eQ==">observability <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHJvbWV0aGV1cw==">prometheus <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHl0aG9u">python <span class="quarto-category-count">(3)</span></div><div class="category" data-category="cXVhcnRv">quarto <span class="quarto-category-count">(2)</span></div><div class="category" data-category="c291cmNlLXJlYWRpbmc=">source-reading <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dHlwZXNjcmlwdA==">typescript <span class="quarto-category-count">(1)</span></div><div class="category" data-category="d2Vi">web <span class="quarto-category-count">(3)</span></div></div></div>
 <!-- main -->
 <main class="content column-page-left" id="quarto-document-content">
 
@@ -404,7 +407,44 @@ window.Quarto = {
     </div>
 </div>
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="YWdlbnQlMkN0eXBlc2NyaXB0" data-listing-date-sort="1779984000000" data-listing-file-modified-sort="1780023453809" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="816">
+<div class="quarto-post image-right" data-index="0" data-categories="YWdlbnQlMkNiaW9tbmklMkNweXRob24lMkNiaW9pbmZvcm1hdGljcw==" data-listing-date-sort="1780243200000" data-listing-file-modified-sort="1780287044388" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="9" data-listing-word-count-sort="1691">
+<div class="thumbnail"><a href="./posts/biomni/index.html" class="no-external">
+
+<img loading="lazy" src="./posts/biomni/biomni.png" class="thumbnail-image">
+
+</a></div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./posts/biomni/index.html" class="no-external">Biomni 源码解读</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./posts/biomni/index.html" class="no-external">面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制</a>
+</div>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('YWdlbnQ='); return false;">agent</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmlvbW5p'); return false;">biomni</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">python</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmlvaW5mb3JtYXRpY3M='); return false;">bioinformatics</div>
+
+</div>
+</div>
+<div class="metadata">
+<a href="./posts/biomni/index.html" class="no-external">
+<div class="listing-date">
+Jun 1, 2026
+</div>
+<div class="listing-author">
+Liripo
+</div>
+<div class="listing-reading-time">9 min</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="1" data-categories="YWdlbnQlMkN0eXBlc2NyaXB0JTJDc291cmNlLXJlYWRpbmc=" data-listing-date-sort="1779984000000" data-listing-file-modified-sort="1780287044254" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="5" data-listing-word-count-sort="816">
 <div class="thumbnail"><a href="./posts/pi-agent/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/pi-agent/pi-agent.png" class="thumbnail-image">
@@ -415,13 +455,15 @@ window.Quarto = {
 <a href="./posts/pi-agent/index.html" class="no-external">pi-agent 源码解读</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/pi-agent/index.html" class="no-external"></a>
+<a href="./posts/pi-agent/index.html" class="no-external">一个极简终端编程代理的核心循环、工具系统和扩展机制</a>
 </div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('YWdlbnQ='); return false;">agent</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('dHlwZXNjcmlwdA=='); return false;">typescript</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c291cmNlLXJlYWRpbmc='); return false;">source-reading</div>
 
 </div>
 </div>
@@ -437,22 +479,26 @@ Liripo
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="d2Vi" data-listing-date-sort="1718467200000" data-listing-file-modified-sort="1780023195238" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="27">
+<div class="quarto-post image-right" data-index="2" data-categories="d2ViJTJDYW5hbHl0aWNzJTJDcXVhcnRv" data-listing-date-sort="1718467200000" data-listing-file-modified-sort="1780287024215" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="1" data-listing-word-count-sort="63">
 <div class="thumbnail"><a href="./posts/umami/index.html" class="no-external">
 
-<img loading="lazy" src="https://umami.is/images/app.jpg" class="thumbnail-image">
+<img loading="lazy" src="./posts/umami/app.jpg" class="thumbnail-image">
 
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/umami/index.html" class="no-external">Umami 分析网站访客</a>
+<a href="./posts/umami/index.html" class="no-external">用 Umami 分析网站访客</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/umami/index.html" class="no-external"></a>
+<a href="./posts/umami/index.html" class="no-external">给 Quarto 博客接入一个轻量、隐私友好的访问统计</a>
 </div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('d2Vi'); return false;">web</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YW5hbHl0aWNz'); return false;">analytics</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cXVhcnRv'); return false;">quarto</div>
 
 </div>
 </div>
@@ -468,7 +514,7 @@ Liripo
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="Y2Fkdmlzb3IlMkNwcm9tZXRoZXVzJTJDZ3JhZmFuYQ==" data-listing-date-sort="1718467200000" data-listing-file-modified-sort="1780019563841" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="215">
+<div class="quarto-post image-right" data-index="3" data-categories="Y2Fkdmlzb3IlMkNwcm9tZXRoZXVzJTJDZ3JhZmFuYSUyQ2RvY2tlciUyQ29ic2VydmFiaWxpdHk=" data-listing-date-sort="1718467200000" data-listing-file-modified-sort="1780287044119" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="2" data-listing-word-count-sort="215">
 <div class="thumbnail"><a href="./posts/容器资源监控/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/容器资源监控/cadvisor.png" class="thumbnail-image">
@@ -476,10 +522,10 @@ Liripo
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/容器资源监控/index.html" class="no-external">cadvisor + prometheus + grafana 容器资源监控</a>
+<a href="./posts/容器资源监控/index.html" class="no-external">cAdvisor + Prometheus + Grafana 容器资源监控</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/容器资源监控/index.html" class="no-external"></a>
+<a href="./posts/容器资源监控/index.html" class="no-external">用一套轻量监控链路观察 Docker 容器资源消耗</a>
 </div>
 <div class="listing-categories">
 
@@ -488,6 +534,10 @@ Liripo
 <div class="listing-category" onclick="window.quartoListingCategory('cHJvbWV0aGV1cw=='); return false;">prometheus</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('Z3JhZmFuYQ=='); return false;">grafana</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZG9ja2Vy'); return false;">docker</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('b2JzZXJ2YWJpbGl0eQ=='); return false;">observability</div>
 
 </div>
 </div>
@@ -503,7 +553,7 @@ Liripo
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="ZGFzaCUyQ3dlYg==" data-listing-date-sort="1718380800000" data-listing-file-modified-sort="1780019563830" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1439">
+<div class="quarto-post image-right" data-index="4" data-categories="ZGFzaCUyQ3dlYiUyQ3B5dGhvbiUyQ2dyYW5pYW4=" data-listing-date-sort="1718380800000" data-listing-file-modified-sort="1780287091000" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="8" data-listing-word-count-sort="1441">
 <div class="thumbnail"><a href="./posts/granian_dash/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/granian_dash/granian.png" class="thumbnail-image">
@@ -511,16 +561,20 @@ Liripo
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/granian_dash/index.html" class="no-external">granian 部署 dash 生产环境</a>
+<a href="./posts/granian_dash/index.html" class="no-external">用 Granian 部署 Dash 生产环境</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/granian_dash/index.html" class="no-external"></a>
+<a href="./posts/granian_dash/index.html" class="no-external">用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启</a>
 </div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('ZGFzaA=='); return false;">dash</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('d2Vi'); return false;">web</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">python</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Z3Jhbmlhbg=='); return false;">granian</div>
 
 </div>
 </div>
@@ -536,7 +590,7 @@ Liripo
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="ZGFzaCUyQ3dlYg==" data-listing-date-sort="1718380800000" data-listing-file-modified-sort="1780019563833" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="212">
+<div class="quarto-post image-right" data-index="5" data-categories="ZGFzaCUyQ3dlYiUyQ3B5dGhvbiUyQ2d1bmljb3Ju" data-listing-date-sort="1718380800000" data-listing-file-modified-sort="1780287091164" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="2" data-listing-word-count-sort="213">
 <div class="thumbnail"><a href="./posts/gunicorn_dash/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/gunicorn_dash/dash.jpg" class="thumbnail-image">
@@ -544,16 +598,20 @@ Liripo
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/gunicorn_dash/index.html" class="no-external">gunicorn 部署 dash 生产环境</a>
+<a href="./posts/gunicorn_dash/index.html" class="no-external">用 Gunicorn 部署 Dash 生产环境</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/gunicorn_dash/index.html" class="no-external"></a>
+<a href="./posts/gunicorn_dash/index.html" class="no-external">Dash 应用的多进程启动、配置文件和常用信号</a>
 </div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('ZGFzaA=='); return false;">dash</div>
 
 <div class="listing-category" onclick="window.quartoListingCategory('d2Vi'); return false;">web</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHl0aG9u'); return false;">python</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Z3VuaWNvcm4='); return false;">gunicorn</div>
 
 </div>
 </div>
@@ -569,7 +627,7 @@ Liripo
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="cXVhcnRv" data-listing-date-sort="1704124800000" data-listing-file-modified-sort="1780019563836" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="90">
+<div class="quarto-post image-right" data-index="6" data-categories="cXVhcnRvJTJDYmxvZyUyQ2dpdGh1Yi1wYWdlcw==" data-listing-date-sort="1704124800000" data-listing-file-modified-sort="1780286969871" data-listing-date-modified-sort="1780243200000" data-listing-reading-time-sort="1" data-listing-word-count-sort="102">
 <div class="thumbnail"><a href="./posts/quarto_blog/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/quarto_blog/quarto.png" class="thumbnail-image">
@@ -577,14 +635,18 @@ Liripo
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/quarto_blog/index.html" class="no-external">quarto 创建博客</a>
+<a href="./posts/quarto_blog/index.html" class="no-external">用 Quarto 创建个人博客</a>
 </h3>
 <div class="listing-subtitle">
-<a href="./posts/quarto_blog/index.html" class="no-external"></a>
+<a href="./posts/quarto_blog/index.html" class="no-external">从安装、初始化到 GitHub Pages 发布的最小路径</a>
 </div>
 <div class="listing-categories">
 
 <div class="listing-category" onclick="window.quartoListingCategory('cXVhcnRv'); return false;">quarto</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmxvZw=='); return false;">blog</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Z2l0aHViLXBhZ2Vz'); return false;">github-pages</div>
 
 </div>
 </div>
@@ -667,13 +729,14 @@ Liripo
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

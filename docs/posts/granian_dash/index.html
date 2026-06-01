@@ -2,15 +2,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Liripo">
 <meta name="dcterms.date" content="2024-06-15">
+<meta name="description" content="记录 Granian 部署 Dash 应用的最小配置、启动命令、热重载方式和常用参数。">
 
-<title>granian 部署 dash 生产环境 – Liripo</title>
+<title>用 Granian 部署 Dash 生产环境 – Liripo</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -73,14 +77,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-2fef5ea3f8957b3e4ecc936fc74692ca.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-08799928d293638fe9563d5c5a2794e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/quarto-contrib/line-highlight-1.0.0/line-highlight.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
@@ -325,10 +329,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">granian 部署 dash 生产环境</h1>
-                                <div class="quarto-categories">
+      <h1 class="title">用 Granian 部署 Dash 生产环境</h1>
+            <p class="subtitle lead">用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启</p>
+                  <div>
+        <div class="description">
+          记录 Granian 部署 Dash 应用的最小配置、启动命令、热重载方式和常用参数。
+        </div>
+      </div>
+                          <div class="quarto-categories">
                 <div class="quarto-category">dash</div>
                 <div class="quarto-category">web</div>
+                <div class="quarto-category">python</div>
+                <div class="quarto-category">granian</div>
               </div>
                   </div>
   </div>
@@ -350,6 +362,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
     </div>
     
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">June 1, 2026</p>
+      </div>
+    </div>
       
     </div>
     
@@ -362,10 +380,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#使用-granian-部署-dash" id="toc-使用-granian-部署-dash" class="nav-link active" data-scroll-target="#使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 granian 部署 dash</a>
+  <li><a href="#使用-granian-部署-dash" id="toc-使用-granian-部署-dash" class="nav-link active" data-scroll-target="#使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 Granian 部署 Dash</a></li>
+  <li><a href="#热重载应用程序" id="toc-热重载应用程序" class="nav-link" data-scroll-target="#热重载应用程序"><span class="header-section-number">2</span> 热重载应用程序</a>
   <ul class="collapse">
-  <li><a href="#热重载应用程序" id="toc-热重载应用程序" class="nav-link" data-scroll-target="#热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</a></li>
-  <li><a href="#granian-帮助文档" id="toc-granian-帮助文档" class="nav-link" data-scroll-target="#granian-帮助文档"><span class="header-section-number">1.2</span> granian 帮助文档</a></li>
+  <li><a href="#granian-帮助文档" id="toc-granian-帮助文档" class="nav-link" data-scroll-target="#granian-帮助文档"><span class="header-section-number">2.1</span> granian 帮助文档</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -379,19 +397,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <section id="使用-granian-部署-dash" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 <a href="https://github.com/emmett-framework/granian">granian</a> 部署 dash</h2>
-<blockquote class="blockquote">
-<p>相比使用 gunicorn 部署 dash 应用，具有更好的性能。性能比较文档：<a href="https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md" class="uri">https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md</a></p>
-</blockquote>
+<h2 data-number="1" class="anchored" data-anchor-id="使用-granian-部署-dash"><span class="header-section-number">1</span> 使用 <a href="https://github.com/emmett-framework/granian">Granian</a> 部署 Dash</h2>
+<p>相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：<a href="https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md" class="uri">https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md</a>。</p>
 <ol type="1">
-<li>下载 <a href="https://github.com/emmett-framework/granian">granian</a></li>
+<li>安装 <a href="https://github.com/emmett-framework/granian">Granian</a></li>
 </ol>
-<div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">pip</span> install granian</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">pip</span> install granian</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ol start="2" type="1">
-<li>dash 示例代码</li>
+<li>Dash 示例代码</li>
 </ol>
-<div id="0f481b03" class="cell" data-source-line-numbers="10" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">import</span> dash</span>
+<div id="6605f2f9" class="cell" data-source-line-numbers="10" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">import</span> dash</span>
 <span id="cb2-2"><a href="#cb2-2"></a><span class="im">from</span> dash <span class="im">import</span> html</span>
 <span id="cb2-3"><a href="#cb2-3"></a></span>
 <span id="cb2-4"><a href="#cb2-4"></a>app <span class="op">=</span> dash.Dash(<span class="va">__name__</span>)</span>
@@ -400,15 +416,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7"></a>    html.H1(<span class="st">"Dash 示例"</span>),</span>
 <span id="cb2-8"><a href="#cb2-8"></a>])</span>
 <span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a>server <span class="op">=</span> app.server <span class="co"># 这行代码需要包含</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a>server <span class="op">=</span> app.server <span class="co"># Granian 通过这个 WSGI server 对象启动应用</span></span>
 <span id="cb2-11"><a href="#cb2-11"></a></span>
 <span id="cb2-12"><a href="#cb2-12"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">'__main__'</span>:</span>
-<span id="cb2-13"><a href="#cb2-13"></a>    app.run_server(debug<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-13"><a href="#cb2-13"></a>    app.run_server(debug<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<ol start="2" type="1">
+<ol start="3" type="1">
 <li>启动程序</li>
 </ol>
-<div class="sourceCode" id="cb3" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">granian</span> <span class="at">--interface</span> wsgi <span class="at">--workers</span> 4 app:server</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">granian</span> <span class="at">--interface</span> wsgi <span class="at">--workers</span> 4 app:server</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -419,21 +435,21 @@ Tip
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>–interface 参数用于指定应用程序接口类型，如服务器网关接口（WSGI）或异步服务器网关接口（ASGI）来运行。通常 <code>flask</code> 或者 <code>Django</code> 使用 wsgi，而 <code>starlette</code> 或 <code>fastapi</code> 构建的应用使用 asgi。</p>
+<p><code>--interface</code> 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 <code>wsgi</code>；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 <code>asgi</code>。</p>
 </div>
 </div>
-<section id="热重载应用程序" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">1.1</span> 热重载应用程序</h3>
+</section>
+<section id="热重载应用程序" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="热重载应用程序"><span class="header-section-number">2</span> 热重载应用程序</h2>
 <p>想要自己重启 <code>granian</code>，可以向 <code>granian</code> 主进程发送HUP信号，这会导致 <code>granian</code> 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）</p>
 <ol type="1">
 <li>查找主进程 pid</li>
 </ol>
-<div class="sourceCode" id="cb4" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">ps</span> axjf <span class="kw">|</span> <span class="fu">grep</span> granian</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb5" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="bu">kill</span> <span class="at">-HUP</span> 1674</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="granian-帮助文档" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="granian-帮助文档"><span class="header-section-number">1.2</span> granian 帮助文档</h3>
-<div class="sourceCode" id="cb6" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">使用方式:</span> granian <span class="pp">[</span><span class="ss">选项</span><span class="pp">]</span> APP</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">ps</span> axjf <span class="kw">|</span> <span class="fu">grep</span> granian</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a><span class="bu">kill</span> <span class="at">-HUP</span> 1674</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="granian-帮助文档" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="granian-帮助文档"><span class="header-section-number">2.1</span> granian 帮助文档</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-code-line-numbers=""><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">使用方式:</span> granian <span class="pp">[</span><span class="ss">选项</span><span class="pp">]</span> APP</span>
 <span id="cb6-2"><a href="#cb6-2"></a></span>
 <span id="cb6-3"><a href="#cb6-3"></a>  <span class="ex">APP</span>  服务的应用目标。<span class="pp">[</span><span class="ss">必需</span><span class="pp">]</span></span>
 <span id="cb6-4"><a href="#cb6-4"></a></span>
@@ -499,7 +515,7 @@ Tip
 <span id="cb6-64"><a href="#cb6-64"></a>                                  <span class="ex">[环境变量:</span> GRANIAN_RELOAD<span class="kw">;</span> <span class="ex">默认:</span> <span class="er">(</span><span class="ex">禁用</span><span class="kw">)</span><span class="ex">]</span></span>
 <span id="cb6-65"><a href="#cb6-65"></a>  <span class="ex">--process-name</span> TEXT             设置进程的自定义名称（需要granian<span class="pp">[</span><span class="ss">pname</span><span class="pp">]</span>额外配置）  [环境变量: GRANIAN_PROCESS_NAME]</span>
 <span id="cb6-66"><a href="#cb6-66"></a>  <span class="ex">--version</span>                       显示版本并退出。</span>
-<span id="cb6-67"><a href="#cb6-67"></a>  <span class="ex">--help</span>                          显示这条帮助信息并退出。</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-67"><a href="#cb6-67"></a>  <span class="ex">--help</span>                          显示这条帮助信息并退出。</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
@@ -570,13 +586,14 @@ Tip
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

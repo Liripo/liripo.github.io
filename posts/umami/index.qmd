@@ -1,18 +1,25 @@
 ---
-title: "Umami 分析网站访客"
+title: "用 Umami 分析网站访客"
+subtitle: "给 Quarto 博客接入一个轻量、隐私友好的访问统计"
+description: "介绍如何在网站中接入 Umami Cloud，并把追踪脚本放入 Quarto 的站点配置。"
 author: "Liripo"
 date: "2024-06-16"
-categories: [web]
+date-modified: "2026-06-01"
+categories: [web, analytics, quarto]
 image: "app.jpg"
 ---
 
-## **Umami Cloud 监控网站**
+## Umami Cloud
 
 ![](https://umami.is/images/app.jpg)
 
-如上图所示，我们可以通过 `Umami Cloud` 分析网站访客。
+如果只是给个人博客看访问趋势，`Umami Cloud` 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。
 
-> `Umami Cloud`免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，`Umami` 也支持本地部署。
+::: {.callout-note}
+如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。
+:::
+
+## 接入步骤
 
 1.  注册`Umami Cloud`, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；
 2.  给要分析的网站，增加追踪代码：
@@ -22,3 +29,15 @@ image: "app.jpg"
 ```
 
 上面代码`data-website-id='*'`记得改为对应的追踪 `id`。
+
+## 放到 Quarto 配置中
+
+对 Quarto 网站来说，可以把脚本放到 `_quarto.yml` 的 `include-in-header` 中，这样每个页面都会自动带上统计脚本：
+
+```yaml
+format:
+  html:
+    include-in-header:
+      - text: |
+          <script defer src="https://cloud.umami.is/script.js" data-website-id="你的站点 ID"></script>
+```

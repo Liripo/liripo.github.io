@@ -2,15 +2,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Liripo">
 <meta name="dcterms.date" content="2024-01-02">
+<meta name="description" content="记录使用 Quarto 搭建个人博客、配置 docs 输出目录，并发布到 GitHub Pages 的完整流程。">
 
-<title>quarto 创建博客 – Liripo</title>
+<title>用 Quarto 创建个人博客 – Liripo</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -73,14 +77,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-2fef5ea3f8957b3e4ecc936fc74692ca.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-08799928d293638fe9563d5c5a2794e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
@@ -327,9 +331,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">quarto 创建博客</h1>
-                                <div class="quarto-categories">
+      <h1 class="title">用 Quarto 创建个人博客</h1>
+            <p class="subtitle lead">从安装、初始化到 GitHub Pages 发布的最小路径</p>
+                  <div>
+        <div class="description">
+          记录使用 Quarto 搭建个人博客、配置 docs 输出目录，并发布到 GitHub Pages 的完整流程。
+        </div>
+      </div>
+                          <div class="quarto-categories">
                 <div class="quarto-category">quarto</div>
+                <div class="quarto-category">blog</div>
+                <div class="quarto-category">github-pages</div>
               </div>
                   </div>
   </div>
@@ -351,6 +363,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
     </div>
     
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">June 1, 2026</p>
+      </div>
+    </div>
       
     </div>
     
@@ -363,13 +381,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#使用-quarto-创建自己的博客" id="toc-使用-quarto-创建自己的博客" class="nav-link active" data-scroll-target="#使用-quarto-创建自己的博客"><span class="header-section-number">1</span> 使用 quarto 创建自己的博客</a>
-  <ul class="collapse">
-  <li><a href="#quarto的简单介绍" id="toc-quarto的简单介绍" class="nav-link" data-scroll-target="#quarto的简单介绍"><span class="header-section-number">1.1</span> quarto的简单介绍</a></li>
-  <li><a href="#安装-quarto" id="toc-安装-quarto" class="nav-link" data-scroll-target="#安装-quarto"><span class="header-section-number">1.2</span> 安装 quarto</a></li>
-  <li><a href="#quarto-创建-blog的详细步骤" id="toc-quarto-创建-blog的详细步骤" class="nav-link" data-scroll-target="#quarto-创建-blog的详细步骤"><span class="header-section-number">1.3</span> quarto 创建 blog的详细步骤</a></li>
-  <li><a href="#发布博客" id="toc-发布博客" class="nav-link" data-scroll-target="#发布博客"><span class="header-section-number">1.4</span> 发布博客</a></li>
-  </ul></li>
+  <li><a href="#简介" id="toc-简介" class="nav-link active" data-scroll-target="#简介"><span class="header-section-number">1</span> 简介</a></li>
+  <li><a href="#安装-quarto" id="toc-安装-quarto" class="nav-link" data-scroll-target="#安装-quarto"><span class="header-section-number">2</span> 安装 Quarto</a></li>
+  <li><a href="#创建博客" id="toc-创建博客" class="nav-link" data-scroll-target="#创建博客"><span class="header-section-number">3</span> 创建博客</a></li>
+  <li><a href="#发布到-github-pages" id="toc-发布到-github-pages" class="nav-link" data-scroll-target="#发布到-github-pages"><span class="header-section-number">4</span> 发布到 GitHub Pages</a></li>
   </ul>
 </nav>
     </div>
@@ -381,76 +396,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<section id="使用-quarto-创建自己的博客" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="使用-quarto-创建自己的博客"><span class="header-section-number">1</span> 使用 quarto 创建自己的博客</h2>
-<section id="quarto的简单介绍" class="level3" data-number="1.1">
-<h3 data-number="1.1" class="anchored" data-anchor-id="quarto的简单介绍"><span class="header-section-number">1.1</span> quarto的简单介绍</h3>
-<p><a href="https://quarto.org/">Quarto®</a> 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。</p>
+<section id="简介" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="简介"><span class="header-section-number">1</span> 简介</h2>
+<p><a href="https://quarto.org/">Quarto</a> 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。</p>
+<p>这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 <code>docs/</code>，最后交给 GitHub Pages 发布。</p>
 </section>
-<section id="安装-quarto" class="level3" data-number="1.2">
-<h3 data-number="1.2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">1.2</span> 安装 quarto</h3>
+<section id="安装-quarto" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="安装-quarto"><span class="header-section-number">2</span> 安装 Quarto</h2>
 <p>这里推荐两个选择：</p>
 <ol type="1">
-<li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a> 介绍下载安装即可。</p></li>
-<li><p>选择一个带 <code>quarto</code> 的 <code>docker</code> 镜像，我比较喜欢使用的是 <a href="https://rocker-project.org/images/versioned/rstudio.html">rocker</a> 项目的 <code>tidyverse</code>镜像。<code>tidyverse</code>镜像的基础镜像是<code>rstudio</code> 镜像，而目前新版本的<code>rstudio</code> 都会包含 <code>quarto</code> 软件。</p></li>
+<li><p>按照<a href="https://quarto.org/docs/get-started/">官网</a>介绍下载安装。</p></li>
+<li><p>使用带 <code>quarto</code> 的 Docker 镜像。我比较喜欢 <a href="https://rocker-project.org/images/versioned/rstudio.html">rocker</a> 项目的 <code>tidyverse</code> 镜像，它基于 RStudio 镜像，适合作为 R 相关开发的基础环境。</p></li>
 </ol>
 <blockquote class="blockquote">
 <p>ps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。</p>
 </blockquote>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># pull 镜像</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># pull 镜像</span></span>
 <span id="cb1-2"><a href="#cb1-2"></a>docker pull rocker<span class="sc">/</span>tidyverse<span class="sc">:</span>latest</span>
 <span id="cb1-3"><a href="#cb1-3"></a><span class="co"># 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a>docker run <span class="sc">-</span>d <span class="sc">-</span>ti <span class="sc">-</span>p <span class="dv">8787</span><span class="sc">:</span><span class="dv">8787</span> <span class="sc">-</span>e ROOT<span class="ot">=</span><span class="cn">TRUE</span> <span class="sc">-</span>e PASSWORD<span class="ot">=</span>《你的密码》 <span class="sc">-</span>v 《本地路径，可以整个D盘》<span class="sc">:</span>《镜像目录》 rocker<span class="sc">/</span>tidyverse</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>这样，你就可以直接打开浏览器，输入网址 <a href="localhost:8787">localhost:8787</a> 开启 Rstudio IDE。 默认用户名：rstudio <img src="./rstudio.png" class="img-fluid"></p>
+<span id="cb1-4"><a href="#cb1-4"></a>docker run <span class="sc">-</span>d <span class="sc">-</span>ti <span class="sc">-</span>p <span class="dv">8787</span><span class="sc">:</span><span class="dv">8787</span> <span class="sc">-</span>e ROOT<span class="ot">=</span><span class="cn">TRUE</span> <span class="sc">-</span>e PASSWORD<span class="ot">=</span>《你的密码》 <span class="sc">-</span>v 《本地路径，可以整个D盘》<span class="sc">:</span>《镜像目录》 rocker<span class="sc">/</span>tidyverse</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>这样就可以打开浏览器，访问 <a href="http://localhost:8787" class="uri">http://localhost:8787</a> 进入 RStudio IDE。默认用户名是 <code>rstudio</code>。</p>
+<p><a href="./rstudio.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="./rstudio.png" class="img-fluid"></a></p>
 </section>
-<section id="quarto-创建-blog的详细步骤" class="level3" data-number="1.3">
-<h3 data-number="1.3" class="anchored" data-anchor-id="quarto-创建-blog的详细步骤"><span class="header-section-number">1.3</span> quarto 创建 blog的详细步骤</h3>
-<blockquote class="blockquote">
-<p>没什么资源比官网的步骤更详细了</p>
-</blockquote>
+<section id="创建博客" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="创建博客"><span class="header-section-number">3</span> 创建博客</h2>
+<p>Quarto 官方文档已经把博客项目的初始化步骤写得很清楚，可以直接参考：</p>
 <p><a href="https://quarto.org/docs/websites/website-blog.html" class="uri">https://quarto.org/docs/websites/website-blog.html</a></p>
 </section>
-<section id="发布博客" class="level3" data-number="1.4">
-<h3 data-number="1.4" class="anchored" data-anchor-id="发布博客"><span class="header-section-number">1.4</span> 发布博客</h3>
-<section id="使用-github-pages-发布" class="level4" data-number="1.4.1">
-<h4 data-number="1.4.1" class="anchored" data-anchor-id="使用-github-pages-发布"><span class="header-section-number">1.4.1</span> 使用 <code>github-pages</code> 发布</h4>
-<p>网址前缀如：https://《用户名》.github.io 所示的网址就是使用的<code>github-pages</code>。</p>
+<section id="发布到-github-pages" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="发布到-github-pages"><span class="header-section-number">4</span> 发布到 GitHub Pages</h2>
+<p>网址形如 <code>https://&lt;用户名&gt;.github.io</code> 的站点通常可以直接用 GitHub Pages 托管。</p>
 <ol type="1">
-<li><p>首先在 <code>github</code> 新建一个名称为 <code>https://《用户名》.github.io</code> 的仓库。</p></li>
-<li><p>设置好仓库的<code>pages</code>选项，如下图所示：</p></li>
+<li><p>在 GitHub 新建一个名为 <code>&lt;用户名&gt;.github.io</code> 的仓库。</p></li>
+<li><p>设置仓库的 Pages 选项，如下图所示：</p></li>
 </ol>
-<p><a href="./github.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="./github.png" class="img-fluid"></a></p>
+<p><a href="./github.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="./github.png" class="img-fluid"></a></p>
 <ol start="3" type="1">
-<li>按照上面的步骤，博客项目下会有<code>_quarto.yml</code> 文件，修改下此文件的输出目录。</li>
+<li>修改博客项目下的 <code>_quarto.yml</code>，将输出目录设置为 <code>docs/</code>。</li>
 </ol>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>_quarto.yml</strong></pre>
 </div>
-<div class="sourceCode" id="cb2" data-filename="_quarto.yml"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">project:</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="_quarto.yml"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">project:</span></span>
 <span id="cb2-2"><a href="#cb2-2"></a>  <span class="ex">type:</span> website</span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="ex">output-dir:</span> docs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="ex">output-dir:</span> docs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol start="4" type="1">
-<li>将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：</li>
+<li>在仓库根目录添加 <code>.nojekyll</code> 文件，告诉 GitHub Pages 不要再用 Jekyll 处理已经渲染好的站点。</li>
 </ol>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>terminal</strong></pre>
 </div>
-<div class="sourceCode" id="cb3" data-filename="terminal"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">touch</span> .nojekyll</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="terminal"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">touch</span> .nojekyll</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol start="5" type="1">
-<li>渲染网站并发布</li>
+<li>渲染网站并发布。</li>
 </ol>
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># quarto 渲染网站</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># quarto 渲染网站</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="ex">quarto</span> render</span>
 <span id="cb4-3"><a href="#cb4-3"></a><span class="co"># 使用 git 将渲染好的网站发送到刚刚创建好的仓库中</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="fu">git</span> push</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="fu">git</span> push</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
-</section>
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -518,13 +527,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

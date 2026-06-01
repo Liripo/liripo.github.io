@@ -1,26 +1,29 @@
 ---
-title: "granian 部署 dash 生产环境"
+title: "用 Granian 部署 Dash 生产环境"
+subtitle: "用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启"
+description: "记录 Granian 部署 Dash 应用的最小配置、启动命令、热重载方式和常用参数。"
 author: "Liripo"
 date: "2024-06-15"
-categories: [dash,web]
+date-modified: "2026-06-01"
+categories: [dash, web, python, granian]
 image: "granian.png"
 filters:
   - line-highlight
 ---
 
-## 使用 [granian](https://github.com/emmett-framework/granian) 部署 dash
+## 使用 [Granian](https://github.com/emmett-framework/granian) 部署 Dash
 
-> 相比使用 gunicorn 部署 dash 应用，具有更好的性能。性能比较文档：<https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md>
+相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：<https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md>。
 
 
-1. 下载 [granian](https://github.com/emmett-framework/granian)
+1. 安装 [Granian](https://github.com/emmett-framework/granian)
 
 ```bash
 pip install granian
 ```
 
 
-2. dash 示例代码
+2. Dash 示例代码
 
 ```{python}
 #| eval: false
@@ -34,24 +37,24 @@ app.layout = html.Div([
     html.H1("Dash 示例"),
 ])
 
-server = app.server # 这行代码需要包含
+server = app.server # Granian 通过这个 WSGI server 对象启动应用
 
 if __name__ == '__main__':
     app.run_server(debug=True)
 ```
 
 
-2. 启动程序
+3. 启动程序
 
 ```bash
 granian --interface wsgi --workers 4 app:server
 ```
 
 ::: {.callout-tip}
---interface 参数用于指定应用程序接口类型，如服务器网关接口（WSGI）或异步服务器网关接口（ASGI）来运行。通常 `flask` 或者 `Django` 使用 wsgi，而 `starlette` 或 `fastapi` 构建的应用使用 asgi。
+`--interface` 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 `wsgi`；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 `asgi`。
 :::
 
-### 热重载应用程序
+## 热重载应用程序
 
 想要自己重启 `granian`，可以向 `granian` 主进程发送HUP信号，这会导致 `granian` 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）
 

@@ -2,15 +2,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Liripo">
 <meta name="dcterms.date" content="2024-06-16">
+<meta name="description" content="介绍如何在网站中接入 Umami Cloud，并把追踪脚本放入 Quarto 的站点配置。">
 
-<title>Umami 分析网站访客 – Liripo</title>
+<title>用 Umami 分析网站访客 – Liripo</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -21,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -38,14 +77,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-2fef5ea3f8957b3e4ecc936fc74692ca.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-08799928d293638fe9563d5c5a2794e5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-dfb324f25d9b1687192fa8be62ac8f9c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
@@ -292,9 +331,17 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Umami 分析网站访客</h1>
-                                <div class="quarto-categories">
+      <h1 class="title">用 Umami 分析网站访客</h1>
+            <p class="subtitle lead">给 Quarto 博客接入一个轻量、隐私友好的访问统计</p>
+                  <div>
+        <div class="description">
+          介绍如何在网站中接入 Umami Cloud，并把追踪脚本放入 Quarto 的站点配置。
+        </div>
+      </div>
+                          <div class="quarto-categories">
                 <div class="quarto-category">web</div>
+                <div class="quarto-category">analytics</div>
+                <div class="quarto-category">quarto</div>
               </div>
                   </div>
   </div>
@@ -316,6 +363,12 @@ ul.task-list li input[type="checkbox"] {
       </div>
     </div>
     
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">June 1, 2026</p>
+      </div>
+    </div>
       
     </div>
     
@@ -328,7 +381,9 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#umami-cloud-监控网站" id="toc-umami-cloud-监控网站" class="nav-link active" data-scroll-target="#umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></a></li>
+  <li><a href="#umami-cloud" id="toc-umami-cloud" class="nav-link active" data-scroll-target="#umami-cloud"><span class="header-section-number">1</span> Umami Cloud</a></li>
+  <li><a href="#接入步骤" id="toc-接入步骤" class="nav-link" data-scroll-target="#接入步骤"><span class="header-section-number">2</span> 接入步骤</a></li>
+  <li><a href="#放到-quarto-配置中" id="toc-放到-quarto-配置中" class="nav-link" data-scroll-target="#放到-quarto-配置中"><span class="header-section-number">3</span> 放到 Quarto 配置中</a></li>
   </ul>
 </nav>
     </div>
@@ -340,19 +395,41 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<section id="umami-cloud-监控网站" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud-监控网站"><span class="header-section-number">1</span> <strong>Umami Cloud 监控网站</strong></h2>
+<section id="umami-cloud" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="umami-cloud"><span class="header-section-number">1</span> Umami Cloud</h2>
 <p><a href="https://umami.is/images/app.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="https://umami.is/images/app.jpg" class="img-fluid"></a></p>
-<p>如上图所示，我们可以通过 <code>Umami Cloud</code> 分析网站访客。</p>
-<blockquote class="blockquote">
-<p><code>Umami Cloud</code>免费套餐可以监控三个网站，10k/mouth 的访客数，对于博客，完全够用了。如果不够用的，<code>Umami</code> 也支持本地部署。</p>
-</blockquote>
+<p>如果只是给个人博客看访问趋势，<code>Umami Cloud</code> 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。</p>
+</div>
+</div>
+</section>
+<section id="接入步骤" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="接入步骤"><span class="header-section-number">2</span> 接入步骤</h2>
 <ol type="1">
 <li>注册<code>Umami Cloud</code>, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；</li>
 <li>给要分析的网站，增加追踪代码：</li>
 </ol>
 <pre><code>&lt;script defer src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"&gt;&lt;/script&gt;</code></pre>
 <p>上面代码<code>data-website-id='*'</code>记得改为对应的追踪 <code>id</code>。</p>
+</section>
+<section id="放到-quarto-配置中" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="放到-quarto-配置中"><span class="header-section-number">3</span> 放到 Quarto 配置中</h2>
+<p>对 Quarto 网站来说，可以把脚本放到 <code>_quarto.yml</code> 的 <code>include-in-header</code> 中，这样每个页面都会自动带上统计脚本：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">format</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="at">  </span><span class="fu">html</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="at">    </span><span class="fu">include-in-header</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">      - </span><span class="fu">text</span><span class="kw">:</span><span class="at"> </span><span class="ch">|</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>          &lt;script defer src="https://cloud.umami.is/script.js" data-website-id="你的站点 ID"&gt;&lt;/script&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
@@ -422,13 +499,14 @@ ul.task-list li input[type="checkbox"] {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

@@ -1,8 +1,11 @@
 ---
-title: "cadvisor + prometheus + grafana 容器资源监控"
+title: "cAdvisor + Prometheus + Grafana 容器资源监控"
+subtitle: "用一套轻量监控链路观察 Docker 容器资源消耗"
+description: "记录 cAdvisor、Prometheus 和 Grafana 的 Docker 部署方式，以及如何导入仪表盘查看容器 CPU、内存、网络和 IO 指标。"
 author: "Liripo"
 date: "2024-06-16"
-categories: [cadvisor,prometheus,grafana]
+date-modified: "2026-06-01"
+categories: [cadvisor, prometheus, grafana, docker, observability]
 image: "cadvisor.png"
 ---
 

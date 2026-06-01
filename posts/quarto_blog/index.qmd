@@ -1,24 +1,27 @@
 ---
-title: "quarto 创建博客"
+title: "用 Quarto 创建个人博客"
+subtitle: "从安装、初始化到 GitHub Pages 发布的最小路径"
+description: "记录使用 Quarto 搭建个人博客、配置 docs 输出目录，并发布到 GitHub Pages 的完整流程。"
 author: "Liripo"
 date: "2024-01-02"
-categories: [quarto]
+date-modified: "2026-06-01"
+categories: [quarto, blog, github-pages]
 image: "quarto.png"
 ---
 
-## 使用 quarto 创建自己的博客
+## 简介
 
-### quarto的简单介绍
+[Quarto](https://quarto.org/) 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。
 
-[Quarto®](https://quarto.org/) 是在一款建立在pandoc上的开源的科学与技术排版系统，可以进行包含Python、R 、Julia、或 bash 等代码的自动化报告工作。
+这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 `docs/`，最后交给 GitHub Pages 发布。
 
-### 安装 quarto
+## 安装 Quarto
 
 这里推荐两个选择：
 
-1. 按照[官网](https://quarto.org/docs/get-started/) 介绍下载安装即可。
+1. 按照[官网](https://quarto.org/docs/get-started/)介绍下载安装。
 
-2. 选择一个带 `quarto` 的 `docker` 镜像，我比较喜欢使用的是 [rocker](https://rocker-project.org/images/versioned/rstudio.html) 项目的 `tidyverse`镜像。`tidyverse`镜像的基础镜像是`rstudio` 镜像，而目前新版本的`rstudio` 都会包含 `quarto` 软件。
+2. 使用带 `quarto` 的 Docker 镜像。我比较喜欢 [rocker](https://rocker-project.org/images/versioned/rstudio.html) 项目的 `tidyverse` 镜像，它基于 RStudio 镜像，适合作为 R 相关开发的基础环境。
 
 > ps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。
 
@@ -29,29 +32,27 @@ docker pull rocker/tidyverse:latest
 docker run -d -ti -p 8787:8787 -e ROOT=TRUE -e PASSWORD=《你的密码》 -v 《本地路径，可以整个D盘》:《镜像目录》 rocker/tidyverse
 ```
 
-这样，你就可以直接打开浏览器，输入网址 [localhost:8787](localhost:8787) 开启 Rstudio IDE。
-默认用户名：rstudio
+这样就可以打开浏览器，访问 <http://localhost:8787> 进入 RStudio IDE。默认用户名是 `rstudio`。
+
 ![](./rstudio.png)
 
-### quarto 创建 blog的详细步骤
+## 创建博客
 
-> 没什么资源比官网的步骤更详细了
+Quarto 官方文档已经把博客项目的初始化步骤写得很清楚，可以直接参考：
 
 <https://quarto.org/docs/websites/website-blog.html>
 
-### 发布博客
+## 发布到 GitHub Pages
 
-#### 使用 `github-pages` 发布
+网址形如 `https://<用户名>.github.io` 的站点通常可以直接用 GitHub Pages 托管。
 
-网址前缀如：https://《用户名》.github.io 所示的网址就是使用的`github-pages`。
+1. 在 GitHub 新建一个名为 `<用户名>.github.io` 的仓库。
 
-1. 首先在 `github` 新建一个名称为 `https://《用户名》.github.io` 的仓库。
-
-2. 设置好仓库的`pages`选项，如下图所示：
+2. 设置仓库的 Pages 选项，如下图所示：
 
 ![](./github.png)
 
-3. 按照上面的步骤，博客项目下会有`_quarto.yml` 文件，修改下此文件的输出目录。
+3. 修改博客项目下的 `_quarto.yml`，将输出目录设置为 `docs/`。
 
 ```{.bash filename="_quarto.yml"}
 project:
@@ -59,13 +60,13 @@ project:
   output-dir: docs
 ```
 
-4. 将 .nojekyll 文件添加到存储库的根目录，告诉 GitHub Pages 不要使用 Jekyll（GitHub 默认站点生成工具）对已发布的站点进行其他处理：
+4. 在仓库根目录添加 `.nojekyll` 文件，告诉 GitHub Pages 不要再用 Jekyll 处理已经渲染好的站点。
 
 ```{.bash filename="terminal"}
 touch .nojekyll
 ```
 
-5. 渲染网站并发布
+5. 渲染网站并发布。
 
 ```{.bash}
 # quarto 渲染网站

@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Liripo">
+<meta name="dcterms.date" content="2026-06-01">
+<meta name="description" content="梳理 Stanford SNAP Biomni 的数据湖、评测集、224 个工具模块、System Prompt 结构和 use_tool_retriever 动态提示策略。">
+
+<title>Biomni 源码解读 – Liripo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+<script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Liripo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Liripo"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/Liripo_zzz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Biomni 源码解读</h1>
+            <p class="subtitle lead">面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制</p>
+                  <div>
+        <div class="description">
+          梳理 Stanford SNAP Biomni 的数据湖、评测集、224 个工具模块、System Prompt 结构和 use_tool_retriever 动态提示策略。
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">agent</div>
+                <div class="quarto-category">biomni</div>
+                <div class="quarto-category">python</div>
+                <div class="quarto-category">bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Liripo </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 1, 2026</p>
+      </div>
+    </div>
+    
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">June 1, 2026</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#引言" id="toc-引言" class="nav-link active" data-scroll-target="#引言"><span class="header-section-number">1</span> 引言</a></li>
+  <li><a href="#数据湖" id="toc-数据湖" class="nav-link" data-scroll-target="#数据湖"><span class="header-section-number">2</span> 数据湖</a></li>
+  <li><a href="#benchmark" id="toc-benchmark" class="nav-link" data-scroll-target="#benchmark"><span class="header-section-number">3</span> Benchmark</a>
+  <ul class="collapse">
+  <li><a href="#hle" id="toc-hle" class="nav-link" data-scroll-target="#hle"><span class="header-section-number">3.1</span> HLE</a></li>
+  <li><a href="#dbqa-和-seqqa" id="toc-dbqa-和-seqqa" class="nav-link" data-scroll-target="#dbqa-和-seqqa"><span class="header-section-number">3.2</span> DbQA 和 SeqQA</a></li>
+  <li><a href="#评估方法" id="toc-评估方法" class="nav-link" data-scroll-target="#评估方法"><span class="header-section-number">3.3</span> 评估方法</a></li>
+  </ul></li>
+  <li><a href="#工具列表" id="toc-工具列表" class="nav-link" data-scroll-target="#工具列表"><span class="header-section-number">4</span> 工具列表</a></li>
+  <li><a href="#system-prompt-结构" id="toc-system-prompt-结构" class="nav-link" data-scroll-target="#system-prompt-结构"><span class="header-section-number">5</span> System Prompt 结构</a>
+  <ul class="collapse">
+  <li><a href="#核心指令" id="toc-核心指令" class="nav-link" data-scroll-target="#核心指令"><span class="header-section-number">5.1</span> 1. 核心指令</a></li>
+  <li><a href="#self-critic可选" id="toc-self-critic可选" class="nav-link" data-scroll-target="#self-critic可选"><span class="header-section-number">5.2</span> 2. Self-Critic（可选）</a></li>
+  <li><a href="#protocol-generation" id="toc-protocol-generation" class="nav-link" data-scroll-target="#protocol-generation"><span class="header-section-number">5.3</span> 3. Protocol Generation</a></li>
+  <li><a href="#自定义资源如果有" id="toc-自定义资源如果有" class="nav-link" data-scroll-target="#自定义资源如果有"><span class="header-section-number">5.4</span> 4. 自定义资源（如果有）</a></li>
+  <li><a href="#环境资源" id="toc-环境资源" class="nav-link" data-scroll-target="#环境资源"><span class="header-section-number">5.5</span> 5. 环境资源</a></li>
+  </ul></li>
+  <li><a href="#动态-promptuse_tool_retriever" id="toc-动态-promptuse_tool_retriever" class="nav-link" data-scroll-target="#动态-promptuse_tool_retriever"><span class="header-section-number">6</span> 动态 Prompt：<code>use_tool_retriever</code></a></li>
+  <li><a href="#执行流程" id="toc-执行流程" class="nav-link" data-scroll-target="#执行流程"><span class="header-section-number">7</span> 执行流程</a></li>
+  <li><a href="#使用体验" id="toc-使用体验" class="nav-link" data-scroll-target="#使用体验"><span class="header-section-number">8</span> 使用体验</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p><a href="https://github.com/snap-stanford/Biomni">Biomni</a> 是 Stanford SNAP 实验室开源的生医 AI Agent，目标是让 LLM 像一个真正的研究者那样：拿到一个问题，自己去查数据库、跑代码、调工具，最后把结果整理好交出来。围绕这个目标，Biomni 做了三件事：</p>
+<ol type="1">
+<li><strong>打包一切</strong>：把生信工具、数据库、Python/R 包全部塞进一个环境里，让 Agent 有东西可用。</li>
+<li><strong>ReAct 循环</strong>：通过 <code>&lt;execute&gt;</code> / <code>&lt;solution&gt;</code> 两个标签，让 LLM 自己决定”继续干活”还是”该交作业了”。</li>
+<li><strong>动态 prompt</strong>：用 <code>use_tool_retriever</code> 按需筛选工具，避免把 200+ 工具一股脑塞进上下文。</li>
+</ol>
+<blockquote class="blockquote">
+<p>项目地址：<a href="https://github.com/snap-stanford/Biomni" class="uri">https://github.com/snap-stanford/Biomni</a></p>
+</blockquote>
+</section>
+<section id="数据湖" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="数据湖"><span class="header-section-number">2</span> 数据湖</h2>
+<p>第一次跑 Biomni，最耗时的不是启动，而是等它把数据湖下载完。README 里写的”约 11 GB”不是吓人的，光是 <code>BindingDB_All_202409.tsv</code> 这一个文件就有 <strong>6.25 G</strong>——蛋白-小分子结合亲和力数据，体量确实离谱。</p>
+<p>数据湖落在 <code>biomni_data/data_lake/</code> 下面，按主题大致分了这么几类：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>类别</th>
+<th style="text-align: right;">文件名</th>
+<th>简短描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>affinity_capture-ms.parquet</code></td>
+<td>通过亲和捕获 + 质谱检测到的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>affinity_capture-rna.parquet</code></td>
+<td>通过亲和捕获检测到的蛋白-RNA 相互作用</td>
+</tr>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>co-fractionation.parquet</code></td>
+<td>共分馏实验得到的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>proximity_label-ms.parquet</code></td>
+<td>通过近邻标记 + 质谱检测的蛋白相互作用</td>
+</tr>
+<tr class="odd">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>two-hybrid.parquet</code></td>
+<td>酵母双杂交检测的蛋白-蛋白相互作用</td>
+</tr>
+<tr class="even">
+<td>蛋白质互作 / 蛋白组学</td>
+<td style="text-align: right;"><code>reconstituted_complex.parquet</code></td>
+<td>体外重构的蛋白复合体数据</td>
+</tr>
+<tr class="odd">
+<td>病毒/宿主相互作用</td>
+<td style="text-align: right;"><code>Virus-Host_PPI_P-HIPSTER_2020.parquet</code></td>
+<td>P-HIPSTER 提供的病毒-宿主蛋白互作数据</td>
+</tr>
+<tr class="even">
+<td>蛋白表达</td>
+<td style="text-align: right;"><code>proteinatlas.tsv</code></td>
+<td>人类蛋白表达数据（Human Protein Atlas）</td>
+</tr>
+<tr class="odd">
+<td><strong>小分子 / 药物发现</strong></td>
+<td style="text-align: right;"><strong><code>BindingDB_All_202409.tsv</code></strong></td>
+<td><strong>蛋白-小分子结合亲和力测量数据（6.25 G）</strong></td>
+</tr>
+<tr class="even">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>broad_repurposing_hub_molecule_with_smiles.parquet</code></td>
+<td>Broad 重定位库分子及 SMILES 注释</td>
+</tr>
+<tr class="odd">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>broad_repurposing_hub_phase_moa_target_info.parquet</code></td>
+<td>药物阶段、作用机制与靶点信息</td>
+</tr>
+<tr class="even">
+<td>小分子 / 药物发现</td>
+<td style="text-align: right;"><code>enamine_cloud_library_smiles.pkl</code></td>
+<td>Enamine REAL 化合物库（含 SMILES）</td>
+</tr>
+<tr class="odd">
+<td>筛选 / 实验结果（EveBio）</td>
+<td style="text-align: right;"><code>evebio_*.csv</code>（8 个文件）</td>
+<td>筛选/分型实验的元数据、化合物、对照、原始点、结果汇总等</td>
+</tr>
+<tr class="even">
+<td>药物相互作用（DDInter）</td>
+<td style="text-align: right;"><code>ddinter_*.csv</code>（8 个文件）</td>
+<td>按药物分类的药物-药物相互作用</td>
+</tr>
+<tr class="odd">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>go-plus.json</code></td>
+<td>基因本体（GO）本体数据</td>
+</tr>
+<tr class="even">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>msigdb_human_*.parquet</code></td>
+<td>MSigDB 人类 C1-C8 及 Hallmark 基因集</td>
+</tr>
+<tr class="odd">
+<td>基因集 / 本体</td>
+<td style="text-align: right;"><code>mousemine_*.parquet</code></td>
+<td>MouseMine M1/M2/M3/M5/M8/MH 基因集</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>variant_table.parquet</code></td>
+<td>注释过的基因变异表</td>
+</tr>
+<tr class="odd">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>genebass_*.pkl</code></td>
+<td>GeneBass 过滤后的 missense / pLoF / synonymous 变体</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>gwas_catalog.pkl</code></td>
+<td>全基因组关联研究（GWAS）结果集合</td>
+</tr>
+<tr class="odd">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>omim.parquet</code></td>
+<td>OMIM 遗传疾病与相关基因</td>
+</tr>
+<tr class="even">
+<td>基因组 / 变异 / 遗传学</td>
+<td style="text-align: right;"><code>DisGeNET.parquet</code></td>
+<td>多源的基因-疾病关联</td>
+</tr>
+<tr class="odd">
+<td>表型 / 本体</td>
+<td style="text-align: right;"><code>hp.obo</code></td>
+<td>人类表型本体（HPO） obographs 格式</td>
+</tr>
+<tr class="even">
+<td>基因 / 表达</td>
+<td style="text-align: right;"><code>gene_info.parquet</code></td>
+<td>基因综合信息</td>
+</tr>
+<tr class="odd">
+<td>基因 / 表达</td>
+<td style="text-align: right;"><code>gtex_tissue_gene_tpm.parquet</code></td>
+<td>GTEx 各组织基因表达（TPM）</td>
+</tr>
+<tr class="even">
+<td>细胞系 / 癌症依赖性 (DepMap)</td>
+<td style="text-align: right;"><code>DepMap_*.csv</code>（4 个文件）</td>
+<td>DepMap 细胞系 CRISPR 依赖性、效应、模型元数据、表达</td>
+</tr>
+<tr class="odd">
+<td>细胞 / 单细胞资源</td>
+<td style="text-align: right;"><code>czi_census_datasets_v4.parquet</code></td>
+<td>CZI Cell Census 数据集合集</td>
+</tr>
+<tr class="even">
+<td>细胞 / 标记</td>
+<td style="text-align: right;"><code>marker_celltype.parquet</code></td>
+<td>细胞类型标记基因集合</td>
+</tr>
+<tr class="odd">
+<td>免疫 / TCR</td>
+<td style="text-align: right;"><code>McPAS-TCR.parquet</code></td>
+<td>T 细胞受体序列与特异性数据（McPAS）</td>
+</tr>
+<tr class="even">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRDB_v6.0_results.parquet</code></td>
+<td>miRDB 预测的 microRNA 靶点</td>
+</tr>
+<tr class="odd">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRTarBase_*.parquet</code></td>
+<td>经验证的 miRNA-靶基因互作及结合位点</td>
+</tr>
+<tr class="even">
+<td>miRNA 相关</td>
+<td style="text-align: right;"><code>miRTarBase_microRNA_target_interaction_pubmed_abtract.txt</code></td>
+<td>miRTarBase 互作对应的 PubMed 摘要文本</td>
+</tr>
+<tr class="odd">
+<td>知识图谱 / 综合资源</td>
+<td style="text-align: right;"><code>kg.csv</code></td>
+<td>精准医学知识图谱（疾病与多尺度关系）</td>
+</tr>
+<tr class="even">
+<td>CRISPR / sgRNA 库</td>
+<td style="text-align: right;"><code>sgRNA_KO_SP_mouse.txt</code></td>
+<td>小鼠 sgRNA 敲除（KO）库</td>
+</tr>
+<tr class="odd">
+<td>CRISPR / sgRNA 库</td>
+<td style="text-align: right;"><code>sgRNA_KO_SP_human.txt</code></td>
+<td>人类 sgRNA 敲除（KO）库</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>genetic_interaction.parquet</code></td>
+<td>基因间遗传互作</td>
+</tr>
+<tr class="odd">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>dosage_growth_defect.parquet</code></td>
+<td>剂量变化影响生长的基因</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_growth_defect.parquet</code></td>
+<td>合成生长缺陷数据</td>
+</tr>
+<tr class="odd">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_lethality.parquet</code></td>
+<td>合成致死相互作用</td>
+</tr>
+<tr class="even">
+<td>遗传互作 / 合成致死</td>
+<td style="text-align: right;"><code>synthetic_rescue.parquet</code></td>
+<td>恢复表型的遗传互作</td>
+</tr>
+<tr class="odd">
+<td>机器学习 / 预测 (TXGNN)</td>
+<td style="text-align: right;"><code>txgnn_name_mapping.pkl</code></td>
+<td>TXGNN 名称映射</td>
+</tr>
+<tr class="even">
+<td>机器学习 / 预测 (TXGNN)</td>
+<td style="text-align: right;"><code>txgnn_prediction.pkl</code></td>
+<td>TXGNN 模型预测结果</td>
+</tr>
+</tbody>
+</table>
+<p>磁盘空间宽裕的话就全部下完，紧张的话可以按需跳过——不过我个人建议还是全下，省得后面跑到一半发现缺数据。</p>
+<p>除了数据文件，Biomni 还维护了一份 <code>library_content_dict</code>，把预先装好的 Python / R 包名和简介整理成一份清单，在 System Prompt 里一并告诉 LLM，这样 Agent 在调用工具的时候就能准确 import 正确的包，不用自己瞎猜该 <code>import</code> 什么。</p>
+</section>
+<section id="benchmark" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="benchmark"><span class="header-section-number">3</span> Benchmark</h2>
+<p>光有工具和数据还不够，怎么证明 Agent 真的”学会了”？Biomni 在 <code>data/biomni_data/benchmark/</code> 下面准备了三套题：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>数据集</th>
+<th>题目数</th>
+<th>原始格式</th>
+<th>评估格式</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>hle</code></td>
+<td>52</td>
+<td>原生多选题</td>
+<td>多选题</td>
+<td>Humanity’s Last Exam</td>
+</tr>
+<tr class="even">
+<td><code>DbQA</code></td>
+<td>60（测试集）</td>
+<td>问答题 + 干扰项</td>
+<td>多选题</td>
+<td>Lab Bench（数据库 QA）</td>
+</tr>
+<tr class="odd">
+<td><code>SeqQA</code></td>
+<td>70（测试集）</td>
+<td>问答题 + 干扰项</td>
+<td>多选题</td>
+<td>Lab Bench（序列 QA）</td>
+</tr>
+</tbody>
+</table>
+<p><code>DbQA</code> 和 <code>SeqQA</code> 各自有三个 parquet 文件：完整集（520/600 题）、采样集（65/75 题）、测试集（60/70 题）。实际跑分用的是 <code>_test.parquet</code>，别一不小心把完整集当测试集拿来算分，那结果就没意义了。</p>
+<section id="hle" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="hle"><span class="header-section-number">3.1</span> HLE</h3>
+<p><code>test_sampled_biology_medicine.parquet</code> 这个文件来自 Humanity’s Last Exam，题目字段比较丰富：<code>id</code>、<code>question</code>、<code>answer</code>、<code>rationale</code>、<code>category</code> 都有，甚至还有图片相关字段。其中 <code>canary</code> 字段是一个数据集水印，用来检测 benchmark 有没有泄露到训练数据里，评估流程本身不依赖它。</p>
+<p>随手放一道题：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb1-1"><a href="#cb1-1"></a>Which of the following mechanisms most accurately describes the role of intron </span>
+<span id="cb1-2"><a href="#cb1-2"></a>length variability in influencing eukaryotic gene expression efficiency?</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a>A. Intron length variability impacts gene expression by altering the DNA </span>
+<span id="cb1-5"><a href="#cb1-5"></a>   methylation patterns, thereby influencing transcriptional silencing.</span>
+<span id="cb1-6"><a href="#cb1-6"></a>B. Variable intron lengths change the DNA torsional stress distribution, </span>
+<span id="cb1-7"><a href="#cb1-7"></a>   indirectly affecting RNA polymerase II elongation speed and efficiency.</span>
+<span id="cb1-8"><a href="#cb1-8"></a>C. Longer introns increase the probability of alternative splicing events </span>
+<span id="cb1-9"><a href="#cb1-9"></a>   by providing more splice site positions.</span>
+<span id="cb1-10"><a href="#cb1-10"></a>D. Intron variability primarily affects the spatial configuration of </span>
+<span id="cb1-11"><a href="#cb1-11"></a>   enhancers, thereby modifying gene expression through changes in </span>
+<span id="cb1-12"><a href="#cb1-12"></a>   enhancer-promoter interactions.</span>
+<span id="cb1-13"><a href="#cb1-13"></a>E. Shorter introns enhance transcriptional efficiency by facilitating RNA </span>
+<span id="cb1-14"><a href="#cb1-14"></a>   polymerase II access to promoter regions more quickly.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>正确答案 <strong>B</strong>，选项设计一看就是故意埋坑的那种。</p>
+</section>
+<section id="dbqa-和-seqqa" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="dbqa-和-seqqa"><span class="header-section-number">3.2</span> DbQA 和 SeqQA</h3>
+<p>DbQA 侧重”数据库查到了什么”，SeqQA 侧重”序列分析做对了没有”。两个数据集字段结构一样：<code>id</code>、<code>question</code>、<code>ideal</code>（标准答案）、<code>distractors</code>（干扰项列表）、<code>canary</code>、<code>subtask</code>。</p>
+<p>DbQA 覆盖的子任务包括：多序列变异分析（11 题）、小鼠肿瘤基因集（10 题）、病毒蛋白质互作（7 题）、差异基因分析、基因定位、miRNA 靶点预测等等。SeqQA 则是限制性内切酶片段数、PCR 引物设计、ORF 氨基酸识别、GC 含量计算这一类序列分析题。</p>
+<p>一道 DbQA 的例子：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb2-1"><a href="#cb2-1"></a>Which of the following genes is associated with achromatopsia according to </span>
+<span id="cb2-2"><a href="#cb2-2"></a>DisGeNet but not according to OMIM?</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a>ideal: CNGA3</span>
+<span id="cb2-5"><a href="#cb2-5"></a>distractors: ["CNGB3", "GNAT2", "PDE6C", "ATF7IP"]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="评估方法" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="评估方法"><span class="header-section-number">3.3</span> 评估方法</h3>
+<p>评估流程很直白：<strong>把开放式问答转成多选题，然后算分</strong>。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a>options <span class="op">=</span> shuffle(distractors <span class="op">+</span> [ideal, <span class="st">"Insufficient information to answer the question."</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>每道题最后长这样：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource plain number-lines code-with-copy"><code class="sourceCode"><span id="cb4-1"><a href="#cb4-1"></a>Question: {question}</span>
+<span id="cb4-2"><a href="#cb4-2"></a>Options:</span>
+<span id="cb4-3"><a href="#cb4-3"></a>A. {option1}</span>
+<span id="cb4-4"><a href="#cb4-4"></a>B. {option2}</span>
+<span id="cb4-5"><a href="#cb4-5"></a>C. {option3}</span>
+<span id="cb4-6"><a href="#cb4-6"></a>D. {option4}</span>
+<span id="cb4-7"><a href="#cb4-7"></a>E. {option5}</span>
+<span id="cb4-8"><a href="#cb4-8"></a>F. Insufficient information to answer the question.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>其中那个 <strong>“Insufficient information to answer the question.”</strong> 是关键——它允许 Agent 在信息不够时”体面地”拒答，而不是硬猜。这样一来，评估就能同时看三个维度：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>accuracy</strong></td>
+<td>答对了多少</td>
+</tr>
+<tr class="even">
+<td><strong>coverage</strong></td>
+<td>敢于回答多少（而不是全选”信息不足”）</td>
+</tr>
+<tr class="odd">
+<td><strong>precision</strong></td>
+<td>回答的部分里，有几个是对的</td>
+</tr>
+</tbody>
+</table>
+<p>答对得 <code>1.0</code>，答错得 <code>0.0</code>，没有部分分。</p>
+<p>我个人挺喜欢这种设计：它把”会不会答”和”敢不敢答”拆开衡量了，光看 accuracy 根本看不出来 Agent 是不是在”躺平拒答”。</p>
+</section>
+</section>
+<section id="工具列表" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="工具列表"><span class="header-section-number">4</span> 工具列表</h2>
+<p>Biomni 内置了 <strong>224 个工具</strong>，分布在 <strong>22 个模块</strong>里。第一次看到这个数字的时候我愣了一下——这也太多了吧。</p>
+<p>把 200+ 工具全塞进 System Prompt，光是工具描述就能吃掉一大半上下文。Biomni 给出的折中方案是 <code>use_tool_retriever</code>，但说实话，把工具做成按需加载的 Skills 应该会更优雅一些。</p>
+<p>工具模块分布如下：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>模块</th>
+<th style="text-align: right;">工具数</th>
+<th>主要功能</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>database</code></td>
+<td style="text-align: right;">40</td>
+<td>生物医学数据库查询（UniProt、PDB、KEGG、ClinVar、GEO、Ensembl、gnomAD、ChEMBL、PubChem 等）</td>
+</tr>
+<tr class="even">
+<td><code>pharmacology</code></td>
+<td style="text-align: right;">25</td>
+<td>药物研发（分子对接、ADMET 预测、药物重定位、药物相互作用、FDA 不良反应等）</td>
+</tr>
+<tr class="odd">
+<td><code>genomics</code></td>
+<td style="text-align: right;">19</td>
+<td>基因组学（scRNA-seq 注释、嵌入生成、ChIP-seq、基因集富集、物种间基因转换等）</td>
+</tr>
+<tr class="even">
+<td><code>molecular_biology</code></td>
+<td style="text-align: right;">18</td>
+<td>分子生物学（ORF 注释、质粒注释、PCR 模拟、限制性酶切、CRISPR sgRNA 设计、引物设计等）</td>
+</tr>
+<tr class="odd">
+<td><code>microbiology</code></td>
+<td style="text-align: right;">12</td>
+<td>微生物学（细菌生长建模、生物膜分析、基因组注释、RNA 二级结构预测等）</td>
+</tr>
+<tr class="even">
+<td><code>physiology</code></td>
+<td style="text-align: right;">11</td>
+<td>生理学（血流动力学分析、脑 ADC 图、昼夜节律分析、脂肪酸组成分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>bioimaging</code></td>
+<td style="text-align: right;">10</td>
+<td>生物成像（医学图像分割、图像配准、相似性度量等）</td>
+</tr>
+<tr class="even">
+<td><code>immunology</code></td>
+<td style="text-align: right;">10</td>
+<td>免疫学（ATAC-seq、免疫细胞分选、细胞因子分析、抗体滴度分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>genetics</code></td>
+<td style="text-align: right;">9</td>
+<td>遗传学（基因组坐标转换、贝叶斯精细定位、CRISPR 分析、群体模拟等）</td>
+</tr>
+<tr class="even">
+<td><strong>literature</strong></td>
+<td style="text-align: right;"><strong>8</strong></td>
+<td><strong>文献检索（PubMed、arXiv、Google Scholar、PDF 提取、网页搜索等）</strong></td>
+</tr>
+<tr class="odd">
+<td><code>synthetic_biology</code></td>
+<td style="text-align: right;">8</td>
+<td>合成生物学（细菌基因组工程、密码子优化、基因线路模拟等）</td>
+</tr>
+<tr class="even">
+<td><code>cancer_biology</code></td>
+<td style="text-align: right;">6</td>
+<td>癌症生物学（DDR 网络分析、体细胞突变检测、结构变异检测、NMF 分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>biochemistry</code></td>
+<td style="text-align: right;">6</td>
+<td>生物化学（CD 光谱分析、酶动力学、ITC 结合热力学、蛋白保守性分析等）</td>
+</tr>
+<tr class="even">
+<td><code>cell_biology</code></td>
+<td style="text-align: right;">5</td>
+<td>细胞生物学（细胞周期分析、细胞迁移分析、流式细胞术、线粒体形态分析等）</td>
+</tr>
+<tr class="odd">
+<td><code>systems_biology</code></td>
+<td style="text-align: right;">7</td>
+<td>系统生物学（通量平衡分析、信号网络模拟、代谢网络扰动分析等）</td>
+</tr>
+<tr class="even">
+<td><code>bioengineering</code></td>
+<td style="text-align: right;">7</td>
+<td>生物工程（细胞迁移分析、CRISPR 模拟、钙成像分析、ODE 模型模拟等）</td>
+</tr>
+<tr class="odd">
+<td><code>pathology</code></td>
+<td style="text-align: right;">7</td>
+<td>病理学（主动脉分析、血栓组织学、骨微 CT 分析、多重图像分析等）</td>
+</tr>
+<tr class="even">
+<td><code>protocols</code></td>
+<td style="text-align: right;">4</td>
+<td>实验方案（protocols.io 搜索、本地方案读取）</td>
+</tr>
+<tr class="odd">
+<td><code>biophysics</code></td>
+<td style="text-align: right;">3</td>
+<td>生物物理（蛋白无序区域预测、细胞形态分析、组织形变分析）</td>
+</tr>
+<tr class="even">
+<td><code>glycoengineering</code></td>
+<td style="text-align: right;">3</td>
+<td>糖工程（N-糖基化位点预测、O-糖基化预测）</td>
+</tr>
+<tr class="odd">
+<td><code>support_tools</code></td>
+<td style="text-align: right;">3</td>
+<td>支持工具（Python REPL 执行、源码读取、Synapse 数据下载）</td>
+</tr>
+<tr class="even">
+<td><code>lab_automation</code></td>
+<td style="text-align: right;">3</td>
+<td>实验室自动化（PyLabRobot 脚本测试、文档获取）</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="system-prompt-结构" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="system-prompt-结构"><span class="header-section-number">5</span> System Prompt 结构</h2>
+<p>Biomni 的 System Prompt 本质上就是把”你有什么能力”写成一份说明书，交给 LLM。拆开来看，主要由这几段拼成：</p>
+<section id="核心指令" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="核心指令"><span class="header-section-number">5.1</span> 1. 核心指令</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb5-1"><a href="#cb5-1"></a>You are a helpful biomedical assistant assigned with the task of problem-solving.</span>
+<span id="cb5-2"><a href="#cb5-2"></a>To achieve this, you will be using an interactive coding environment equipped</span>
+<span id="cb5-3"><a href="#cb5-3"></a>with a variety of tool functions, data, and softwares to assist you throughout</span>
+<span id="cb5-4"><a href="#cb5-4"></a>the process.</span>
+<span id="cb5-5"><a href="#cb5-5"></a></span>
+<span id="cb5-6"><a href="#cb5-6"></a>Given a task, make a plan first. The plan should be a numbered list of steps</span>
+<span id="cb5-7"><a href="#cb5-7"></a>that you will take to solve the task. Be specific and detailed.</span>
+<span id="cb5-8"><a href="#cb5-8"></a>Format your plan as a checklist with empty checkboxes like this:</span>
+<span id="cb5-9"><a href="#cb5-9"></a></span>
+<span id="cb5-10"><a href="#cb5-10"></a>- [ ] First step</span>
+<span id="cb5-11"><a href="#cb5-11"></a>- [ ] Second step</span>
+<span id="cb5-12"><a href="#cb5-12"></a>- [ ] Third step</span>
+<span id="cb5-13"><a href="#cb5-13"></a></span>
+<span id="cb5-14"><a href="#cb5-14"></a>Follow the plan step by step. After completing each step, update the checklist</span>
+<span id="cb5-15"><a href="#cb5-15"></a>by replacing the empty checkbox with a checkmark:</span>
+<span id="cb5-16"><a href="#cb5-16"></a></span>
+<span id="cb5-17"><a href="#cb5-17"></a>1. [✓] First step (completed)</span>
+<span id="cb5-18"><a href="#cb5-18"></a>- [ ] Second step</span>
+<span id="cb5-19"><a href="#cb5-19"></a>...</span>
+<span id="cb5-20"><a href="#cb5-20"></a></span>
+<span id="cb5-21"><a href="#cb5-21"></a>If a step fails or needs modification, mark it with an X and explain why:</span>
+<span id="cb5-22"><a href="#cb5-22"></a>...</span>
+<span id="cb5-23"><a href="#cb5-23"></a></span>
+<span id="cb5-24"><a href="#cb5-24"></a>At each turn, you should first provide your thinking and reasoning given the</span>
+<span id="cb5-25"><a href="#cb5-25"></a>conversation history.</span>
+<span id="cb5-26"><a href="#cb5-26"></a>After that, you have two options:</span>
+<span id="cb5-27"><a href="#cb5-27"></a></span>
+<span id="cb5-28"><a href="#cb5-28"></a>1. Interact with a programming environment and receive the corresponding</span>
+<span id="cb5-29"><a href="#cb5-29"></a>   output within . Your code should be enclosed using "" tag, for example:</span>
+<span id="cb5-30"><a href="#cb5-30"></a>   print("Hello World!") .</span>
+<span id="cb5-31"><a href="#cb5-31"></a>   - For Python code (default):  print("Hello World!")</span>
+<span id="cb5-32"><a href="#cb5-32"></a>   - For R code:  #!R\nlibrary(ggplot2)\nprint("Hello from R")</span>
+<span id="cb5-33"><a href="#cb5-33"></a>   - For Bash scripts:  #!BASH\necho "Hello from Bash"\nls -la</span>
+<span id="cb5-34"><a href="#cb5-34"></a>2. When you think it is ready, directly provide a solution that adheres to</span>
+<span id="cb5-35"><a href="#cb5-35"></a>   the required format for the given task to the user. Your solution should</span>
+<span id="cb5-36"><a href="#cb5-36"></a>   be enclosed using ""  tag, for example: The answer is  A .</span>
+<span id="cb5-37"><a href="#cb5-37"></a></span>
+<span id="cb5-38"><a href="#cb5-38"></a>In each response, you must include EITHER  or  tag. Not both at the</span>
+<span id="cb5-39"><a href="#cb5-39"></a>same time. Do not respond with messages without any tags. No empty messages.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>两个核心标签，用口诀记就是”execute 是干活，solution 是收尾”：</p>
+<ul>
+<li><code>&lt;execute&gt;...&lt;/execute&gt;</code>：Agent 要跑代码了，把 Python / R / Bash 写进去。</li>
+<li><code>&lt;solution&gt;...&lt;/solution&gt;</code>：Agent 觉得可以交作业了，把最终答案放进去。</li>
+</ul>
+<p>每轮回复里<strong>必须二选一</strong>，不能同时出现，也不能完全没有——Biomni 就靠这两个标签来解析 Agent 的输出。少了任何一个，解析直接报错或者把这一轮丢掉。</p>
+</section>
+<section id="self-critic可选" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="self-critic可选"><span class="header-section-number">5.2</span> 2. Self-Critic（可选）</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb6-1"><a href="#cb6-1"></a>You may or may not receive feedbacks from human. If so, address the feedbacks</span>
+<span id="cb6-2"><a href="#cb6-2"></a>by following the same procedure of multiple rounds of thinking, execution,</span>
+<span id="cb6-3"><a href="#cb6-3"></a>and then coming up with a new solution.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>意思很简单：如果有人类反馈，就按同样的流程（思考→执行→给答案）重新来一遍。</p>
+</section>
+<section id="protocol-generation" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="protocol-generation"><span class="header-section-number">5.3</span> 3. Protocol Generation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb7-1"><a href="#cb7-1"></a>PROTOCOL GENERATION:</span>
+<span id="cb7-2"><a href="#cb7-2"></a>If the user requests an experimental protocol, use search_protocols(),</span>
+<span id="cb7-3"><a href="#cb7-3"></a>advanced_web_search_claude(), list_local_protocols(), and read_local_protocol()</span>
+<span id="cb7-4"><a href="#cb7-4"></a>to generate an accurate protocol. Include details such as reagents (with</span>
+<span id="cb7-5"><a href="#cb7-5"></a>catalog numbers if available), equipment specifications, replicate</span>
+<span id="cb7-6"><a href="#cb7-6"></a>requirements, error handling, and troubleshooting - but ONLY include</span>
+<span id="cb7-7"><a href="#cb7-7"></a>information found in these resources. Do not make up specifications, catalog</span>
+<span id="cb7-8"><a href="#cb7-8"></a>numbers, or equipment details.</span>
+<span id="cb7-9"><a href="#cb7-9"></a>Prioritize accuracy over completeness.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>生成实验方案时，只能用搜到的信息，不能瞎编货号和设备参数——这一点倒是挺严谨的。</p>
+</section>
+<section id="自定义资源如果有" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="自定义资源如果有"><span class="header-section-number">5.4</span> 4. 自定义资源（如果有）</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb8-1"><a href="#cb8-1"></a>PRIORITY CUSTOM RESOURCES</span>
+<span id="cb8-2"><a href="#cb8-2"></a>==============================</span>
+<span id="cb8-3"><a href="#cb8-3"></a>IMPORTANT: The following custom resources have been specifically added for</span>
+<span id="cb8-4"><a href="#cb8-4"></a>your use. PRIORITIZE using these resources as they are directly relevant to</span>
+<span id="cb8-5"><a href="#cb8-5"></a>your task. Always consider these FIRST and in the meantime using default</span>
+<span id="cb8-6"><a href="#cb8-6"></a>resources.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>这一段是可选的，用来注入项目特定的 know-how 文档、自定义工具、数据集和软件库。相当于给 Agent 开了个”小灶”。</p>
+</section>
+<section id="环境资源" class="level3" data-number="5.5">
+<h3 data-number="5.5" class="anchored" data-anchor-id="环境资源"><span class="header-section-number">5.5</span> 5. 环境资源</h3>
+<p>最后是把实验室里有什么明确告诉 LLM：</p>
+<ul>
+<li><strong>Function Dictionary</strong>：224 个工具的函数签名（模块路径、方法名、参数、默认值），按模块分组列出来。</li>
+<li><strong>Biological Data Lake</strong>：100+ 数据集的简介，告诉 Agent 数据在哪里、长什么样。</li>
+<li><strong>Software Library</strong>：约 50 个可以直接 import 的 Python 包（scanpy、anndata、pysam、biopython 等），让 Agent 知道哪些包已经装好了。</li>
+<li><strong>R 包与 Bash</strong>：说明 R 代码用 <code>#!R</code> 标记，Bash 用 <code>#!BASH</code> 标记。</li>
+</ul>
+</section>
+</section>
+<section id="动态-promptuse_tool_retriever" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="动态-promptuse_tool_retriever"><span class="header-section-number">6</span> 动态 Prompt：<code>use_tool_retriever</code></h2>
+<p>把所有工具、数据、库一股脑塞进 System Prompt 的代价是——<strong>prompt 长度爆炸</strong>。空载就接近 3 万 token，光是”把所有工具摆上桌”这一件事就能吃掉不少额度。</p>
+<p>Biomni 提供了一个开关 <code>use_tool_retriever</code>：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>模式</th>
+<th><code>use_tool_retriever=False</code></th>
+<th><code>use_tool_retriever=True</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>System prompt</td>
+<td>包含所有 224 个工具 + 全部数据集</td>
+<td>只包含检索到的相关工具/数据集</td>
+</tr>
+<tr class="even">
+<td>Prompt 长度</td>
+<td>~30K+ tokens</td>
+<td>~5K tokens</td>
+</tr>
+<tr class="odd">
+<td>适用场景</td>
+<td>简单查询、短对话</td>
+<td>复杂查询、长对话</td>
+</tr>
+<tr class="even">
+<td>初始化速度</td>
+<td>快</td>
+<td>需要额外一次 LLM 调用做检索</td>
+</tr>
+</tbody>
+</table>
+<p>两种模式的本质区别是：<code>False</code> 模式把”工具菜单”全摆出来让 LLM 自己挑，<code>True</code> 模式先用一次 LLM 调用预估任务可能用到的工具和数据集，再把精简后的菜单塞进 prompt。</p>
+<p>这其实就是 RAG 思路在”工具选择”上的迁移——跟 Toolformer / ToolLLM 那一脉是一脉相承的。工程上怎么选，还是要看”准确性”和”成本”哪个对你更重要。</p>
+</section>
+<section id="执行流程" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="执行流程"><span class="header-section-number">7</span> 执行流程</h2>
+<p>光看 Prompt 还是太抽象，下面以一个”BRCA1 突变分析”任务为例，把跑通过程铺开看：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb9-1"><a href="#cb9-1"></a>轮次 1:</span>
+<span id="cb9-2"><a href="#cb9-2"></a>  LLM:&lt;execute&gt;</span>
+<span id="cb9-3"><a href="#cb9-3"></a>       from biomni.tool.genetics import analyze_crispr_genome_editing</span>
+<span id="cb9-4"><a href="#cb9-4"></a>       # ... 代码</span>
+<span id="cb9-5"><a href="#cb9-5"></a>       &lt;/execute&gt;</span>
+<span id="cb9-6"><a href="#cb9-6"></a>  执行: 运行 Python 代码 → 返回结果</span>
+<span id="cb9-7"><a href="#cb9-7"></a></span>
+<span id="cb9-8"><a href="#cb9-8"></a>轮次 2:</span>
+<span id="cb9-9"><a href="#cb9-9"></a>  LLM:&lt;execute&gt;</span>
+<span id="cb9-10"><a href="#cb9-10"></a>       # 可视化代码</span>
+<span id="cb9-11"><a href="#cb9-11"></a>       &lt;/execute&gt;</span>
+<span id="cb9-12"><a href="#cb9-12"></a>  执行: 生成图表</span>
+<span id="cb9-13"><a href="#cb9-13"></a></span>
+<span id="cb9-14"><a href="#cb9-14"></a>轮次 3:</span>
+<span id="cb9-15"><a href="#cb9-15"></a>  LLM:&lt;solution&gt;</span>
+<span id="cb9-16"><a href="#cb9-16"></a>       BRCA1 基因分析结果：</span>
+<span id="cb9-17"><a href="#cb9-17"></a>       - 检测到 12 个突变位点</span>
+<span id="cb9-18"><a href="#cb9-18"></a>       - 其中 5 个为致病性突变</span>
+<span id="cb9-19"><a href="#cb9-19"></a>       - ...</span>
+<span id="cb9-20"><a href="#cb9-20"></a>       &lt;/solution&gt;</span>
+<span id="cb9-21"><a href="#cb9-21"></a>  终止</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>翻译成流程图：</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[用户任务] --&gt; B[LLM 思考 + 制定计划]
+    B --&gt; C{继续执行?}
+    C --&gt;|是| D[发出 execute 标签]
+    D --&gt; E[执行 Python / R / Bash]
+    E --&gt; F[把输出追加到上下文]
+    F --&gt; B
+    C --&gt;|否| G[发出 solution 标签]
+    G --&gt; H[返回最终答案]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>整个循环就是一个”判断要不要继续”的 loop，直到 Agent 觉得信息够了，发出 <code>&lt;solution&gt;</code> 才停下来。</p>
+</section>
+<section id="使用体验" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="使用体验"><span class="header-section-number">8</span> 使用体验</h2>
+<ol type="1">
+<li><strong>环境准备成本不低</strong>。Python 和 R 两条线都得自己处理好，第一次用非常容易报错（依赖冲突、系统库缺失、R 包编译失败都很常见）。建议直接用 Biomni 提供的 <code>biomni_env</code> 目录或者上游 Docker 镜像起手。</li>
+<li><strong>Prompt 偏长</strong>。空载就接近 3 万 token，即使开了 <code>use_tool_retriever</code> 也有 5K 左右。更优雅的做法是把工具改造成按需加载的 Skills——这也是 Anthropic / Claude Code 现在在推的方向。</li>
+<li><strong>LLM 模型接入可以更灵活</strong>。<code>llm.py</code> 目前主要对接了 Claude，用 litellm 统一接入的话会方便很多。</li>
+<li><strong>数据湖首次下载耗时</strong>。<code>BindingDB_All_202409.tsv</code> 单文件 6.25 G，磁盘空间和网络都得提前规划好。</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/liripo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

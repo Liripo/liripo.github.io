@@ -1,24 +1,27 @@
 ---
-title: "gunicorn 部署 dash 生产环境"
+title: "用 Gunicorn 部署 Dash 生产环境"
+subtitle: "Dash 应用的多进程启动、配置文件和常用信号"
+description: "整理 Gunicorn 部署 Dash 应用时需要暴露的 server 对象、配置文件示例以及平滑重启信号。"
 author: "Liripo"
 date: "2024-06-15"
-categories: [dash,web]
+date-modified: "2026-06-01"
+categories: [dash, web, python, gunicorn]
 image: "dash.jpg"
 ---
 
-## 使用 gunicorn 部署 dash
+## 使用 Gunicorn 部署 Dash
 
-> 使用 gunicorn 的好处是可以多进程以及热重载。
+Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。
 
 
-1. 首先 dash的代码，例如 app.py中必须包含下面代码
+1. 首先，Dash 的代码中需要暴露 Flask `server` 对象。例如 `app.py` 中必须包含下面代码：
 
 ```py
 app = Dash(__name__)
-server = app.server # 这行代码需要包含在 dash 代码中
+server = app.server # Gunicorn 会加载这个对象
 ```
 
-2. 设置配置文件，如 `gunicorn.conf.py`
+2. 设置配置文件，如 `gunicorn.conf.py`。
 
 ```py
 bind = '127.0.0.1:8000'      #绑定ip和端口号
@@ -37,7 +40,7 @@ errorlog = "/tmp/gunicorn/gunicorn_error.log"        #错误日志文件
 reload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }
 ```
 
-3. 启动程序
+3. 启动程序。
 
 ```bash
 # app表示当前目录下app.py的意思，server则是文件下的变量
