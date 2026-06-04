@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Liripo">
+<meta name="dcterms.date" content="2026-06-04">
+<meta name="description" content="梳理 CellChat 的 CellChatDB 数据库结构、CellChat 对象定义、computeCommunProb 核心算法（Hill 函数 × 多因素乘积 × 置换检验）以及高层网络分析。">
+
+<title>CellChat 源码解读 – Liripo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+<script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Liripo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Liripo"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/Liripo_zzz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">CellChat 源码解读</h1>
+            <p class="subtitle lead">从配体-受体数据库到细胞间通讯推断的完整管线</p>
+                  <div>
+        <div class="description">
+          梳理 CellChat 的 CellChatDB 数据库结构、CellChat 对象定义、computeCommunProb 核心算法（Hill 函数 × 多因素乘积 × 置换检验）以及高层网络分析。
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">single-cell</div>
+                <div class="quarto-category">cellchat</div>
+                <div class="quarto-category">R</div>
+                <div class="quarto-category">bioinformatics</div>
+                <div class="quarto-category">cell-communication</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Liripo </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 4, 2026</p>
+      </div>
+    </div>
+    
+      <div>
+      <div class="quarto-title-meta-heading">Modified</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date-modified">June 4, 2026</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#引言" id="toc-引言" class="nav-link active" data-scroll-target="#引言"><span class="header-section-number">1</span> 引言</a></li>
+  <li><a href="#cellchatdb-数据库" id="toc-cellchatdb-数据库" class="nav-link" data-scroll-target="#cellchatdb-数据库"><span class="header-section-number">2</span> CellChatDB 数据库</a>
+  <ul class="collapse">
+  <li><a href="#四张表" id="toc-四张表" class="nav-link" data-scroll-target="#四张表"><span class="header-section-number">2.1</span> 四张表</a></li>
+  <li><a href="#interaction-表" id="toc-interaction-表" class="nav-link" data-scroll-target="#interaction-表"><span class="header-section-number">2.2</span> interaction 表</a></li>
+  <li><a href="#complex-表" id="toc-complex-表" class="nav-link" data-scroll-target="#complex-表"><span class="header-section-number">2.3</span> complex 表</a></li>
+  <li><a href="#cofactor-表" id="toc-cofactor-表" class="nav-link" data-scroll-target="#cofactor-表"><span class="header-section-number">2.4</span> cofactor 表</a></li>
+  <li><a href="#geneinfo-表" id="toc-geneinfo-表" class="nav-link" data-scroll-target="#geneinfo-表"><span class="header-section-number">2.5</span> geneInfo 表</a></li>
+  </ul></li>
+  <li><a href="#原理解读" id="toc-原理解读" class="nav-link" data-scroll-target="#原理解读"><span class="header-section-number">3</span> 原理解读</a>
+  <ul class="collapse">
+  <li><a href="#第一步计算每个细胞群每个基因的平均表达量" id="toc-第一步计算每个细胞群每个基因的平均表达量" class="nav-link" data-scroll-target="#第一步计算每个细胞群每个基因的平均表达量"><span class="header-section-number">3.1</span> 第一步：计算每个细胞群每个基因的平均表达量</a></li>
+  <li><a href="#第二步共刺激共抑制受体调节" id="toc-第二步共刺激共抑制受体调节" class="nav-link" data-scroll-target="#第二步共刺激共抑制受体调节"><span class="header-section-number">3.2</span> 第二步：共刺激/共抑制受体调节</a></li>
+  <li><a href="#第三步计算通讯概率" id="toc-第三步计算通讯概率" class="nav-link" data-scroll-target="#第三步计算通讯概率"><span class="header-section-number">3.3</span> 第三步：计算通讯概率</a></li>
+  <li><a href="#置换检验" id="toc-置换检验" class="nav-link" data-scroll-target="#置换检验"><span class="header-section-number">3.4</span> 置换检验</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p>单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。</p>
+<p><a href="https://github.com/jinworks/CellChat">CellChat</a> 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。</p>
+<p><a href="https://github.com/jinworks/CellChat" class="uri">https://github.com/jinworks/CellChat</a></p>
+</section>
+<section id="cellchatdb-数据库" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="cellchatdb-数据库"><span class="header-section-number">2</span> CellChatDB 数据库</h2>
+<section id="四张表" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="四张表"><span class="header-section-number">2.1</span> 四张表</h3>
+<p>CellChatDB 是一个 <code>list</code>，包含四个 <code>data.frame</code>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb1-1"><a href="#cb1-1"></a>CellChatDB</span>
+<span id="cb1-2"><a href="#cb1-2"></a>├── interaction    ← 核心：配体-受体互作关系</span>
+<span id="cb1-3"><a href="#cb1-3"></a>├── complex        ← 复合物：多亚基配体/受体的亚基组成</span>
+<span id="cb1-4"><a href="#cb1-4"></a>├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成</span>
+<span id="cb1-5"><a href="#cb1-5"></a>└── geneInfo       ← 基因注释：官方符号、定位、功能关键词</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>showDatabaseCategory()</code> 函数显示人类数据库的分布：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 29%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>类型</th>
+<th>中文名称</th>
+<th style="text-align: center;">是否需接触</th>
+<th>信号范围</th>
+<th>功能方向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Secreted Signaling</strong></td>
+<td>分泌型信号</td>
+<td style="text-align: center;">否</td>
+<td>远程</td>
+<td>发育、免疫、系统调节</td>
+</tr>
+<tr class="even">
+<td><strong>ECM-Receptor</strong></td>
+<td>细胞外基质-受体信号</td>
+<td style="text-align: center;">否</td>
+<td>局部</td>
+<td>结构支持、黏附、迁移</td>
+</tr>
+<tr class="odd">
+<td><strong>Cell-Cell Contact</strong></td>
+<td>细胞-细胞接触信号</td>
+<td style="text-align: center;">是</td>
+<td>临近</td>
+<td>发育、干细胞分化、边界形成</td>
+</tr>
+<tr class="even">
+<td><strong>Non-protein Signaling</strong></td>
+<td>非蛋白信号</td>
+<td style="text-align: center;">否/是</td>
+<td>多变</td>
+<td>炎症、代谢调控、环境应答</td>
+</tr>
+</tbody>
+</table>
+<p>官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。</p>
+</section>
+<section id="interaction-表" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="interaction-表"><span class="header-section-number">2.2</span> interaction 表</h3>
+<p>每行是一个 L-R 对。<code>dplyr::glimpse(CellChatDB.human$interaction)</code> 可以看到完整结构，关键字段如下：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>列名</th>
+<th>中文名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>interaction_name</code></td>
+<td>互作名称</td>
+<td>用 <code>_</code> 连接的配体和受体组合，例如 <code>TGFB1_TGFBR1_TGFBR2</code></td>
+</tr>
+<tr class="even">
+<td><code>pathway_name</code></td>
+<td>通路名称</td>
+<td>所属信号通路名称，如 TGFb、WNT 等</td>
+</tr>
+<tr class="odd">
+<td><code>ligand</code></td>
+<td>配体名</td>
+<td>配体标识（可能为组合）</td>
+</tr>
+<tr class="even">
+<td><code>receptor</code></td>
+<td>受体名</td>
+<td>受体标识（可能为组合）</td>
+</tr>
+<tr class="odd">
+<td><code>agonist</code></td>
+<td>激动剂</td>
+<td>指出该通路中已知的激动剂</td>
+</tr>
+<tr class="even">
+<td><code>antagonist</code></td>
+<td>拮抗剂</td>
+<td>指出该通路中已知的拮抗剂</td>
+</tr>
+<tr class="odd">
+<td><code>co_A_receptor</code></td>
+<td>辅助激动型受体</td>
+<td>协助激活信号的共同受体</td>
+</tr>
+<tr class="even">
+<td><code>co_I_receptor</code></td>
+<td>辅助抑制型受体</td>
+<td>协助抑制信号的共同受体</td>
+</tr>
+<tr class="odd">
+<td><code>evidence</code></td>
+<td>支持证据</td>
+<td>来源数据库或文献，如 <code>KEGG: hsa04350</code>、PMID 等</td>
+</tr>
+<tr class="even">
+<td><code>annotation</code></td>
+<td>互作分类</td>
+<td><code>Secreted Signaling</code> 等四类</td>
+</tr>
+<tr class="odd">
+<td><code>interaction_name_2</code></td>
+<td>格式化互作名称</td>
+<td>更清晰可读的互作表达，例如 <code>TGFB1 - (TGFBR1+TGFBR2)</code>，用于展示</td>
+</tr>
+<tr class="even">
+<td><code>ligand.symbol</code></td>
+<td>配体符号</td>
+<td>配体的 HGNC 基因符号</td>
+</tr>
+<tr class="odd">
+<td><code>receptor.symbol</code></td>
+<td>受体符号</td>
+<td>多个受体基因符号（逗号分隔）</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="complex-表" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="complex-表"><span class="header-section-number">2.3</span> complex 表</h3>
+<p>interaction 中配体（<code>ligand</code>）和受体（<code>receptor</code>）的组成：可能是单个基因，也可能是复合物（<code>complex</code>）。</p>
+<p>举个例子，复合物 <strong>Activin AB</strong> 查 complex 表就知道它包含亚基 <strong>INHBA</strong> 和 <strong>INHBB</strong>。计算表达时会取这些亚基的<strong>几何平均</strong>。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。</p>
+</section>
+<section id="cofactor-表" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="cofactor-表"><span class="header-section-number">2.4</span> cofactor 表</h3>
+<p>配体/受体调节因子（cofactors）数据库。interaction 里 <code>agonist</code>、<code>antagonist</code>、<code>co_A_receptor</code>、<code>co_I_receptor</code> 四列对应的信息：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>术语</th>
+<th>作用类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>agonist</strong></td>
+<td>激动剂</td>
+<td>增强主配体-受体相互作用的分子，与主配体协同激活</td>
+</tr>
+<tr class="even">
+<td><strong>antagonist</strong></td>
+<td>拮抗剂</td>
+<td>抑制主配体-受体作用的分子，常与受体竞争结合</td>
+</tr>
+<tr class="odd">
+<td><strong>co_A_receptor</strong></td>
+<td>协同激活受体</td>
+<td>除主受体外，另一个<strong>必需</strong>的受体亚基，缺失则信号不能传导</td>
+</tr>
+<tr class="even">
+<td><strong>co_I_receptor</strong></td>
+<td>协同抑制受体</td>
+<td>一个受体亚基，但<strong>抑制信号传导</strong>，常与主受体共同存在以调节反应强度</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="geneinfo-表" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="geneinfo-表"><span class="header-section-number">2.5</span> geneInfo 表</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>列名</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>EntryID.uniprot</strong></td>
+<td>UniProt 的唯一标识符（如：P01137）</td>
+</tr>
+<tr class="even">
+<td><strong>Symbol</strong></td>
+<td>基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列</td>
+</tr>
+<tr class="odd">
+<td><strong>Synonym</strong></td>
+<td>基因的其他常用名称或别名</td>
+</tr>
+<tr class="even">
+<td><strong>Reviewed</strong></td>
+<td>该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）</td>
+</tr>
+<tr class="odd">
+<td><strong>EntryName</strong></td>
+<td>UniProt Entry 名称</td>
+</tr>
+<tr class="even">
+<td><strong>ProteinName</strong></td>
+<td>蛋白的全名或描述性名称</td>
+</tr>
+<tr class="odd">
+<td><strong>Keywords</strong></td>
+<td>与该蛋白相关的关键词</td>
+</tr>
+<tr class="even">
+<td><strong>Location</strong></td>
+<td>蛋白在细胞中的主要定位（细胞膜、细胞外等）</td>
+</tr>
+<tr class="odd">
+<td><strong>AntibodyName</strong></td>
+<td>对应该蛋白的抗体名称（如果有）</td>
+</tr>
+</tbody>
+</table>
+<p><code>Symbol</code> 用来跟 <code>interaction$ligand</code> / <code>interaction$receptor</code> 做匹配；<code>Reviewed == TRUE</code> 的数据质量更可靠。</p>
+</section>
+</section>
+<section id="原理解读" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="原理解读"><span class="header-section-number">3</span> 原理解读</h2>
+<p>CellChat 的分析管线大致分六步：</p>
+<ol type="1">
+<li>过滤不在数据库里的基因</li>
+<li>识别每个细胞群的 marker</li>
+<li>识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）</li>
+<li>推断不同细胞群之间通过配体-受体对发生的潜在通信</li>
+<li>将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度</li>
+<li>统计交互次数（数量）以及计算总通信概率（权重）</li>
+</ol>
+<p>下面重点拆第 4 步的 <code>computeCommunProb</code>。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["表达矩阵"] --&gt; B["过滤非数据库基因"]
+    B --&gt; C["识别每个细胞群的 marker"]
+    C --&gt; D["识别过表达的 LR 对"]
+    D --&gt; E["computeCommunProb&lt;br&gt;通讯概率"]
+    E --&gt; F["computeCommunProbPathway&lt;br&gt;通路水平聚合"]
+    F --&gt; G["aggregateNet&lt;br&gt;交互次数 &amp; 权重"]
+    G --&gt; H["netAnalysis_computeCentrality&lt;br&gt;中心性分析"]
+    G --&gt; I["identifyCommunicationPatterns&lt;br&gt;NMF 模式识别"]
+    H --&gt; J["可视化&lt;br&gt;弦图 / 气泡图 / 热图"]
+    I --&gt; J
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<section id="第一步计算每个细胞群每个基因的平均表达量" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="第一步计算每个细胞群每个基因的平均表达量"><span class="header-section-number">3.1</span> 第一步：计算每个细胞群每个基因的平均表达量</h3>
+<p>为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：</p>
+<p><span class="math display">\[EM = \frac{1}{2}Q_2 + \frac{1}{4}\left( Q_1 + Q_3 \right)\]</span></p>
+<p><span class="math inline">\(Q_1\)</span>、<span class="math inline">\(Q_2\)</span>、<span class="math inline">\(Q_3\)</span> 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。</p>
+<p>遇到复合体时，用<strong>几何平均</strong>合并亚基表达：</p>
+<p><span class="math display">\[\text{Expr(complex)} = \sqrt[N]{\prod_{i=1}^{N} \text{Expr(subunit}_i)}\]</span></p>
+<p>任何亚基表达为零，复合物就失活。</p>
+</section>
+<section id="第二步共刺激共抑制受体调节" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="第二步共刺激共抑制受体调节"><span class="header-section-number">3.2</span> 第二步：共刺激/共抑制受体调节</h3>
+<p>利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。</p>
+</section>
+<section id="第三步计算通讯概率" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="第三步计算通讯概率"><span class="header-section-number">3.3</span> 第三步：计算通讯概率</h3>
+<p>对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># 1. 配体与受体表达量的外积</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="co"># L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>dataLR[j, k] <span class="ot">=</span> L[j] <span class="sc">*</span> R[k]</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co"># 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co"># Kh（半最大效应浓度，默认 0.5）</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#   - dataLR = Kh → P1 = 0.5（半最大概率）</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co"># n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a>P1 <span class="ot">&lt;-</span> dataLR<span class="sc">^</span>n <span class="sc">/</span> (Kh<span class="sc">^</span>n <span class="sc">+</span> dataLR<span class="sc">^</span>n)</span>
+<span id="cb2-12"><a href="#cb2-12"></a></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co"># 3. 激动剂调制：有激动剂时增强信号</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#    当前 L-R 对没有激动剂记录时 P2 = 1</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a>P2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> agonist_expr<span class="sc">^</span>n <span class="sc">/</span> (Kh<span class="sc">^</span>n <span class="sc">+</span> agonist_expr<span class="sc">^</span>n)</span>
+<span id="cb2-17"><a href="#cb2-17"></a></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="co"># 4. 拮抗剂调制：有拮抗剂时抑制信号</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0</span></span>
+<span id="cb2-20"><a href="#cb2-20"></a><span class="co">#    当前 L-R 对没有拮抗剂记录时 P3 = 1</span></span>
+<span id="cb2-21"><a href="#cb2-21"></a>P3 <span class="ot">&lt;-</span> Kh<span class="sc">^</span>n <span class="sc">/</span> (Kh<span class="sc">^</span>n <span class="sc">+</span> antagonist_expr<span class="sc">^</span>n)</span>
+<span id="cb2-22"><a href="#cb2-22"></a></span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="co"># 5. 空间约束：非空间数据下 P.spatial 全部为 1</span></span>
+<span id="cb2-24"><a href="#cb2-24"></a>Pnull <span class="ot">=</span> P1 <span class="sc">*</span> P2 <span class="sc">*</span> P3 <span class="sc">*</span> P.spatial</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="置换检验" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="置换检验"><span class="header-section-number">3.4</span> 置换检验</h3>
+<p>通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？</p>
+<p>做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 <code>nboot = 100</code> 次，每次得到一个随机化的概率分布：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># 简化示意：实际循环 100 次，每次打乱标签后重算</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>) {</span>
+<span id="cb3-3"><a href="#cb3-3"></a>  shuffled_labels <span class="ot">&lt;-</span> <span class="fu">sample</span>(cell_labels)                     <span class="co"># 打乱</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>  shuffled_prob   <span class="ot">&lt;-</span> <span class="fu">compute_prob</span>(data, shuffled_labels)     <span class="co"># 重算</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>  null_dist[i]    <span class="ot">&lt;-</span> shuffled_prob</span>
+<span id="cb3-6"><a href="#cb3-6"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co"># 真实概率在零分布中的位置 → p 值</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>p_value <span class="ot">&lt;-</span> <span class="fu">sum</span>(null_dist <span class="sc">&gt;=</span> observed_prob) <span class="sc">/</span> nboot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>p 值越小，说明真实概率越不太可能是随机噪音</li>
+<li>默认 <code>nboot = 100</code>，对于严格的使用可以提高到 500 或 1000</li>
+<li>结果存在 <code>net$pval</code> 里，跟 <code>net$prob</code> 维度相同</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/liripo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

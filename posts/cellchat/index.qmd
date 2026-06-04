@@ -1,0 +1,194 @@
+---
+title: "CellChat 源码解读"
+subtitle: "从配体-受体数据库到细胞间通讯推断的完整管线"
+description: "梳理 CellChat 的 CellChatDB 数据库结构、CellChat 对象定义、computeCommunProb 核心算法（Hill 函数 × 多因素乘积 × 置换检验）以及高层网络分析。"
+author: "Liripo"
+date: "2026-06-04"
+date-modified: "2026-06-04"
+categories: [single-cell, cellchat, R, bioinformatics, cell-communication]
+image: "CellChat_Logo.png"
+---
+
+## 引言
+
+单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。
+
+[CellChat](https://github.com/jinworks/CellChat) 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。
+
+<https://github.com/jinworks/CellChat>
+
+## CellChatDB 数据库
+
+### 四张表
+
+CellChatDB 是一个 `list`，包含四个 `data.frame`：
+
+```text
+CellChatDB
+├── interaction    ← 核心：配体-受体互作关系
+├── complex        ← 复合物：多亚基配体/受体的亚基组成
+├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成
+└── geneInfo       ← 基因注释：官方符号、定位、功能关键词
+```
+
+`showDatabaseCategory()` 函数显示人类数据库的分布：
+
+| 类型 | 中文名称 | 是否需接触 | 信号范围 | 功能方向 |
+| --- | --- | :---: | --- | --- |
+| **Secreted Signaling** | 分泌型信号 | 否 | 远程 | 发育、免疫、系统调节 |
+| **ECM-Receptor** | 细胞外基质-受体信号 | 否 | 局部 | 结构支持、黏附、迁移 |
+| **Cell-Cell Contact** | 细胞-细胞接触信号 | 是 | 临近 | 发育、干细胞分化、边界形成 |
+| **Non-protein Signaling** | 非蛋白信号 | 否/是 | 多变 | 炎症、代谢调控、环境应答 |
+
+官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。
+
+### interaction 表
+
+每行是一个 L-R 对。`dplyr::glimpse(CellChatDB.human$interaction)` 可以看到完整结构，关键字段如下：
+
+| 列名 | 中文名称 | 说明 |
+| --- | --- | --- |
+| `interaction_name` | 互作名称 | 用 `_` 连接的配体和受体组合，例如 `TGFB1_TGFBR1_TGFBR2` |
+| `pathway_name` | 通路名称 | 所属信号通路名称，如 TGFb、WNT 等 |
+| `ligand` | 配体名 | 配体标识（可能为组合） |
+| `receptor` | 受体名 | 受体标识（可能为组合） |
+| `agonist` | 激动剂 | 指出该通路中已知的激动剂 |
+| `antagonist` | 拮抗剂 | 指出该通路中已知的拮抗剂 |
+| `co_A_receptor` | 辅助激动型受体 | 协助激活信号的共同受体 |
+| `co_I_receptor` | 辅助抑制型受体 | 协助抑制信号的共同受体 |
+| `evidence` | 支持证据 | 来源数据库或文献，如 `KEGG: hsa04350`、PMID 等 |
+| `annotation` | 互作分类 | `Secreted Signaling` 等四类 |
+| `interaction_name_2` | 格式化互作名称 | 更清晰可读的互作表达，例如 `TGFB1 - (TGFBR1+TGFBR2)`，用于展示 |
+| `ligand.symbol` | 配体符号 | 配体的 HGNC 基因符号 |
+| `receptor.symbol` | 受体符号 | 多个受体基因符号（逗号分隔） |
+
+### complex 表
+
+interaction 中配体（`ligand`）和受体（`receptor`）的组成：可能是单个基因，也可能是复合物（`complex`）。
+
+举个例子，复合物 **Activin AB** 查 complex 表就知道它包含亚基 **INHBA** 和 **INHBB**。计算表达时会取这些亚基的**几何平均**。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。
+
+### cofactor 表
+
+配体/受体调节因子（cofactors）数据库。interaction 里 `agonist`、`antagonist`、`co_A_receptor`、`co_I_receptor` 四列对应的信息：
+
+| 术语 | 作用类型 | 说明 |
+| --- | --- | --- |
+| **agonist** | 激动剂 | 增强主配体-受体相互作用的分子，与主配体协同激活 |
+| **antagonist** | 拮抗剂 | 抑制主配体-受体作用的分子，常与受体竞争结合 |
+| **co_A_receptor** | 协同激活受体 | 除主受体外，另一个**必需**的受体亚基，缺失则信号不能传导 |
+| **co_I_receptor** | 协同抑制受体 | 一个受体亚基，但**抑制信号传导**，常与主受体共同存在以调节反应强度 |
+
+### geneInfo 表
+
+| 列名 | 含义 |
+| --- | --- |
+| **EntryID.uniprot** | UniProt 的唯一标识符（如：P01137） |
+| **Symbol** | 基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列 |
+| **Synonym** | 基因的其他常用名称或别名 |
+| **Reviewed** | 该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据） |
+| **EntryName** | UniProt Entry 名称 |
+| **ProteinName** | 蛋白的全名或描述性名称 |
+| **Keywords** | 与该蛋白相关的关键词 |
+| **Location** | 蛋白在细胞中的主要定位（细胞膜、细胞外等） |
+| **AntibodyName** | 对应该蛋白的抗体名称（如果有） |
+
+`Symbol` 用来跟 `interaction$ligand` / `interaction$receptor` 做匹配；`Reviewed == TRUE` 的数据质量更可靠。
+
+## 原理解读
+
+CellChat 的分析管线大致分六步：
+
+1. 过滤不在数据库里的基因
+2. 识别每个细胞群的 marker
+3. 识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）
+4. 推断不同细胞群之间通过配体-受体对发生的潜在通信
+5. 将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度
+6. 统计交互次数（数量）以及计算总通信概率（权重）
+
+下面重点拆第 4 步的 `computeCommunProb`。
+
+```{mermaid}
+flowchart TD
+    A["表达矩阵"] --> B["过滤非数据库基因"]
+    B --> C["识别每个细胞群的 marker"]
+    C --> D["识别过表达的 LR 对"]
+    D --> E["computeCommunProb<br>通讯概率"]
+    E --> F["computeCommunProbPathway<br>通路水平聚合"]
+    F --> G["aggregateNet<br>交互次数 & 权重"]
+    G --> H["netAnalysis_computeCentrality<br>中心性分析"]
+    G --> I["identifyCommunicationPatterns<br>NMF 模式识别"]
+    H --> J["可视化<br>弦图 / 气泡图 / 热图"]
+    I --> J
+```
+
+### 第一步：计算每个细胞群每个基因的平均表达量
+
+为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：
+
+$$EM = \frac{1}{2}Q_2 + \frac{1}{4}\left( Q_1 + Q_3 \right)$$
+
+$Q_1$、$Q_2$、$Q_3$ 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。
+
+遇到复合体时，用**几何平均**合并亚基表达：
+
+$$\text{Expr(complex)} = \sqrt[N]{\prod_{i=1}^{N} \text{Expr(subunit}_i)}$$
+
+任何亚基表达为零，复合物就失活。
+
+### 第二步：共刺激/共抑制受体调节
+
+利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。
+
+### 第三步：计算通讯概率
+
+对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：
+
+```r
+# 1. 配体与受体表达量的外积
+# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达
+dataLR[j, k] = L[j] * R[k]
+
+# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值
+# Kh（半最大效应浓度，默认 0.5）
+#   - dataLR << Kh → P1 ≈ 0（几乎无信号）
+#   - dataLR = Kh → P1 = 0.5（半最大概率）
+#   - dataLR >> Kh → P1 ≈ 1（信号饱和）
+# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为
+P1 <- dataLR^n / (Kh^n + dataLR^n)
+
+# 3. 激动剂调制：有激动剂时增强信号
+#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1
+#    当前 L-R 对没有激动剂记录时 P2 = 1
+P2 <- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)
+
+# 4. 拮抗剂调制：有拮抗剂时抑制信号
+#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0
+#    当前 L-R 对没有拮抗剂记录时 P3 = 1
+P3 <- Kh^n / (Kh^n + antagonist_expr^n)
+
+# 5. 空间约束：非空间数据下 P.spatial 全部为 1
+Pnull = P1 * P2 * P3 * P.spatial
+```
+
+### 置换检验
+
+通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？
+
+做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 `nboot = 100` 次，每次得到一个随机化的概率分布：
+
+```r
+# 简化示意：实际循环 100 次，每次打乱标签后重算
+for (i in 1:100) {
+  shuffled_labels <- sample(cell_labels)                     # 打乱
+  shuffled_prob   <- compute_prob(data, shuffled_labels)     # 重算
+  null_dist[i]    <- shuffled_prob
+}
+
+# 真实概率在零分布中的位置 → p 值
+p_value <- sum(null_dist >= observed_prob) / nboot
+```
+
+- p 值越小，说明真实概率越不太可能是随机噪音
+- 默认 `nboot = 100`，对于严格的使用可以提高到 500 或 1000
+- 结果存在 `net$pval` 里，跟 `net$prob` 维度相同

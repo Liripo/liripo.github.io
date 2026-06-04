@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/cellchat/index.html",
       "/posts/biomni/index.html",
       "/posts/pi-agent/index.html",
       "/posts/umami/index.html",

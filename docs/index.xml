@@ -10,7 +10,498 @@
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
 <generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 31 May 2026 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 03 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>CellChat 源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/cellchat/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p>单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。</p>
+<p><a href="https://github.com/jinworks/CellChat">CellChat</a> 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。</p>
+<p><a href="https://github.com/jinworks/CellChat" class="uri">https://github.com/jinworks/CellChat</a></p>
+</section>
+<section id="cellchatdb-数据库" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="cellchatdb-数据库"><span class="header-section-number">2</span> CellChatDB 数据库</h2>
+<section id="四张表" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="四张表"><span class="header-section-number">2.1</span> 四张表</h3>
+<p>CellChatDB 是一个 <code>list</code>，包含四个 <code>data.frame</code>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource text number-lines code-with-copy"><code class="sourceCode"><span id="cb1-1">CellChatDB</span>
+<span id="cb1-2">├── interaction    ← 核心：配体-受体互作关系</span>
+<span id="cb1-3">├── complex        ← 复合物：多亚基配体/受体的亚基组成</span>
+<span id="cb1-4">├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成</span>
+<span id="cb1-5">└── geneInfo       ← 基因注释：官方符号、定位、功能关键词</span></code></pre></div></div>
+<p><code>showDatabaseCategory()</code> 函数显示人类数据库的分布：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 29%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>类型</th>
+<th>中文名称</th>
+<th style="text-align: center;">是否需接触</th>
+<th>信号范围</th>
+<th>功能方向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Secreted Signaling</strong></td>
+<td>分泌型信号</td>
+<td style="text-align: center;">否</td>
+<td>远程</td>
+<td>发育、免疫、系统调节</td>
+</tr>
+<tr class="even">
+<td><strong>ECM-Receptor</strong></td>
+<td>细胞外基质-受体信号</td>
+<td style="text-align: center;">否</td>
+<td>局部</td>
+<td>结构支持、黏附、迁移</td>
+</tr>
+<tr class="odd">
+<td><strong>Cell-Cell Contact</strong></td>
+<td>细胞-细胞接触信号</td>
+<td style="text-align: center;">是</td>
+<td>临近</td>
+<td>发育、干细胞分化、边界形成</td>
+</tr>
+<tr class="even">
+<td><strong>Non-protein Signaling</strong></td>
+<td>非蛋白信号</td>
+<td style="text-align: center;">否/是</td>
+<td>多变</td>
+<td>炎症、代谢调控、环境应答</td>
+</tr>
+</tbody>
+</table>
+<p>官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。</p>
+</section>
+<section id="interaction-表" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="interaction-表"><span class="header-section-number">2.2</span> interaction 表</h3>
+<p>每行是一个 L-R 对。<code>dplyr::glimpse(CellChatDB.human$interaction)</code> 可以看到完整结构，关键字段如下：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>列名</th>
+<th>中文名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>interaction_name</code></td>
+<td>互作名称</td>
+<td>用 <code>_</code> 连接的配体和受体组合，例如 <code>TGFB1_TGFBR1_TGFBR2</code></td>
+</tr>
+<tr class="even">
+<td><code>pathway_name</code></td>
+<td>通路名称</td>
+<td>所属信号通路名称，如 TGFb、WNT 等</td>
+</tr>
+<tr class="odd">
+<td><code>ligand</code></td>
+<td>配体名</td>
+<td>配体标识（可能为组合）</td>
+</tr>
+<tr class="even">
+<td><code>receptor</code></td>
+<td>受体名</td>
+<td>受体标识（可能为组合）</td>
+</tr>
+<tr class="odd">
+<td><code>agonist</code></td>
+<td>激动剂</td>
+<td>指出该通路中已知的激动剂</td>
+</tr>
+<tr class="even">
+<td><code>antagonist</code></td>
+<td>拮抗剂</td>
+<td>指出该通路中已知的拮抗剂</td>
+</tr>
+<tr class="odd">
+<td><code>co_A_receptor</code></td>
+<td>辅助激动型受体</td>
+<td>协助激活信号的共同受体</td>
+</tr>
+<tr class="even">
+<td><code>co_I_receptor</code></td>
+<td>辅助抑制型受体</td>
+<td>协助抑制信号的共同受体</td>
+</tr>
+<tr class="odd">
+<td><code>evidence</code></td>
+<td>支持证据</td>
+<td>来源数据库或文献，如 <code>KEGG: hsa04350</code>、PMID 等</td>
+</tr>
+<tr class="even">
+<td><code>annotation</code></td>
+<td>互作分类</td>
+<td><code>Secreted Signaling</code> 等四类</td>
+</tr>
+<tr class="odd">
+<td><code>interaction_name_2</code></td>
+<td>格式化互作名称</td>
+<td>更清晰可读的互作表达，例如 <code>TGFB1 - (TGFBR1+TGFBR2)</code>，用于展示</td>
+</tr>
+<tr class="even">
+<td><code>ligand.symbol</code></td>
+<td>配体符号</td>
+<td>配体的 HGNC 基因符号</td>
+</tr>
+<tr class="odd">
+<td><code>receptor.symbol</code></td>
+<td>受体符号</td>
+<td>多个受体基因符号（逗号分隔）</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="complex-表" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="complex-表"><span class="header-section-number">2.3</span> complex 表</h3>
+<p>interaction 中配体（<code>ligand</code>）和受体（<code>receptor</code>）的组成：可能是单个基因，也可能是复合物（<code>complex</code>）。</p>
+<p>举个例子，复合物 <strong>Activin AB</strong> 查 complex 表就知道它包含亚基 <strong>INHBA</strong> 和 <strong>INHBB</strong>。计算表达时会取这些亚基的<strong>几何平均</strong>。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。</p>
+</section>
+<section id="cofactor-表" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="cofactor-表"><span class="header-section-number">2.4</span> cofactor 表</h3>
+<p>配体/受体调节因子（cofactors）数据库。interaction 里 <code>agonist</code>、<code>antagonist</code>、<code>co_A_receptor</code>、<code>co_I_receptor</code> 四列对应的信息：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>术语</th>
+<th>作用类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>agonist</strong></td>
+<td>激动剂</td>
+<td>增强主配体-受体相互作用的分子，与主配体协同激活</td>
+</tr>
+<tr class="even">
+<td><strong>antagonist</strong></td>
+<td>拮抗剂</td>
+<td>抑制主配体-受体作用的分子，常与受体竞争结合</td>
+</tr>
+<tr class="odd">
+<td><strong>co_A_receptor</strong></td>
+<td>协同激活受体</td>
+<td>除主受体外，另一个<strong>必需</strong>的受体亚基，缺失则信号不能传导</td>
+</tr>
+<tr class="even">
+<td><strong>co_I_receptor</strong></td>
+<td>协同抑制受体</td>
+<td>一个受体亚基，但<strong>抑制信号传导</strong>，常与主受体共同存在以调节反应强度</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="geneinfo-表" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="geneinfo-表"><span class="header-section-number">2.5</span> geneInfo 表</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>列名</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>EntryID.uniprot</strong></td>
+<td>UniProt 的唯一标识符（如：P01137）</td>
+</tr>
+<tr class="even">
+<td><strong>Symbol</strong></td>
+<td>基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列</td>
+</tr>
+<tr class="odd">
+<td><strong>Synonym</strong></td>
+<td>基因的其他常用名称或别名</td>
+</tr>
+<tr class="even">
+<td><strong>Reviewed</strong></td>
+<td>该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）</td>
+</tr>
+<tr class="odd">
+<td><strong>EntryName</strong></td>
+<td>UniProt Entry 名称</td>
+</tr>
+<tr class="even">
+<td><strong>ProteinName</strong></td>
+<td>蛋白的全名或描述性名称</td>
+</tr>
+<tr class="odd">
+<td><strong>Keywords</strong></td>
+<td>与该蛋白相关的关键词</td>
+</tr>
+<tr class="even">
+<td><strong>Location</strong></td>
+<td>蛋白在细胞中的主要定位（细胞膜、细胞外等）</td>
+</tr>
+<tr class="odd">
+<td><strong>AntibodyName</strong></td>
+<td>对应该蛋白的抗体名称（如果有）</td>
+</tr>
+</tbody>
+</table>
+<p><code>Symbol</code> 用来跟 <code>interaction$ligand</code> / <code>interaction$receptor</code> 做匹配；<code>Reviewed == TRUE</code> 的数据质量更可靠。</p>
+</section>
+</section>
+<section id="原理解读" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="原理解读"><span class="header-section-number">3</span> 原理解读</h2>
+<p>CellChat 的分析管线大致分六步：</p>
+<ol type="1">
+<li>过滤不在数据库里的基因</li>
+<li>识别每个细胞群的 marker</li>
+<li>识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）</li>
+<li>推断不同细胞群之间通过配体-受体对发生的潜在通信</li>
+<li>将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度</li>
+<li>统计交互次数（数量）以及计算总通信概率（权重）</li>
+</ol>
+<p>下面重点拆第 4 步的 <code>computeCommunProb</code>。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["表达矩阵"] --&gt; B["过滤非数据库基因"]
+    B --&gt; C["识别每个细胞群的 marker"]
+    C --&gt; D["识别过表达的 LR 对"]
+    D --&gt; E["computeCommunProb&lt;br&gt;通讯概率"]
+    E --&gt; F["computeCommunProbPathway&lt;br&gt;通路水平聚合"]
+    F --&gt; G["aggregateNet&lt;br&gt;交互次数 &amp; 权重"]
+    G --&gt; H["netAnalysis_computeCentrality&lt;br&gt;中心性分析"]
+    G --&gt; I["identifyCommunicationPatterns&lt;br&gt;NMF 模式识别"]
+    H --&gt; J["可视化&lt;br&gt;弦图 / 气泡图 / 热图"]
+    I --&gt; J
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<section id="第一步计算每个细胞群每个基因的平均表达量" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="第一步计算每个细胞群每个基因的平均表达量"><span class="header-section-number">3.1</span> 第一步：计算每个细胞群每个基因的平均表达量</h3>
+<p>为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：</p>
+<p><img src="https://latex.codecogs.com/png.latex?EM%20=%20%5Cfrac%7B1%7D%7B2%7DQ_2%20+%20%5Cfrac%7B1%7D%7B4%7D%5Cleft(%20Q_1%20+%20Q_3%20%5Cright)"></p>
+<p><img src="https://latex.codecogs.com/png.latex?Q_1">、<img src="https://latex.codecogs.com/png.latex?Q_2">、<img src="https://latex.codecogs.com/png.latex?Q_3"> 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。</p>
+<p>遇到复合体时，用<strong>几何平均</strong>合并亚基表达：</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Ctext%7BExpr(complex)%7D%20=%20%5Csqrt%5BN%5D%7B%5Cprod_%7Bi=1%7D%5E%7BN%7D%20%5Ctext%7BExpr(subunit%7D_i)%7D"></p>
+<p>任何亚基表达为零，复合物就失活。</p>
+</section>
+<section id="第二步共刺激共抑制受体调节" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="第二步共刺激共抑制受体调节"><span class="header-section-number">3.2</span> 第二步：共刺激/共抑制受体调节</h3>
+<p>利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。</p>
+</section>
+<section id="第三步计算通讯概率" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="第三步计算通讯概率"><span class="header-section-number">3.3</span> 第三步：计算通讯概率</h3>
+<p>对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 1. 配体与受体表达量的外积</span></span>
+<span id="cb2-2"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达</span></span>
+<span id="cb2-3">dataLR[j, k] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> L[j] <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> R[k]</span>
+<span id="cb2-4"></span>
+<span id="cb2-5"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值</span></span>
+<span id="cb2-6"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Kh（半最大效应浓度，默认 0.5）</span></span>
+<span id="cb2-7"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）</span></span>
+<span id="cb2-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#   - dataLR = Kh → P1 = 0.5（半最大概率）</span></span>
+<span id="cb2-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）</span></span>
+<span id="cb2-10"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为</span></span>
+<span id="cb2-11">P1 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> dataLR<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> (Kh<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> dataLR<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n)</span>
+<span id="cb2-12"></span>
+<span id="cb2-13"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 3. 激动剂调制：有激动剂时增强信号</span></span>
+<span id="cb2-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1</span></span>
+<span id="cb2-15"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#    当前 L-R 对没有激动剂记录时 P2 = 1</span></span>
+<span id="cb2-16">P2 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> agonist_expr<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> (Kh<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> agonist_expr<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n)</span>
+<span id="cb2-17"></span>
+<span id="cb2-18"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 4. 拮抗剂调制：有拮抗剂时抑制信号</span></span>
+<span id="cb2-19"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0</span></span>
+<span id="cb2-20"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">#    当前 L-R 对没有拮抗剂记录时 P3 = 1</span></span>
+<span id="cb2-21">P3 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> Kh<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> (Kh<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> antagonist_expr<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>n)</span>
+<span id="cb2-22"></span>
+<span id="cb2-23"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 5. 空间约束：非空间数据下 P.spatial 全部为 1</span></span>
+<span id="cb2-24">Pnull <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> P1 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> P2 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> P3 <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> P.spatial</span></code></pre></div></div>
+</section>
+<section id="置换检验" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="置换检验"><span class="header-section-number">3.4</span> 置换检验</h3>
+<p>通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？</p>
+<p>做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 <code>nboot = 100</code> 次，每次得到一个随机化的概率分布：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 简化示意：实际循环 100 次，每次打乱标签后重算</span></span>
+<span id="cb3-2"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> (i <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>) {</span>
+<span id="cb3-3">  shuffled_labels <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sample</span>(cell_labels)                     <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 打乱</span></span>
+<span id="cb3-4">  shuffled_prob   <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">compute_prob</span>(data, shuffled_labels)     <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 重算</span></span>
+<span id="cb3-5">  null_dist[i]    <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> shuffled_prob</span>
+<span id="cb3-6">}</span>
+<span id="cb3-7"></span>
+<span id="cb3-8"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 真实概率在零分布中的位置 → p 值</span></span>
+<span id="cb3-9">p_value <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sum</span>(null_dist <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> observed_prob) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> nboot</span></code></pre></div></div>
+<ul>
+<li>p 值越小，说明真实概率越不太可能是随机噪音</li>
+<li>默认 <code>nboot = 100</code>，对于严格的使用可以提高到 500 或 1000</li>
+<li>结果存在 <code>net$pval</code> 里，跟 <code>net$prob</code> 维度相同</li>
+</ul>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>single-cell</category>
+  <category>cellchat</category>
+  <category>R</category>
+  <category>bioinformatics</category>
+  <category>cell-communication</category>
+  <guid>https://liripo.github.io/posts/cellchat/</guid>
+  <pubDate>Wed, 03 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/cellchat/CellChat_Logo.png" medium="image" type="image/png" height="72" width="144"/>
+</item>
 <item>
   <title>Biomni 源码解读</title>
   <dc:creator>Liripo </dc:creator>
