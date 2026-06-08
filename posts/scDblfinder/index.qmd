@@ -1,0 +1,9 @@
+---
+title: "scDblFinder 识别双胞源码解读"
+author: "Liripo"
+date: "2026-06-08"
+categories: [single-cell, R, bioinformatics]
+image: "cover.png"
+---
+
+这篇源码整理成了 PPT，[下载 PPTX](./scDblFinder%20识别双胞.pptx)

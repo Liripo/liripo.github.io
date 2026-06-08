@@ -34,5 +34,14 @@
   },
   "posts/cellchat/index.qmd": {
     "index.html": "fd505ee1"
+  },
+  "posts/scDblfinder/index.qmd": {
+    "index.html": "9b2da17d"
+  },
+  "posts/spatial-compare/index.qmd": {
+    "index.html": "a37e0ca1"
+  },
+  "docs/posts/spatial-compare/index.qmd": {
+    "index.html": "b22438f8"
   }
 }

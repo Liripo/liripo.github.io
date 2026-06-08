@@ -10,7 +10,54 @@
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
 <generator>quarto-1.9.37</generator>
-<lastBuildDate>Wed, 03 Jun 2026 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 07 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>scDblFinder 识别双胞源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/scDblfinder/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<p>这篇源码整理成了 PPT，<a href="./scDblFinder 识别双胞.pptx">下载 PPTX</a></p>
+
+
+
+ ]]></description>
+  <category>single-cell</category>
+  <category>R</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/scDblfinder/</guid>
+  <pubDate>Sun, 07 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/scDblfinder/cover.png" medium="image" type="image/png" height="76" width="144"/>
+</item>
+<item>
+  <title>系统地比较 11 种空间转录组方法</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/spatial-compare/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<p><a href="./系统地比较11种空间转录组方法.pptx">下载 PPTX</a></p>
+
+
+
+ ]]></description>
+  <category>spatial-transcriptomics</category>
+  <category>single-cell</category>
+  <category>R</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/spatial-compare/</guid>
+  <pubDate>Sun, 07 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/spatial-compare/cover.png" medium="image" type="image/png" height="76" width="144"/>
+</item>
 <item>
   <title>CellChat 源码解读</title>
   <dc:creator>Liripo </dc:creator>
@@ -2608,7 +2655,7 @@ font-style: inherit;">pip</span> install granian</span></code></pre></div></div>
 <ol start="2" type="1">
 <li>Dash 示例代码</li>
 </ol>
-<div id="6605f2f9" class="cell" data-source-line-numbers="10" data-execution_count="1">
+<div id="fa765bfd" class="cell" data-source-line-numbers="10" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-source-line-numbers="10" data-code-line-numbers="10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="im" style="color: #00769E;
 background-color: null;
 font-style: inherit;">import</span> dash</span>

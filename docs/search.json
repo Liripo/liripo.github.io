@@ -42,6 +42,13 @@
     "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
   },
   {
+    "objectID": "posts/spatial-compare/index.html",
+    "href": "posts/spatial-compare/index.html",
+    "title": "系统地比较 11 种空间转录组方法",
+    "section": "",
+    "text": "下载 PPTX"
+  },
+  {
     "objectID": "posts/quarto_blog/index.html",
     "href": "posts/quarto_blog/index.html",
     "title": "用 Quarto 创建个人博客",
@@ -89,6 +96,41 @@
     "title": "用 Gunicorn 部署 Dash 生产环境",
     "section": "",
     "text": "Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。\n\n首先，Dash 的代码中需要暴露 Flask server 对象。例如 app.py 中必须包含下面代码：\n\napp = Dash(__name__)\nserver = app.server # Gunicorn 会加载这个对象\n\n设置配置文件，如 gunicorn.conf.py。\n\nbind = '127.0.0.1:8000'      #绑定ip和端口号\n# chdir = ''  #gunicorn要切换到的目的工作目录\ntimeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒\n# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式\ndaemon = False # 后台运行\nworkers = 4 #进程数\nthreads = 4 #指定每个进程开启的线程数\nloglevel = 'info' #日志级别\naccess_log_format = '%(t)s %(p)s %(h)s \"%(r)s\" %(s)s %(L)s %(b)s %(f)s\" \"%(a)s\"'    #设置gunicorn访问日志格式，错误日志无法设置\n\n\naccesslog = \"/tmp/gunicorn/gunicorn_access.log\"      #访问日志文件\nerrorlog = \"/tmp/gunicorn/gunicorn_error.log\"        #错误日志文件\nreload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }\n\n启动程序。\n\n# app表示当前目录下app.py的意思，server则是文件下的变量\ngunicorn app:server -c ./gunicorn.conf.py\n\n\n想要自己重启 gunicorn，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep gunicorn\n\n\n\npid\n\n\n例如，上图主进程 pid 为 1674\nkill -HUP 1674\n\n\n\n上面的 HUP即为gunicorn支持的信号，下面为其他信号：\n\nQUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。\nTERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。\nHUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。\nTTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。\nTTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。\nUSR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。\nUSR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。\nWINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：\n\n\n\n\n\n\n\nNote\n\n\n\n\nTERM 信号：\n\n作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。\n使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。\n\nWINCH 信号：\n\n作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。\n使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。\n\n\n总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。"
+  },
+  {
+    "objectID": "posts/cellchat/index.html",
+    "href": "posts/cellchat/index.html",
+    "title": "CellChat 源码解读",
+    "section": "",
+    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
+  },
+  {
+    "objectID": "posts/cellchat/index.html#引言",
+    "href": "posts/cellchat/index.html#引言",
+    "title": "CellChat 源码解读",
+    "section": "",
+    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
+  },
+  {
+    "objectID": "posts/cellchat/index.html#cellchatdb-数据库",
+    "href": "posts/cellchat/index.html#cellchatdb-数据库",
+    "title": "CellChat 源码解读",
+    "section": "2 CellChatDB 数据库",
+    "text": "2 CellChatDB 数据库\n\n2.1 四张表\nCellChatDB 是一个 list，包含四个 data.frame：\nCellChatDB\n├── interaction    ← 核心：配体-受体互作关系\n├── complex        ← 复合物：多亚基配体/受体的亚基组成\n├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成\n└── geneInfo       ← 基因注释：官方符号、定位、功能关键词\nshowDatabaseCategory() 函数显示人类数据库的分布：\n\n\n\n\n\n\n\n\n\n\n类型\n中文名称\n是否需接触\n信号范围\n功能方向\n\n\n\n\nSecreted Signaling\n分泌型信号\n否\n远程\n发育、免疫、系统调节\n\n\nECM-Receptor\n细胞外基质-受体信号\n否\n局部\n结构支持、黏附、迁移\n\n\nCell-Cell Contact\n细胞-细胞接触信号\n是\n临近\n发育、干细胞分化、边界形成\n\n\nNon-protein Signaling\n非蛋白信号\n否/是\n多变\n炎症、代谢调控、环境应答\n\n\n\n官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。\n\n\n2.2 interaction 表\n每行是一个 L-R 对。dplyr::glimpse(CellChatDB.human$interaction) 可以看到完整结构，关键字段如下：\n\n\n\n\n\n\n\n\n列名\n中文名称\n说明\n\n\n\n\ninteraction_name\n互作名称\n用 _ 连接的配体和受体组合，例如 TGFB1_TGFBR1_TGFBR2\n\n\npathway_name\n通路名称\n所属信号通路名称，如 TGFb、WNT 等\n\n\nligand\n配体名\n配体标识（可能为组合）\n\n\nreceptor\n受体名\n受体标识（可能为组合）\n\n\nagonist\n激动剂\n指出该通路中已知的激动剂\n\n\nantagonist\n拮抗剂\n指出该通路中已知的拮抗剂\n\n\nco_A_receptor\n辅助激动型受体\n协助激活信号的共同受体\n\n\nco_I_receptor\n辅助抑制型受体\n协助抑制信号的共同受体\n\n\nevidence\n支持证据\n来源数据库或文献，如 KEGG: hsa04350、PMID 等\n\n\nannotation\n互作分类\nSecreted Signaling 等四类\n\n\ninteraction_name_2\n格式化互作名称\n更清晰可读的互作表达，例如 TGFB1 - (TGFBR1+TGFBR2)，用于展示\n\n\nligand.symbol\n配体符号\n配体的 HGNC 基因符号\n\n\nreceptor.symbol\n受体符号\n多个受体基因符号（逗号分隔）\n\n\n\n\n\n2.3 complex 表\ninteraction 中配体（ligand）和受体（receptor）的组成：可能是单个基因，也可能是复合物（complex）。\n举个例子，复合物 Activin AB 查 complex 表就知道它包含亚基 INHBA 和 INHBB。计算表达时会取这些亚基的几何平均。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。\n\n\n2.4 cofactor 表\n配体/受体调节因子（cofactors）数据库。interaction 里 agonist、antagonist、co_A_receptor、co_I_receptor 四列对应的信息：\n\n\n\n\n\n\n\n\n术语\n作用类型\n说明\n\n\n\n\nagonist\n激动剂\n增强主配体-受体相互作用的分子，与主配体协同激活\n\n\nantagonist\n拮抗剂\n抑制主配体-受体作用的分子，常与受体竞争结合\n\n\nco_A_receptor\n协同激活受体\n除主受体外，另一个必需的受体亚基，缺失则信号不能传导\n\n\nco_I_receptor\n协同抑制受体\n一个受体亚基，但抑制信号传导，常与主受体共同存在以调节反应强度\n\n\n\n\n\n2.5 geneInfo 表\n\n\n\n\n\n\n\n列名\n含义\n\n\n\n\nEntryID.uniprot\nUniProt 的唯一标识符（如：P01137）\n\n\nSymbol\n基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列\n\n\nSynonym\n基因的其他常用名称或别名\n\n\nReviewed\n该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）\n\n\nEntryName\nUniProt Entry 名称\n\n\nProteinName\n蛋白的全名或描述性名称\n\n\nKeywords\n与该蛋白相关的关键词\n\n\nLocation\n蛋白在细胞中的主要定位（细胞膜、细胞外等）\n\n\nAntibodyName\n对应该蛋白的抗体名称（如果有）\n\n\n\nSymbol 用来跟 interaction$ligand / interaction$receptor 做匹配；Reviewed == TRUE 的数据质量更可靠。"
+  },
+  {
+    "objectID": "posts/cellchat/index.html#原理解读",
+    "href": "posts/cellchat/index.html#原理解读",
+    "title": "CellChat 源码解读",
+    "section": "3 原理解读",
+    "text": "3 原理解读\nCellChat 的分析管线大致分六步：\n\n过滤不在数据库里的基因\n识别每个细胞群的 marker\n识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）\n推断不同细胞群之间通过配体-受体对发生的潜在通信\n将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度\n统计交互次数（数量）以及计算总通信概率（权重）\n\n下面重点拆第 4 步的 computeCommunProb。\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵\"] --&gt; B[\"过滤非数据库基因\"]\n    B --&gt; C[\"识别每个细胞群的 marker\"]\n    C --&gt; D[\"识别过表达的 LR 对\"]\n    D --&gt; E[\"computeCommunProb&lt;br&gt;通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway&lt;br&gt;通路水平聚合\"]\n    F --&gt; G[\"aggregateNet&lt;br&gt;交互次数 & 权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality&lt;br&gt;中心性分析\"]\n    G --&gt; I[\"identifyCommunicationPatterns&lt;br&gt;NMF 模式识别\"]\n    H --&gt; J[\"可视化&lt;br&gt;弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n\n3.1 第一步：计算每个细胞群每个基因的平均表达量\n为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：\n\\[EM = \\frac{1}{2}Q_2 + \\frac{1}{4}\\left( Q_1 + Q_3 \\right)\\]\n\\(Q_1\\)、\\(Q_2\\)、\\(Q_3\\) 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n遇到复合体时，用几何平均合并亚基表达：\n\\[\\text{Expr(complex)} = \\sqrt[N]{\\prod_{i=1}^{N} \\text{Expr(subunit}_i)}\\]\n任何亚基表达为零，复合物就失活。\n\n\n3.2 第二步：共刺激/共抑制受体调节\n利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。\n\n\n3.3 第三步：计算通讯概率\n对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：\n# 1. 配体与受体表达量的外积\n# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达\ndataLR[j, k] = L[j] * R[k]\n\n# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值\n# Kh（半最大效应浓度，默认 0.5）\n#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）\n#   - dataLR = Kh → P1 = 0.5（半最大概率）\n#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）\n# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为\nP1 &lt;- dataLR^n / (Kh^n + dataLR^n)\n\n# 3. 激动剂调制：有激动剂时增强信号\n#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1\n#    当前 L-R 对没有激动剂记录时 P2 = 1\nP2 &lt;- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)\n\n# 4. 拮抗剂调制：有拮抗剂时抑制信号\n#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0\n#    当前 L-R 对没有拮抗剂记录时 P3 = 1\nP3 &lt;- Kh^n / (Kh^n + antagonist_expr^n)\n\n# 5. 空间约束：非空间数据下 P.spatial 全部为 1\nPnull = P1 * P2 * P3 * P.spatial\n\n\n3.4 置换检验\n通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？\n做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 nboot = 100 次，每次得到一个随机化的概率分布：\n# 简化示意：实际循环 100 次，每次打乱标签后重算\nfor (i in 1:100) {\n  shuffled_labels &lt;- sample(cell_labels)                     # 打乱\n  shuffled_prob   &lt;- compute_prob(data, shuffled_labels)     # 重算\n  null_dist[i]    &lt;- shuffled_prob\n}\n\n# 真实概率在零分布中的位置 → p 值\np_value &lt;- sum(null_dist &gt;= observed_prob) / nboot\n\np 值越小，说明真实概率越不太可能是随机噪音\n默认 nboot = 100，对于严格的使用可以提高到 500 或 1000\n结果存在 net$pval 里，跟 net$prob 维度相同"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Blog",
+    "section": "",
+    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nscDblFinder 识别双胞源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n系统地比较 11 种空间转录组方法\n\n\n\n\n\n\nspatial-transcriptomics\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\ncellchat\n\nR\n\nbioinformatics\n\ncell-communication\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nagent\n\nbiomni\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\nagent\n\ntypescript\n\nsource-reading\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\nquarto\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ncadvisor\n\nprometheus\n\ngrafana\n\ndocker\n\nobservability\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\ndash\n\nweb\n\npython\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\ndash\n\nweb\n\npython\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\nblog\n\ngithub-pages\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/biomni/index.html",
@@ -152,13 +194,6 @@
     "title": "Biomni 源码解读",
     "section": "8 使用体验",
     "text": "8 使用体验\n\n环境准备成本不低。Python 和 R 两条线都得自己处理好，第一次用非常容易报错（依赖冲突、系统库缺失、R 包编译失败都很常见）。建议直接用 Biomni 提供的 biomni_env 目录或者上游 Docker 镜像起手。\nPrompt 偏长。空载就接近 3 万 token，即使开了 use_tool_retriever 也有 5K 左右。更优雅的做法是把工具改造成按需加载的 Skills——这也是 Anthropic / Claude Code 现在在推的方向。\nLLM 模型接入可以更灵活。llm.py 目前主要对接了 Claude，用 litellm 统一接入的话会方便很多。\n数据湖首次下载耗时。BindingDB_All_202409.tsv 单文件 6.25 G，磁盘空间和网络都得提前规划好。"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Blog",
-    "section": "",
-    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\ncellchat\n\nR\n\nbioinformatics\n\ncell-communication\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nagent\n\nbiomni\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\nagent\n\ntypescript\n\nsource-reading\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\nquarto\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ncadvisor\n\nprometheus\n\ngrafana\n\ndocker\n\nobservability\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\ndash\n\nweb\n\npython\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\ndash\n\nweb\n\npython\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\nblog\n\ngithub-pages\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/granian_dash/index.html",
@@ -238,6 +273,13 @@
     "text": "7 配置与扩展\n\n7.1 配置文件\npi 使用多个配置文件：\n\n\n\n文件\n位置\n用途\n\n\n\n\nsettings.json\n~/.pi/agent/ 或 .pi/\n全局/项目设置\n\n\nauth.json\n~/.pi/agent/\nAPI 密钥和 OAuth 凭证\n\n\nmodels.json\n~/.pi/agent/\n自定义提供商和模型\n\n\nkeybindings.json\n~/.pi/agent/\n快捷键自定义\n\n\n\n\n\n7.2 技能系统\n技能是按需加载的能力包，遵循 Agent Skills 标准：\n# SKILL.md 格式\n---\nname: my-skill\ndescription: 描述技能功能\n---\n\n## 使用说明\n...\n\n通过 /skill:name 调用\n或由 Agent 自动加载\n在系统提示中显示为可用能力\n\n\n\n7.3 上下文文件\npi 会自动加载 AGENTS.md（或 CLAUDE.md）：\n\n全局配置目录\n父目录\n当前目录\n\n所有匹配的文件会连接到系统提示中。"
   },
   {
+    "objectID": "posts/scDblfinder/index.html",
+    "href": "posts/scDblfinder/index.html",
+    "title": "scDblFinder 识别双胞源码解读",
+    "section": "",
+    "text": "这篇源码整理成了 PPT，下载 PPTX"
+  },
+  {
     "objectID": "posts/umami/index.html",
     "href": "posts/umami/index.html",
     "title": "用 Umami 分析网站访客",
@@ -266,94 +308,10 @@
     "text": "3 放到 Quarto 配置中\n对 Quarto 网站来说，可以把脚本放到 _quarto.yml 的 include-in-header 中，这样每个页面都会自动带上统计脚本：\nformat:\n  html:\n    include-in-header:\n      - text: |\n          &lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"你的站点 ID\"&gt;&lt;/script&gt;"
   },
   {
-    "objectID": "posts/cellchat/index.html",
-    "href": "posts/cellchat/index.html",
-    "title": "CellChat 源码解读",
+    "objectID": "docs/posts/spatial-compare/index.html",
+    "href": "docs/posts/spatial-compare/index.html",
+    "title": "系统地比较 11 种空间转录组方法",
     "section": "",
-    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#引言",
-    "href": "posts/cellchat/index.html#引言",
-    "title": "CellChat 源码解读",
-    "section": "",
-    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#源码结构概览",
-    "href": "posts/cellchat/index.html#源码结构概览",
-    "title": "CellChat 源码解读",
-    "section": "2 源码结构概览",
-    "text": "2 源码结构概览\nCellChat 的主体代码集中在 R/ 目录下，一共 10 个文件：\n\n\n\n\n\n\n\n\n文件\n行数（估）\n职责\n\n\n\n\nCellChat-package.R\n~10\n包入口，加载说明\n\n\nCellChat_class.R\n~600\nCellChat 对象的类定义、createCellChat、mergeCellChat、updateCellChat\n\n\nmodeling.R\n~1200\n核心算法：computeCommunProb、computeCommunProbPathway、Hill 函数\n\n\nanalysis.R\n~1500\n高层次分析：中心性计算、NMF 模式识别、网络相似度、聚类\n\n\nvisualization.R\n~4000\n所有可视化函数（气泡图、弦图、圈图、热图、桑基图……）\n\n\ndatabase.R\n~500\nCellChatDB 的加载、更新、子集筛选\n\n\ndata.R\n~50\n内置数据集接口\n\n\nutilities.R\n~800\n预处理（identifyOverExpressedGenes、smoothData）、辅助工具函数\n\n\nRcppExports.R\n~20\nRcpp 桥接，调用 C++ 加速模块\n\n\napp.R\n~200\nShiny 交互应用入口\n\n\n\n注意那个 visualization.R 占了 4000 行——CellChat 在”画图”这件事上的投入，比核心算法本身还多。这其实符合它的定位：不是纯粹的计算工具，而是一个”从计算到可视化到交互探索”的全流程平台。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#cellchatdb配体-受体数据库",
-    "href": "posts/cellchat/index.html#cellchatdb配体-受体数据库",
-    "title": "CellChat 源码解读",
-    "section": "3 CellChatDB：配体-受体数据库",
-    "text": "3 CellChatDB：配体-受体数据库\n\n3.1 四张表\nCellChatDB 不是一张简单的”配体-受体对照表”。它是一个 list，包含四个 data.frame：\nCellChatDB\n├── interaction    ← 核心：配体-受体互作关系\n├── complex        ← 复合物：多亚基配体/受体的亚基组成\n├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成\n└── geneInfo       ← 基因注释：官方符号、定位、功能关键词\n\n\n3.2 interaction 表\n这是最核心的一张表，每行是一个 L-R 对。以人类数据库为例，包含以下关键字段：\n\n\n\n字段\n含义\n举例\n\n\n\n\ninteraction_name\n唯一标识（用作行名）\nTGFB1_TGFBR1_TGFBR2\n\n\npathway_name\n所属信号通路\nTGFb\n\n\nligand\n配体标识（可能是基因名或复合物名）\nTGFB1\n\n\nreceptor\n受体标识\nTGFBR1_TGFBR2\n\n\nagonist / antagonist\n激动剂 / 拮抗剂\n\"\"\n\n\nco_A_receptor / co_I_receptor\n共激活 / 共抑制受体\n\"\"\n\n\nannotation\n互作类型\nSecreted Signaling\n\n\nevidence\n证据来源\nKEGG: hsa04350\n\n\nligand.symbol\n配体 HGNC 符号\nTGFB1\n\n\nreceptor.symbol\n受体 HGNC 符号（逗号分隔）\nTGFBR1,TGFBR2\n\n\nligand.family\n配体家族\nTGF-beta\n\n\nreceptor.family\n受体家族\nReceptors\n\n\n\n四个互作类型（annotation）的分布：\n\n\n\n\n\n\n\n\n\n\n类型\n中文名称\n是否需接触\n信号范围\n典型通路\n\n\n\n\nSecreted Signaling\n分泌型信号\n否\n远程\nTGFb, WNT, BMP\n\n\nECM-Receptor\n胞外基质-受体\n否\n局部\n胶原蛋白、层粘连蛋白\n\n\nCell-Cell Contact\n细胞间接触\n是\n临近\nNotch, Eph\n\n\nNon-protein Signaling\n非蛋白信号\n多变\n多变\nATP、脂类信号分子\n\n\n\n\n官方建议在实际分析中排除 Non-protein Signaling，因为这类信号的计算模型与蛋白信号不同，混在一起会影响结果。\n\n\n\n3.3 complex 表\n一个配体不一定是一个基因。以复合物 Activin AB 为例：\ncomplex[\"Activin AB\",]\n# subunit_1: INHBA\n# subunit_2: INHBB\n当 CellChat 要计算 Active AB 的表达量时，不是简单取某个基因的值，而是：\nExpr(Activin AB) = sqrt(Expr(INHBA) × Expr(INHBB))\n即亚基表达的几何平均。这意味着：任何一个亚基表达为零，整个复合物就失活。这个设计在生物学上是合理的——没有全亚基就不算完整的复合物。\ncomplex 表最多支持 100 个亚基（subunit_1 ~ subunit_100），实际数据中最多也就几个。\n\n\n3.4 cofactor 表\n配体-受体信号通路中有四类调节因子：\n\n\n\n\n\n\n\n\n术语\n作用\n在算法中的处理\n\n\n\n\nagonist\n增强主配体-受体信号\n计算增强因子 P2\n\n\nantagonist\n抑制信号传导\n计算抑制因子 P3\n\n\nco_A_receptor\n共激活受体（激活必需）\n修正受体表达：R_new = R × (1 + 共受体表达)\n\n\nco_I_receptor\n共抑制受体（负调节）\n修正受体表达：R_new = R / (1 + 共受体表达)\n\n\n\n这四种调节因子构成了 CellChat 模型中比”配体 × 受体”更丰富的信号层次。\n\n\n3.5 geneInfo 表\n基因的元注解，关键字段：\n\n\n\n字段\n含义\n\n\n\n\nSymbol\n标准基因符号（配体/受体名称基于此列）\n\n\nEntryID.uniprot\nUniProt 编号\n\n\nProteinName\n蛋白全名\n\n\nLocation\n细胞亚定位（细胞膜 / 分泌型 / 细胞外）\n\n\nKeywords\n功能关键词\n\n\nReviewed\n是否经 Swiss-Prot 人工校对\n\n\n\n需要注意：interaction 表中的 ligand、receptor 名必须在 geneInfo 的 Symbol 列中存在，否则会被当作无效条目跳过。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#cellchat-对象14-个-slot",
-    "href": "posts/cellchat/index.html#cellchat-对象14-个-slot",
-    "title": "CellChat 源码解读",
-    "section": "4 CellChat 对象：14 个 slot",
-    "text": "4 CellChat 对象：14 个 slot\nCellChat 用 S4 类组织数据，14 个 slot：\nCellChat object\n├── data.raw       — 原始计数矩阵（基因 × 细胞）\n├── data           — 归一化后的表达矩阵\n├── data.signaling — 仅包含信号通路相关基因的子矩阵\n├── data.scale     — 标准化后矩阵\n├── data.smooth    — 平滑后矩阵\n├── meta           — 细胞元数据（必须含 samples 列）\n├── idents         — 细胞类型标签（factor / list）\n├── var.features   — 过表达基因列表 + 差异分析结果\n├── options        — 运行参数（mode, datatype）\n├── DB             — 本次使用的 CellChatDB 子集\n├── LR             — 配体-受体对信息\n├── net            — 核心输出：通讯概率 P[K×K×N] 的三维数组\n├── netP           — 通路级别汇总的通讯网络\n├── images         — 空间信息（coordinates, spatial.factors）\n└── dr             — 降维结果（UMAP / t-SNE / Diffusion Map）\n\n4.1 net slot：通讯概率的三维数组\nnet$prob[K, K, N]\n\nK：细胞类型数\nN：配体-受体对数\nnet$prob[i, j, k]：第 k 个 L-R 对在”细胞群 i → 细胞群 j”上的通讯概率\n\nnet$pval 维度相同，存的是置换检验的 p 值。\n\n\n4.2 createCellChat：三种输入\n# 输入 1：裸矩阵\nobject &lt;- createCellChat(data_matrix, meta = meta_df, group.by = \"celltype\")\n\n# 输入 2：Seurat 对象（最常用）\nobject &lt;- createCellChat(seurat_obj, group.by = \"celltype\")\n\n# 输入 3：SingleCellExperiment\nobject &lt;- createCellChat(sce_obj, group.by = \"celltype\")\n注意 Seurat 对象不能用 integrated assay——整合后的数据有负值，不符合 CellChat 对非负表达值的要求。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#核心算法computecommunprob",
-    "href": "posts/cellchat/index.html#核心算法computecommunprob",
-    "title": "CellChat 源码解读",
-    "section": "5 核心算法：computeCommunProb",
-    "text": "5 核心算法：computeCommunProb\n这是 CellChat 里最值得读的一行代码——甚至可以说是唯一需要认真读的一行。整个函数的本质是：对每一个 L-R 对，计算一个 K×K 的通讯概率矩阵，再把 N 个 L-R 对的结果叠成三维数组。\n\n5.1 第一步：三均值计算每个细胞群的平均表达\nEM = (1/2) × Q₂ + (1/4) × (Q₁ + Q₃)\n其中 Q₁、Q₂、Q₃ 分别为第一、第二、第三四分位数。\n为什么不用简单算术平均？因为单细胞数据噪音大，有个别极端高表达的细胞会拉偏均值。三均值相当于在”中位数”和”均值”之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n除了默认的 triMean，还支持 truncatedMean（截尾均值，产生更多相互作用）、median（中位数，更保守）等。\n\n\n5.2 第二步：配体和受体表达分离\n对于每个 L-R 对，分别提取配体和受体在 K 个细胞群中的平均表达：\nL = [L₁, L₂, ..., Lₖ]    ← 配体在各群中的平均表达\nR = [R₁, R₂, ..., Rₖ]    ← 受体在各群中的平均表达\n如果配体/受体是复合物，用几何平均合并亚基表达：\ngeometricMean &lt;- function(x) exp(mean(log(x), na.rm = TRUE))\n\n\n5.3 第三步：共受体效应修正\n在计算通讯概率之前，先把共受体的影响算进去：\nR_new = R × (1 + co_A_expr) / (1 + co_I_expr)\n\n共激活受体：用 1 + 表达值 放大受体信号\n共抑制受体：用 1 + 表达值 缩小受体信号\n\n\n\n5.4 第四步：Hill 函数映射\n这是把”表达量”变成”概率”的关键一步。先算配体和受体的外积：\ndataLR[j, k] = Lⱼ × Rₖ\n这表示”配体在细胞群 j 的表达量 × 受体在细胞群 k 的表达量”，是对信号强度的一个粗估计。\n然后过一遍 Hill 函数：\nP₁[j, k] = dataLR[j, k]ⁿ / (Khⁿ + dataLR[j, k]ⁿ)\n默认 Kh = 0.5，n = 1。这个函数的行为：\n\n当 dataLR &lt;&lt; Kh（表达量很低）→ P₁ ≈ 0，几乎没有信号\n当 dataLR = Kh → P₁ = 0.5，半最大概率\n当 dataLR &gt;&gt; Kh（表达量很高）→ P₁ ≈ 1，饱和\n\nHill 函数选得好不好，直接决定最终结果的质量。参数 n 控制曲线陡峭度——n 越大，越接近开关行为。\n\n\n5.5 第五步：激动剂 / 拮抗剂调制\nP₂ = 1 + agonist_exprⁿ / (Khⁿ + agonist_exprⁿ)   ← 激动剂增强（&gt;1）\nP₃ = Khⁿ / (Khⁿ + antagonist_exprⁿ)               ← 拮抗剂抑制（&lt;1）\n如果当前 L-R 对没有激动剂/拮抗剂记录，则 P₂ = 1，P₃ = 1，相当于无影响。\n\n\n5.6 第六步：空间约束（可选）\n如果是空间转录组数据，算一个空间距离惩罚项：\nP_spatial[j, k] = 1 / distance(j, k)\n对于 Cell-Cell Contact 类型的信号，还会额外用接触矩阵约束。对于扩散型信号，用 interaction.range（默认 250μm）做距离阈值过滤。\n非空间数据则全部设为 1，相当于不施加空间约束。\n\n\n5.7 第七步：多因素乘积 + 置换检验\nProb[j, k] = P₁ × P₂ × P₃ × P_spatial\n然后打乱细胞标签 100 次（默认 nboot = 100），每次重新算一遍通讯概率，构建零分布。真实观测值高于多少比例的随机值，p 值就是多少：\np = count(Prob_null &gt; Prob_random) / nboot\n\n整个流程可以总结为一张图：\n\n\n\n\n\nflowchart TD\n    A[\"原始表达矩阵\"] --&gt; B[\"按细胞群计算三均值\"]\n    B --&gt; C[\"分离配体表达 L 和受体表达 R\"]\n    C --&gt; D[\"共受体效应修正：R* = R × (1+coA)/(1+coI)\"]\n    D --&gt; E[\"外积 Lⱼ × Rₖ → dataLR\"]\n    E --&gt; F[\"Hill 函数 → P₁\"]\n    F --&gt; G[\"激动剂/拮抗剂调制 → P₂, P₃\"]\n    G --&gt; H[\"空间距离约束 → P_spatial\"]\n    H --&gt; I[\"乘积：Prob = P₁ × P₂ × P₃ × P_spatial\"]\n    I --&gt; J[\"置换检验(nboot=100) → p值\"]\n    J --&gt; K[\"输出：net$prob[K×K×N], net$pval[K×K×N]\"]"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#从概率矩阵到生物学故事",
-    "href": "posts/cellchat/index.html#从概率矩阵到生物学故事",
-    "title": "CellChat 源码解读",
-    "section": "6 从概率矩阵到生物学故事",
-    "text": "6 从概率矩阵到生物学故事\n算完 net$prob 这一步，你拿到的是一个三维数组，很难直接看懂。CellChat 的高层分析就是把这个三维数组压扁、聚合、降维，从中挖出有意义的模式。\n\n6.1 通路水平聚合：computeCommunProbPathway\n把属于同一个通路的 L-R 对概率加总：\nnetP$prob[K, K, M]  ←  M 个通路\n这样就从”千百个 L-R 对”变成了”十几个信号通路”，更容易做生物学解释。\n\n\n6.2 网络中心性：netAnalysis_computeCentrality\n对每个通路水平的通讯网络（K × K 矩阵），计算 9 类中心性指标：\n\n\n\n指标\n含义\n\n\n\n\noutdeg / indeg\n加权出度 / 入度 —— 发送/接收信号的总强度\n\n\nhub\nHub 分数 —— 被多少个高 Hub 节点连接\n\n\nauthority\n权威分数 —— 被多少个高权威节点连接\n\n\neigen\n特征向量中心性 —— 二阶影响力\n\n\npage_rank\nPageRank —— 页面排名影响力\n\n\nbetweenness\n介数中心性 —— “桥梁”角色的强弱\n\n\nflowbet\n流介数 —— 对通讯流量的控制力\n\n\ninfo\n信息中心性 —— 对信息流的控制力\n\n\n\n这些指标对应不同的生物学角色：outdeg 高的细胞群是”信号广播站”，indeg 高的是”信号接收站”，betweenness 高的是”信号中转站”。\nCellChat 在计算中心性时使用了 igraph 包——这个选择很务实，igraph 的 C 核心在处理 K×K 级别的小型网络时足够快。\n\n\n6.3 通讯模式识别：identifyCommunicationPatterns\n这是 CellChat 最巧妙的部分：用 NMF（非负矩阵分解） 把 K 个细胞群体在 M 个通路上的通讯强度，分解成有限个”通讯模式”。\n具体做法：\n\n按 outgoing（发信号）或 incoming（收信号）方向构造一个 K × M 矩阵\n用 NMF::nmf() 分解：\n\ndata[K×M] ≈ W[K×P] × H[P×M]\n\nW 矩阵：每个细胞群体对 P 个通讯模式的”贡献度”\nH 矩阵：每个通讯模式对各种通路的”贡献度”\n\n得到的 Pattern 1 可能是”成纤维细胞发 TGFb + WNT”，Pattern 2 是”免疫细胞收 CCL + CXCL”。这种解读比”TGFb 通路概率 0.32”直观得多。\n模式数量 P 通过 selectK() 函数自动选择，用 Cophenetic 系数和 Silhouette 分数衡量分解稳定性。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#分析管线全景",
-    "href": "posts/cellchat/index.html#分析管线全景",
-    "title": "CellChat 源码解读",
-    "section": "7 分析管线全景",
-    "text": "7 分析管线全景\n把上面的所有步骤串起来，一个完整的 CellChat 分析流程是这样的：\n\n\n\n\n\nflowchart TD\n    A[\"createCellChat(seurat_obj)\"] --&gt; B[\"subsetData() 过滤信号基因\"]\n    B --&gt; C[\"identifyOverExpressedGenes() 识别 marker\"]\n    C --&gt; D[\"identifyOverExpressedInteractions() 过表达 LR 对\"]\n    D --&gt; E[\"computeCommunProb() 通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway() 通路聚合\"]\n    F --&gt; G[\"aggregateNet() 统计交互次数&权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality() 中心性\"]\n    G --&gt; I[\"identifyCommunicationPatterns() NMF 模式\"]\n    H --&gt; J[\"可视化：弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n简化口诀版：\ncreate → subset → overExpress → computeProb → aggregate → centralPattern → visualize"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#写在最后",
-    "href": "posts/cellchat/index.html#写在最后",
-    "title": "CellChat 源码解读",
-    "section": "8 写在最后",
-    "text": "8 写在最后\nCellChat 的代码读下来，几个感受：\n\n数据库是灵魂。CellChat 真正的壁垒不在算法（Hill 函数 + NMF 都是经典方法），而在那一套手工整理的 CellChatDB。v2 版本新增了 1000+ 非蛋白互作，把代谢信号、突触信号也纳入了，这比改参数更有价值。\nvisualization.R 4000 行不是浪费。单细胞分析领域，能把结果”画好看”的能力跟能把结果”算准”一样重要。CellChat 的弦图（netVisual_chord_cell）和桑基图（netAnalysis_river）对文章发表帮助很大。\n参数敏感但有道理。Kh = 0.5、n = 1 这些默认值在实际数据上通常工作得不错，但如果你用的是非标数据（比如低深度测序），可能需要调 Kh 来让更多的 L-R 对”可见”。另外 trim 参数默认 0.1，意味着会截掉最低和最高各 10% 的值再算均值——这在细胞群内部异质性很大时是个合理的做法。\n置换检验的计算量是个瓶颈。默认 nboot = 100，对于 K = 20 个细胞群、N = 2000 个 L-R 对的数据，单次跑完就要算 20×20×2000×100 = 8000 万次矩阵乘法。虽然 future.apply 提供了并行化，但大样本下仍然很慢。好在 CellChat 导出了 net$prob 和 net$pval，后续分析不需要重新算。\n空间版本（v3/Spatial CellChat）分仓库。空间相关的代码在 https://github.com/jinworks/SpatialCellChat，核心算法复用 v1/v2 的框架，主要多了空间距离约束和邻域搜索（通过 BiocNeighbors 实现），以及对多种空间转录组技术的适配（测序型 + 原位成像型）。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#cellchatdb-数据库",
-    "href": "posts/cellchat/index.html#cellchatdb-数据库",
-    "title": "CellChat 源码解读",
-    "section": "2 CellChatDB 数据库",
-    "text": "2 CellChatDB 数据库\n\n2.1 四张表\nCellChatDB 是一个 list，包含四个 data.frame：\nCellChatDB\n├── interaction    ← 核心：配体-受体互作关系\n├── complex        ← 复合物：多亚基配体/受体的亚基组成\n├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成\n└── geneInfo       ← 基因注释：官方符号、定位、功能关键词\nshowDatabaseCategory() 函数显示人类数据库的分布：\n\n\n\n\n\n\n\n\n\n\n类型\n中文名称\n是否需接触\n信号范围\n功能方向\n\n\n\n\nSecreted Signaling\n分泌型信号\n否\n远程\n发育、免疫、系统调节\n\n\nECM-Receptor\n细胞外基质-受体信号\n否\n局部\n结构支持、黏附、迁移\n\n\nCell-Cell Contact\n细胞-细胞接触信号\n是\n临近\n发育、干细胞分化、边界形成\n\n\nNon-protein Signaling\n非蛋白信号\n否/是\n多变\n炎症、代谢调控、环境应答\n\n\n\n官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。\n\n\n2.2 interaction 表\n每行是一个 L-R 对。dplyr::glimpse(CellChatDB.human$interaction) 可以看到完整结构，关键字段如下：\n\n\n\n\n\n\n\n\n列名\n中文名称\n说明\n\n\n\n\ninteraction_name\n互作名称\n用 _ 连接的配体和受体组合，例如 TGFB1_TGFBR1_TGFBR2\n\n\npathway_name\n通路名称\n所属信号通路名称，如 TGFb、WNT 等\n\n\nligand\n配体名\n配体标识（可能为组合）\n\n\nreceptor\n受体名\n受体标识（可能为组合）\n\n\nagonist\n激动剂\n指出该通路中已知的激动剂\n\n\nantagonist\n拮抗剂\n指出该通路中已知的拮抗剂\n\n\nco_A_receptor\n辅助激动型受体\n协助激活信号的共同受体\n\n\nco_I_receptor\n辅助抑制型受体\n协助抑制信号的共同受体\n\n\nevidence\n支持证据\n来源数据库或文献，如 KEGG: hsa04350、PMID 等\n\n\nannotation\n互作分类\nSecreted Signaling 等四类\n\n\ninteraction_name_2\n格式化互作名称\n更清晰可读的互作表达，例如 TGFB1 - (TGFBR1+TGFBR2)，用于展示\n\n\nligand.symbol\n配体符号\n配体的 HGNC 基因符号\n\n\nreceptor.symbol\n受体符号\n多个受体基因符号（逗号分隔）\n\n\n\n\n\n2.3 complex 表\ninteraction 中配体（ligand）和受体（receptor）的组成：可能是单个基因，也可能是复合物（complex）。\n举个例子，复合物 Activin AB 查 complex 表就知道它包含亚基 INHBA 和 INHBB。计算表达时会取这些亚基的几何平均。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。\n\n\n2.4 cofactor 表\n配体/受体调节因子（cofactors）数据库。interaction 里 agonist、antagonist、co_A_receptor、co_I_receptor 四列对应的信息：\n\n\n\n\n\n\n\n\n术语\n作用类型\n说明\n\n\n\n\nagonist\n激动剂\n增强主配体-受体相互作用的分子，与主配体协同激活\n\n\nantagonist\n拮抗剂\n抑制主配体-受体作用的分子，常与受体竞争结合\n\n\nco_A_receptor\n协同激活受体\n除主受体外，另一个必需的受体亚基，缺失则信号不能传导\n\n\nco_I_receptor\n协同抑制受体\n一个受体亚基，但抑制信号传导，常与主受体共同存在以调节反应强度\n\n\n\n\n\n2.5 geneInfo 表\n\n\n\n\n\n\n\n列名\n含义\n\n\n\n\nEntryID.uniprot\nUniProt 的唯一标识符（如：P01137）\n\n\nSymbol\n基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列\n\n\nSynonym\n基因的其他常用名称或别名\n\n\nReviewed\n该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）\n\n\nEntryName\nUniProt Entry 名称\n\n\nProteinName\n蛋白的全名或描述性名称\n\n\nKeywords\n与该蛋白相关的关键词\n\n\nLocation\n蛋白在细胞中的主要定位（细胞膜、细胞外等）\n\n\nAntibodyName\n对应该蛋白的抗体名称（如果有）\n\n\n\nSymbol 用来跟 interaction$ligand / interaction$receptor 做匹配；Reviewed == TRUE 的数据质量更可靠。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#原理解读",
-    "href": "posts/cellchat/index.html#原理解读",
-    "title": "CellChat 源码解读",
-    "section": "3 原理解读",
-    "text": "3 原理解读\nCellChat 的分析管线大致分六步：\n\n过滤不在数据库里的基因\n识别每个细胞群的 marker\n识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）\n推断不同细胞群之间通过配体-受体对发生的潜在通信\n将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度\n统计交互次数（数量）以及计算总通信概率（权重）\n\n下面重点拆第 4 步的 computeCommunProb。\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵\"] --&gt; B[\"过滤非数据库基因\"]\n    B --&gt; C[\"识别每个细胞群的 marker\"]\n    C --&gt; D[\"识别过表达的 LR 对\"]\n    D --&gt; E[\"computeCommunProb&lt;br&gt;通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway&lt;br&gt;通路水平聚合\"]\n    F --&gt; G[\"aggregateNet&lt;br&gt;交互次数 & 权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality&lt;br&gt;中心性分析\"]\n    G --&gt; I[\"identifyCommunicationPatterns&lt;br&gt;NMF 模式识别\"]\n    H --&gt; J[\"可视化&lt;br&gt;弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n\n3.1 第一步：计算每个细胞群每个基因的平均表达量\n为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：\n\\[EM = \\frac{1}{2}Q_2 + \\frac{1}{4}\\left( Q_1 + Q_3 \\right)\\]\n\\(Q_1\\)、\\(Q_2\\)、\\(Q_3\\) 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n遇到复合体时，用几何平均合并亚基表达：\n\\[\\text{Expr(complex)} = \\sqrt[N]{\\prod_{i=1}^{N} \\text{Expr(subunit}_i)}\\]\n任何亚基表达为零，复合物就失活。\n\n\n3.2 第二步：共刺激/共抑制受体调节\n利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。\n\n\n3.3 第三步：计算通讯概率\n对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：\n# 1. 配体与受体表达量的外积\n# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达\ndataLR[j, k] = L[j] * R[k]\n\n# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值\n# Kh（半最大效应浓度，默认 0.5）\n#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）\n#   - dataLR = Kh → P1 = 0.5（半最大概率）\n#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）\n# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为\nP1 &lt;- dataLR^n / (Kh^n + dataLR^n)\n\n# 3. 激动剂调制：有激动剂时增强信号\n#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1\n#    当前 L-R 对没有激动剂记录时 P2 = 1\nP2 &lt;- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)\n\n# 4. 拮抗剂调制：有拮抗剂时抑制信号\n#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0\n#    当前 L-R 对没有拮抗剂记录时 P3 = 1\nP3 &lt;- Kh^n / (Kh^n + antagonist_expr^n)\n\n# 5. 空间约束：非空间数据下 P.spatial 全部为 1\nPnull = P1 * P2 * P3 * P.spatial\n\n\n3.4 置换检验\n通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？\n做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 nboot = 100 次，每次得到一个随机化的概率分布：\n# 简化示意：实际循环 100 次，每次打乱标签后重算\nfor (i in 1:100) {\n  shuffled_labels &lt;- sample(cell_labels)                     # 打乱\n  shuffled_prob   &lt;- compute_prob(data, shuffled_labels)     # 重算\n  null_dist[i]    &lt;- shuffled_prob\n}\n\n# 真实概率在零分布中的位置 → p 值\np_value &lt;- sum(null_dist &gt;= observed_prob) / nboot\n\np 值越小，说明真实概率越不太可能是随机噪音\n默认 nboot = 100，对于严格的使用可以提高到 500 或 1000\n结果存在 net$pval 里，跟 net$prob 维度相同"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#高层分析",
-    "href": "posts/cellchat/index.html#高层分析",
-    "title": "CellChat 源码解读",
-    "section": "5 高层分析",
-    "text": "5 高层分析\n\n5.1 通路水平聚合：computeCommunProbPathway\n把属于同一个通路的 L-R 对概率加总：\nnetP$prob[K, K, M]  ←  M 个通路\n从”千百个 L-R 对”变成”十几个信号通路”，可解释性一下子高了很多。\n\n\n5.2 网络中心性：netAnalysis_computeCentrality\n对每个通路水平的通讯网络（K × K 矩阵）算 9 类中心性指标：\n\n\n\n指标\n含义\n\n\n\n\noutdeg / indeg\n加权出度 / 入度 —— 发送/接收信号的总强度\n\n\nhub\nHub 分数 —— 被多少个高 Hub 节点连接\n\n\nauthority\n权威分数 —— 被多少个高权威节点连接\n\n\neigen\n特征向量中心性 —— 二阶影响力\n\n\npage_rank\nPageRank —— 页面排名影响力\n\n\nbetweenness\n介数中心性 —— “桥梁”角色的强弱\n\n\nflowbet\n流介数 —— 对通讯流量的控制力\n\n\ninfo\n信息中心性 —— 对信息流的控制力\n\n\n\n简单来说：outdeg 高的是”信号广播站”，indeg 高的是”信号接收站”，betweenness 高的是”信号中转站”。\n\n\n5.3 通讯模式识别：identifyCommunicationPatterns\n这一步是 CellChat 最巧妙的地方：用 NMF（非负矩阵分解） 把细胞群在通路上的通讯强度分解成有限个模式。\n做法：按 outgoing 或 incoming 方向构造一个 K × M 矩阵，然后用 NMF::nmf() 分解：\ndata[K×M] ≈ W[K×P] × H[P×M]\n\nW 矩阵：每个细胞群体对 P 个通讯模式的”贡献度”\nH 矩阵：每个通讯模式对各种通路的”贡献度”\n\n得到的 Pattern 1 可能是”成纤维细胞发 TGFb + WNT”，Pattern 2 可能是”免疫细胞收 CCL + CXCL”。比直接看”TGFb 通路概率 0.32”直观太多。\n模式数量 P 用 selectK() 自动选，通过 Cophenetic 系数和 Silhouette 分数判断分解稳定性。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#cellchat-对象15-个-slot",
-    "href": "posts/cellchat/index.html#cellchat-对象15-个-slot",
-    "title": "CellChat 源码解读",
-    "section": "4 CellChat 对象：15 个 slot",
-    "text": "4 CellChat 对象：15 个 slot\nCellChat 用 S4 类组织数据，15 个 slot：\nCellChat object\n├── data.raw       — 原始计数矩阵（基因 × 细胞）\n├── data           — 归一化后的表达矩阵\n├── data.signaling — 仅包含信号通路相关基因的子矩阵\n├── data.scale     — 标准化后矩阵\n├── data.smooth    — 平滑后矩阵\n├── meta           — 细胞元数据（必须含 samples 列）\n├── idents         — 细胞类型标签（factor / list）\n├── var.features   — 过表达基因列表 + 差异分析结果\n├── options        — 运行参数（mode, datatype）\n├── DB             — 本次使用的 CellChatDB 子集\n├── LR             — 配体-受体对信息\n├── net            — 核心输出：通讯概率 P[K×K×N] 的三维数组\n├── netP           — 通路级别汇总的通讯网络\n├── images         — 空间信息（coordinates, spatial.factors）\n└── dr             — 降维结果（UMAP / t-SNE / Diffusion Map）\n\n4.1 net slot：通讯概率的三维数组\nnet$prob[K, K, N]\n\nK：细胞类型数\nN：配体-受体对数\nnet$prob[i, j, k]：第 k 个 L-R 对在”细胞群 i → 细胞群 j”上的通讯概率\n\nnet$pval 维度相同，存的是置换检验的 p 值。\n\n\n4.2 createCellChat：三种输入\n# 输入 1：裸矩阵\nobject &lt;- createCellChat(data_matrix, meta = meta_df, group.by = \"celltype\")\n\n# 输入 2：Seurat 对象（最常用）\nobject &lt;- createCellChat(seurat_obj, group.by = \"celltype\")\n\n# 输入 3：SingleCellExperiment\nobject &lt;- createCellChat(sce_obj, group.by = \"celltype\")\n注意 Seurat 对象不能用 integrated assay——整合后的数据有负值，不符合 CellChat 对非负表达值的要求。"
+    "text": "下载 PPTX"
   }
 ]

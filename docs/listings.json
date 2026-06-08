@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/scDblfinder/index.html",
+      "/posts/spatial-compare/index.html",
       "/posts/cellchat/index.html",
       "/posts/biomni/index.html",
       "/posts/pi-agent/index.html",
