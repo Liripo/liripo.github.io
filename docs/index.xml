@@ -22,9 +22,530 @@
 
 
 
-<p>这篇源码整理成了 PPT，<a href="./SingleR 源码解读.pptx">下载 PPTX</a></p>
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p>做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。</p>
+<p>2019 年发在 <em>Nature Immunology</em> 上之后，SingleR 有过两个版本：</p>
+<ul>
+<li><strong>纯 R 版</strong>（v1.0.0，<a href="https://github.com/dviraran/SingleR">dviraran/SingleR</a>）：代码直白好读。已经停更了。</li>
+<li><strong>Bioconductor 版</strong>（v2.8.0+，<a href="https://github.com/SingleR-inc/SingleR">SingleR-inc/SingleR</a>）：Aaron Lun 重写的，核心挪到 C++（底层是 <a href="https://github.com/SingleR-inc/singlepp">singlepp</a>），训练和分类拆开，比老版本快几十倍。</li>
+</ul>
+<hr>
+</section>
+<section id="纯-r-版本" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="纯-r-版本"><span class="header-section-number">2</span> 纯 R 版本</h2>
+<p>整体管线分六步：</p>
+<ol type="1">
+<li><code>medianMatrix</code> → 算每个细胞类型的中位表达</li>
+<li>DE 基因选择 → <img src="https://latex.codecogs.com/png.latex?n%20=%20500%20%5Ctimes%20(2/3)%5E%7B%5Clog_2(N)%7D"></li>
+<li><code>cor.stable</code> → Spearman 相关计算</li>
+<li><code>quantileMatrix</code> → 0.8 分位数聚合得分</li>
+<li><code>chisq.out.test</code> → 置信度检验</li>
+<li><code>fineTuningRound</code> → 迭代微调</li>
+</ol>
+<section id="第一步算中位表达矩阵" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="第一步算中位表达矩阵"><span class="header-section-number">2.1</span> 第一步：算中位表达矩阵</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1">mat <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">medianMatrix</span>(ref_data, types)</span></code></pre></div></div>
+<p><code>medianMatrix</code> 按 <code>types</code> 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。</p>
+</section>
+<section id="第二步挑差异基因" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="第二步挑差异基因"><span class="header-section-number">2.2</span> 第二步：挑差异基因</h3>
+<p>选多少基因？<img src="https://latex.codecogs.com/png.latex?n"> 跟参考细胞类型数 <img src="https://latex.codecogs.com/png.latex?N"> 的关系是：</p>
+<p><img src="https://latex.codecogs.com/png.latex?n%20=%20500%20%5Ctimes%20%5Cleft(%20%5Cfrac%7B2%7D%7B3%7D%20%5Cright)%5E%7B%5Clog_2(N)%7D"></p>
+<p>2 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20=%20500">，16 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20%5Capprox%20125">。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。</p>
+<p>对应的源码（<code>SingleR.R:fineTuningRound</code>）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1">n <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">round</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">500</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>)<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">^</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">log2</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">c</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(mat)))))</span>
+<span id="cb2-2">genes.filtered <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">unique</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">unlist</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">unlist</span>(</span>
+<span id="cb2-3">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">lapply</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(mat), <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(j) {</span>
+<span id="cb2-4">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">lapply</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(mat), <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(i) {</span>
+<span id="cb2-5">      s<span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sort</span>(mat[,j]<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>mat[,i],<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">decreasing=</span>T);</span>
+<span id="cb2-6">      s<span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span>s[s<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>];<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(s)[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">min</span>(n,<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(s))]</span>
+<span id="cb2-7">    })</span>
+<span id="cb2-8">  }))))</span></code></pre></div></div>
+<p>拆开来看： 1. 两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对 2. <code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差 3. <code>s = s[s &gt; 0]</code> 只留 j 里上调的 4. 差值从大到小取前 n 个 5. 所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p>
+<p>出来的基因集会覆盖到每种细胞类型的高表达标志基因。</p>
+</section>
+<section id="第三步spearman-相关" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="第三步spearman-相关"><span class="header-section-number">2.3</span> 第三步：Spearman 相关</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1">r <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cor.stable</span>(sc_data, ref_data, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'spearman'</span>)</span></code></pre></div></div>
+<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装。输出一个 <img src="https://latex.codecogs.com/png.latex?M%20%5Ctimes%20K"> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
+</section>
+<section id="第四步分位数聚合" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="第四步分位数聚合"><span class="header-section-number">2.4</span> 第四步：分位数聚合</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1">agg_scores <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">quantileMatrix</span>(r, types, quantile.use)</span></code></pre></div></div>
+<p><code>quantile.use</code> 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。</p>
+<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/">CellTypist</a> 里的”投票”思路有点像。</p>
+</section>
+<section id="第五步初版注释-置信度" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="第五步初版注释-置信度"><span class="header-section-number">2.5</span> 第五步：初版注释 + 置信度</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1">labels <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">colnames</span>(agg_scores)[<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">max.col</span>(agg_scores)]</span>
+<span id="cb5-2">output<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>pval <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">SingleR.ConfidenceTest</span>(output<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>scores)</span></code></pre></div></div>
+<p>初版就是挑每行得分最高的那个类型。</p>
+<p>置信度用卡方异常值检验：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1">SingleR.ConfidenceTest <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(scores) {</span>
+<span id="cb6-2">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apply</span>(scores, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(x) <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">chisq.out.test</span>(x)<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>p.value)</span>
+<span id="cb6-3">}</span></code></pre></div></div>
+<p>逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。</p>
+</section>
+<section id="第六步fine-tuning-迭代" class="level3" data-number="2.6">
+<h3 data-number="2.6" class="anchored" data-anchor-id="第六步fine-tuning-迭代"><span class="header-section-number">2.6</span> 第六步：Fine-tuning 迭代</h3>
+<p>区分相似细胞类型的核心就靠这一步。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1">SingleR.FineTune <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(sc_data, ref_data, types, scores, </span>
+<span id="cb7-2">                              quantile.use, fine.tune.thres, ...) {</span>
+<span id="cb7-3">  labels <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">pbmclapply</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span>N, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">FUN=</span><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(i){</span>
+<span id="cb7-4">    max_score <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">max</span>(scores[i,])</span>
+<span id="cb7-5">    topLabels <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">names</span>(scores[i, scores[i,] <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> max_score <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> fine.tune.thres])</span>
+<span id="cb7-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">while</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(topLabels) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>) {</span>
+<span id="cb7-7">      topLabels <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">fineTuningRound</span>(topLabels, types, ref_data, ...)</span>
+<span id="cb7-8">    }</span>
+<span id="cb7-9">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">return</span> (topLabels)</span>
+<span id="cb7-10">  }, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">mc.cores=</span>numCores)</span>
+<span id="cb7-11">}</span></code></pre></div></div>
+<p>流程：</p>
+<ol type="1">
+<li><code>fine.tune.thres = 0.05</code>，得分在最高分 0.05 范围内的都进入候选</li>
+<li>只从候选类型里重新挑差异基因</li>
+<li>新基因集重新算相关性</li>
+<li>迭代，直到只剩一个候选</li>
+</ol>
+<p>举个实际例子：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>cell type</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>T-cell</td>
+<td>0.85</td>
+</tr>
+<tr class="even">
+<td>NK-cell</td>
+<td>0.82</td>
+</tr>
+<tr class="odd">
+<td>B-cell</td>
+<td>0.62</td>
+</tr>
+</tbody>
+</table>
+<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。</p>
+<p><code>fineTuningRound</code> 里有行代码：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1">agg_scores <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> agg_scores[<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(agg_scores)]</span></code></pre></div></div>
+<p>每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。</p>
+<hr>
+</section>
+</section>
+<section id="bioconductor-版训练和分类拆开c-加速" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="bioconductor-版训练和分类拆开c-加速"><span class="header-section-number">3</span> Bioconductor 版：训练和分类拆开，C++ 加速</h2>
+<p>跟老版本最大的不同：训练一次，分类可以反复用。参考数据只建一次索引，之后不同测试集直接分类就行。老版本每次都得从头跑。</p>
+<p>整个管线拆成两个函数：<code>trainSingleR</code> 训练，<code>classifySingleR</code> 分类。</p>
+<section id="trainsingler训练" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="trainsingler训练"><span class="header-section-number">3.1</span> trainSingleR：训练</h3>
+<section id="de-基因选法三种" class="level4" data-number="3.1.1">
+<h4 data-number="3.1.1" class="anchored" data-anchor-id="de-基因选法三种"><span class="header-section-number">3.1.1</span> DE 基因选法（三种）</h4>
+<p><strong>classic</strong>（默认）：跟 legacy 一样，中位表达差排序。<code>de.n</code> 默认 <img src="https://latex.codecogs.com/png.latex?500%20%5Ctimes%20(2/3)%5E%7B%5Clog_2(N)%7D">。适合 bulk 参考。</p>
+<p><strong>wilcox</strong>（单细胞参考推荐）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1">scrapper<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scoreMarkers</span>(ref, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">groups=</span>labels, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">all.pairwise=</span>de.n, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">compute.auc=</span><span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">TRUE</span>, ...)</span></code></pre></div></div>
+<p>用 AUC 排名。单细胞数据太稀疏（超 50% 零值），median 经常是 0，classic 方法会失效。AUC 是秩统计量，不受零膨胀影响。默认 <code>de.n = 10</code>。</p>
+<p><strong>t</strong>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1">scrapper<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">scoreMarkers</span>(ref, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">groups=</span>labels, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">compute.cohens.d=</span><span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">TRUE</span>, ...)</span></code></pre></div></div>
+<p>用 Cohen’s d。比 AUC 快。默认也是 <code>de.n = 10</code>。</p>
+</section>
+<section id="c-索引" class="level4" data-number="3.1.2">
+<h4 data-number="3.1.2" class="anchored" data-anchor-id="c-索引"><span class="header-section-number">3.1.2</span> C++ 索引</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1">built <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">.build_index</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">ref=</span>curref, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">labels=</span>curlabels, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">ulabels=</span>ulabels, </span>
+<span id="cb11-2">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">test.genes=</span>test.genes, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">markers=</span>markers, </span>
+<span id="cb11-3">                       <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">num.threads=</span>num.threads)</span></code></pre></div></div>
+<p>先通过 <code>beachmat</code> 的 <code>initializeCpp(ref)</code> 把 R 矩阵变成 C++ 能读的结构，然后调 singlepp 的 <code>train_single</code>。<code>built</code> 是一个 <strong>external pointer</strong>——R 里存的是指针，实际数据在 C++ 堆上。不能 <code>saveRDS</code> 保存。</p>
+</section>
+<section id="参考聚合" class="level4" data-number="3.1.3">
+<h4 data-number="3.1.3" class="anchored" data-anchor-id="参考聚合"><span class="header-section-number">3.1.3</span> 参考聚合</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (aggr.ref) {</span>
+<span id="cb12-2">  aggr <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">aggregateReference</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">ref=</span>curref, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">label=</span>curlabels, ...)</span>
+<span id="cb12-3">  curref <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">assay</span>(aggr)</span>
+<span id="cb12-4">}</span></code></pre></div></div>
+<p>参考数据如果是单细胞级别的（几万甚至几十万个细胞），会先用向量量化把同类细胞压成少量伪-bulk 样本。压缩后 KNN 搜索快很多，信息损失不大。</p>
+</section>
+</section>
+<section id="classifysingler分类" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="classifysingler分类"><span class="header-section-number">3.2</span> classifySingleR：分类</h3>
+<p>训练好的索引传给 <code>classifySingleR</code>，对测试数据逐细胞做 KNN 搜索和得分计算。</p>
+<section id="为什么能用-knn-替代-spearman-相关" class="level4" data-number="3.2.1">
+<h4 data-number="3.2.1" class="anchored" data-anchor-id="为什么能用-knn-替代-spearman-相关"><span class="header-section-number">3.2.1</span> 为什么能用 KNN 替代 Spearman 相关</h4>
+<p>这是整个加速的数学基础。Spearman 秩相关系数的标准公式是：</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Crho%20=%201%20-%20%5Cfrac%7B6%20%5Csum_%7Bi=1%7D%5E%7Bn%7D%20d_i%5E2%7D%7Bn(n%5E2%20-%201)%7D"></p>
+<p>其中 <img src="https://latex.codecogs.com/png.latex?d_i%20=%20rank(x_i)%20-%20rank(y_i)">，<img src="https://latex.codecogs.com/png.latex?n"> 是基因数。<img src="https://latex.codecogs.com/png.latex?%5Csum%20d_i%5E2"> 就是两条秩向量之间的平方欧氏距离。</p>
+<p>也就是说：<strong>算 Spearman 相关，等价于先把表达值转成秩，然后算欧氏距离</strong>。相关系数最高的参考样本 = 秩空间中距离最近的邻居。</p>
+<p>这样一来，分类问题就变成了”在秩空间里搜最近邻”——这是个已经研究透的问题，有大量高效的 ANN 算法可以用。</p>
+</section>
+<section id="singlepp-的具体做法" class="level4" data-number="3.2.2">
+<h4 data-number="3.2.2" class="anchored" data-anchor-id="singlepp-的具体做法"><span class="header-section-number">3.2.2</span> singlepp 的具体做法</h4>
+<p>训练时，<code>train_single</code> 对每个参考细胞类型的每个标签，在秩空间里建一个 KNN 索引（用的就是单细胞数据和 DE 基因子集对应的秩值）。</p>
+<p>分类时，<code>classify_single</code> 对每个测试细胞：</p>
+<ol type="1">
+<li>提取 DE 基因的表达值，转成秩</li>
+<li>对每个参考标签，在索引里搜 K 个最近邻参考样本</li>
+<li>对每个标签，用搜出来的距离 <img src="https://latex.codecogs.com/png.latex?d"> 通过公式反推 Spearman 相关 <img src="https://latex.codecogs.com/png.latex?r">：<img src="https://latex.codecogs.com/png.latex?r%20=%201%20-%206d%5E2%20/%20(n(n%5E2%20-%201))"></li>
+<li>对每个标签的所有 K 个相关值取用户指定的分位数（默认 0.8），得到该标签的得分</li>
+<li>得分最高的标签就是初版注释</li>
+<li>如果需要 fine-tuning，用候选标签的特异基因子集再做一轮 KNN 搜索</li>
+</ol>
+<p>关键参数： - <strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略 - <strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p>
+<p>整套流程的复杂度从传统的 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20R%20%5Ctimes%20G)"> 降到了 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20%5Clog%20R)">，ANN 索引让搜索不用遍历所有参考样本。</p>
+<p>R 端的入口：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1">out <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">classify_single</span>(</span>
+<span id="cb13-2">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">test =</span> parsed, </span>
+<span id="cb13-3">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">prebuilt =</span> trained<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">$</span>built, </span>
+<span id="cb13-4">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">quantile =</span> quantile, </span>
+<span id="cb13-5">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">use_fine_tune =</span> fine.tune, </span>
+<span id="cb13-6">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">fine_tune_threshold =</span> tune.thresh, </span>
+<span id="cb13-7">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nthreads =</span> num.threads</span>
+<span id="cb13-8">)</span></code></pre></div></div>
+</section>
+<section id="fine-tuning-和-pruning" class="level4" data-number="3.2.3">
+<h4 data-number="3.2.3" class="anchored" data-anchor-id="fine-tuning-和-pruning"><span class="header-section-number">3.2.3</span> Fine-tuning 和 Pruning</h4>
+<p>Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
+<p>Pruning 是为了解决一个根本问题：SingleR 默认<strong>总会</strong>给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1">pruneScores <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(results, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">nmads=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">min.diff.med=</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span><span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">Inf</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">min.diff.next=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb14-2">  delta <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">getDeltaFromMedian</span>(results)</span>
+<span id="cb14-3">  thresholds[[l]] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> curthresh <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> med <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> nmads <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> MAD</span>
+<span id="cb14-4">  keep[idx] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> keep[idx] <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&amp;</span> current <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> curthresh</span>
+<span id="cb14-5">}</span></code></pre></div></div>
+<p>三个判断维度：</p>
+<p><strong>delta</strong>：<img src="https://latex.codecogs.com/png.latex?delta_i%20=%20score_%7Bbest%7D%20-%20median(score_%7Ball%5C%20labels%7D)">。delta 很小说明对各类型得分都差不多，分配的意义不大。</p>
+<p><strong>标签级异常值</strong>：对每个标签，把所有被分配到这个标签的细胞的 delta 拉出来算分布： <img src="https://latex.codecogs.com/png.latex?threshold%20=%20median(delta)%20-%20nmads%20%5Ctimes%20MAD(delta)"> 低于阈值的标记为低质量。<code>nmads = 3</code> 相当于砍掉正态分布 3-sigma 的末端。</p>
+<p><strong>delta.next</strong>：fine-tuning 后最佳和第二得分的差。小于 <code>min.diff.next</code>（默认 0），说明区分不开，这个注释也标记为不可靠。</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="两版对比" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="两版对比"><span class="header-section-number">4</span> 两版对比</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>维度</th>
+<th>Legacy</th>
+<th>Bioconductor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>实现</td>
+<td>纯 R</td>
+<td>R + C++</td>
+</tr>
+<tr class="even">
+<td>速度</td>
+<td>遍历所有配对</td>
+<td>KNN 索引加速</td>
+</tr>
+<tr class="odd">
+<td>DE 选法</td>
+<td>classic 一种</td>
+<td>classic / wilcox / t</td>
+</tr>
+<tr class="even">
+<td>训练复用</td>
+<td>不支持</td>
+<td>训练一次分类多次</td>
+</tr>
+<tr class="odd">
+<td>质量过滤</td>
+<td>卡方检验</td>
+<td>delta + MAD</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 
  ]]></description>
   <category>single-cell</category>

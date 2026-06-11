@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -78,6 +113,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -325,8 +389,29 @@ ul.task-list li input[type="checkbox"] {
   </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#引言" id="toc-引言" class="nav-link active" data-scroll-target="#引言"><span class="header-section-number">1</span> 引言</a></li>
+  <li><a href="#纯-r-版本" id="toc-纯-r-版本" class="nav-link" data-scroll-target="#纯-r-版本"><span class="header-section-number">2</span> 纯 R 版本</a>
+  <ul class="collapse">
+  <li><a href="#第一步算中位表达矩阵" id="toc-第一步算中位表达矩阵" class="nav-link" data-scroll-target="#第一步算中位表达矩阵"><span class="header-section-number">2.1</span> 第一步：算中位表达矩阵</a></li>
+  <li><a href="#第二步挑差异基因" id="toc-第二步挑差异基因" class="nav-link" data-scroll-target="#第二步挑差异基因"><span class="header-section-number">2.2</span> 第二步：挑差异基因</a></li>
+  <li><a href="#第三步spearman-相关" id="toc-第三步spearman-相关" class="nav-link" data-scroll-target="#第三步spearman-相关"><span class="header-section-number">2.3</span> 第三步：Spearman 相关</a></li>
+  <li><a href="#第四步分位数聚合" id="toc-第四步分位数聚合" class="nav-link" data-scroll-target="#第四步分位数聚合"><span class="header-section-number">2.4</span> 第四步：分位数聚合</a></li>
+  <li><a href="#第五步初版注释-置信度" id="toc-第五步初版注释-置信度" class="nav-link" data-scroll-target="#第五步初版注释-置信度"><span class="header-section-number">2.5</span> 第五步：初版注释 + 置信度</a></li>
+  <li><a href="#第六步fine-tuning-迭代" id="toc-第六步fine-tuning-迭代" class="nav-link" data-scroll-target="#第六步fine-tuning-迭代"><span class="header-section-number">2.6</span> 第六步：Fine-tuning 迭代</a></li>
+  </ul></li>
+  <li><a href="#bioconductor-版训练和分类拆开c-加速" id="toc-bioconductor-版训练和分类拆开c-加速" class="nav-link" data-scroll-target="#bioconductor-版训练和分类拆开c-加速"><span class="header-section-number">3</span> Bioconductor 版：训练和分类拆开，C++ 加速</a>
+  <ul class="collapse">
+  <li><a href="#trainsingler训练" id="toc-trainsingler训练" class="nav-link" data-scroll-target="#trainsingler训练"><span class="header-section-number">3.1</span> trainSingleR：训练</a></li>
+  <li><a href="#classifysingler分类" id="toc-classifysingler分类" class="nav-link" data-scroll-target="#classifysingler分类"><span class="header-section-number">3.2</span> classifySingleR：分类</a></li>
+  </ul></li>
+  <li><a href="#两版对比" id="toc-两版对比" class="nav-link" data-scroll-target="#两版对比"><span class="header-section-number">4</span> 两版对比</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
@@ -336,9 +421,247 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p>这篇源码整理成了 PPT，<a href="./SingleR 源码解读.pptx">下载 PPTX</a></p>
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p>做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。</p>
+<p>2019 年发在 <em>Nature Immunology</em> 上之后，SingleR 有过两个版本：</p>
+<ul>
+<li><strong>纯 R 版</strong>（v1.0.0，<a href="https://github.com/dviraran/SingleR">dviraran/SingleR</a>）：代码直白好读。已经停更了。</li>
+<li><strong>Bioconductor 版</strong>（v2.8.0+，<a href="https://github.com/SingleR-inc/SingleR">SingleR-inc/SingleR</a>）：Aaron Lun 重写的，核心挪到 C++（底层是 <a href="https://github.com/SingleR-inc/singlepp">singlepp</a>），训练和分类拆开，比老版本快几十倍。</li>
+</ul>
+<hr>
+</section>
+<section id="纯-r-版本" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="纯-r-版本"><span class="header-section-number">2</span> 纯 R 版本</h2>
+<p>整体管线分六步：</p>
+<ol type="1">
+<li><code>medianMatrix</code> → 算每个细胞类型的中位表达</li>
+<li>DE 基因选择 → <span class="math inline">\(n = 500 \times (2/3)^{\log_2(N)}\)</span></li>
+<li><code>cor.stable</code> → Spearman 相关计算</li>
+<li><code>quantileMatrix</code> → 0.8 分位数聚合得分</li>
+<li><code>chisq.out.test</code> → 置信度检验</li>
+<li><code>fineTuningRound</code> → 迭代微调</li>
+</ol>
+<section id="第一步算中位表达矩阵" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="第一步算中位表达矩阵"><span class="header-section-number">2.1</span> 第一步：算中位表达矩阵</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>mat <span class="ot">=</span> <span class="fu">medianMatrix</span>(ref_data, types)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>medianMatrix</code> 按 <code>types</code> 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。</p>
+</section>
+<section id="第二步挑差异基因" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="第二步挑差异基因"><span class="header-section-number">2.2</span> 第二步：挑差异基因</h3>
+<p>选多少基因？<span class="math inline">\(n\)</span> 跟参考细胞类型数 <span class="math inline">\(N\)</span> 的关系是：</p>
+<p><span class="math display">\[n = 500 \times \left( \frac{2}{3} \right)^{\log_2(N)}\]</span></p>
+<p>2 个类型时 <span class="math inline">\(n = 500\)</span>，16 个类型时 <span class="math inline">\(n \approx 125\)</span>。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。</p>
+<p>对应的源码（<code>SingleR.R:fineTuningRound</code>）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>n <span class="ot">=</span> <span class="fu">round</span>(<span class="dv">500</span><span class="sc">*</span>(<span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)<span class="sc">^</span>(<span class="fu">log2</span>(<span class="fu">c</span>(<span class="fu">ncol</span>(mat)))))</span>
+<span id="cb2-2"><a href="#cb2-2"></a>genes.filtered <span class="ot">=</span> <span class="fu">unique</span>(<span class="fu">unlist</span>(<span class="fu">unlist</span>(</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(mat), <span class="cf">function</span>(j) {</span>
+<span id="cb2-4"><a href="#cb2-4"></a>    <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(mat), <span class="cf">function</span>(i) {</span>
+<span id="cb2-5"><a href="#cb2-5"></a>      s<span class="ot">=</span><span class="fu">sort</span>(mat[,j]<span class="sc">-</span>mat[,i],<span class="at">decreasing=</span>T);</span>
+<span id="cb2-6"><a href="#cb2-6"></a>      s<span class="ot">=</span>s[s<span class="sc">&gt;</span><span class="dv">0</span>];<span class="fu">names</span>(s)[<span class="dv">1</span><span class="sc">:</span><span class="fu">min</span>(n,<span class="fu">length</span>(s))]</span>
+<span id="cb2-7"><a href="#cb2-7"></a>    })</span>
+<span id="cb2-8"><a href="#cb2-8"></a>  }))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>拆开来看： 1. 两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对 2. <code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差 3. <code>s = s[s &gt; 0]</code> 只留 j 里上调的 4. 差值从大到小取前 n 个 5. 所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p>
+<p>出来的基因集会覆盖到每种细胞类型的高表达标志基因。</p>
+</section>
+<section id="第三步spearman-相关" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="第三步spearman-相关"><span class="header-section-number">2.3</span> 第三步：Spearman 相关</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>r <span class="ot">=</span> <span class="fu">cor.stable</span>(sc_data, ref_data, <span class="at">method=</span><span class="st">'spearman'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装。输出一个 <span class="math inline">\(M \times K\)</span> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
+</section>
+<section id="第四步分位数聚合" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="第四步分位数聚合"><span class="header-section-number">2.4</span> 第四步：分位数聚合</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>agg_scores <span class="ot">=</span> <span class="fu">quantileMatrix</span>(r, types, quantile.use)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>quantile.use</code> 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。</p>
+<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/">CellTypist</a> 里的”投票”思路有点像。</p>
+</section>
+<section id="第五步初版注释-置信度" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="第五步初版注释-置信度"><span class="header-section-number">2.5</span> 第五步：初版注释 + 置信度</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>labels <span class="ot">=</span> <span class="fu">colnames</span>(agg_scores)[<span class="fu">max.col</span>(agg_scores)]</span>
+<span id="cb5-2"><a href="#cb5-2"></a>output<span class="sc">$</span>pval <span class="ot">=</span> <span class="fu">SingleR.ConfidenceTest</span>(output<span class="sc">$</span>scores)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>初版就是挑每行得分最高的那个类型。</p>
+<p>置信度用卡方异常值检验：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>SingleR.ConfidenceTest <span class="ot">=</span> <span class="cf">function</span>(scores) {</span>
+<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">apply</span>(scores, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">chisq.out.test</span>(x)<span class="sc">$</span>p.value)</span>
+<span id="cb6-3"><a href="#cb6-3"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。</p>
+</section>
+<section id="第六步fine-tuning-迭代" class="level3" data-number="2.6">
+<h3 data-number="2.6" class="anchored" data-anchor-id="第六步fine-tuning-迭代"><span class="header-section-number">2.6</span> 第六步：Fine-tuning 迭代</h3>
+<p>区分相似细胞类型的核心就靠这一步。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>SingleR.FineTune <span class="ot">&lt;-</span> <span class="cf">function</span>(sc_data, ref_data, types, scores, </span>
+<span id="cb7-2"><a href="#cb7-2"></a>                              quantile.use, fine.tune.thres, ...) {</span>
+<span id="cb7-3"><a href="#cb7-3"></a>  labels <span class="ot">=</span> <span class="fu">pbmclapply</span>(<span class="dv">1</span><span class="sc">:</span>N, <span class="at">FUN=</span><span class="cf">function</span>(i){</span>
+<span id="cb7-4"><a href="#cb7-4"></a>    max_score <span class="ot">=</span> <span class="fu">max</span>(scores[i,])</span>
+<span id="cb7-5"><a href="#cb7-5"></a>    topLabels <span class="ot">=</span> <span class="fu">names</span>(scores[i, scores[i,] <span class="sc">&gt;=</span> max_score <span class="sc">-</span> fine.tune.thres])</span>
+<span id="cb7-6"><a href="#cb7-6"></a>    <span class="cf">while</span>(<span class="fu">length</span>(topLabels) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
+<span id="cb7-7"><a href="#cb7-7"></a>      topLabels <span class="ot">=</span> <span class="fu">fineTuningRound</span>(topLabels, types, ref_data, ...)</span>
+<span id="cb7-8"><a href="#cb7-8"></a>    }</span>
+<span id="cb7-9"><a href="#cb7-9"></a>    <span class="fu">return</span> (topLabels)</span>
+<span id="cb7-10"><a href="#cb7-10"></a>  }, <span class="at">mc.cores=</span>numCores)</span>
+<span id="cb7-11"><a href="#cb7-11"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>流程：</p>
+<ol type="1">
+<li><code>fine.tune.thres = 0.05</code>，得分在最高分 0.05 范围内的都进入候选</li>
+<li>只从候选类型里重新挑差异基因</li>
+<li>新基因集重新算相关性</li>
+<li>迭代，直到只剩一个候选</li>
+</ol>
+<p>举个实际例子：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>cell type</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>T-cell</td>
+<td>0.85</td>
+</tr>
+<tr class="even">
+<td>NK-cell</td>
+<td>0.82</td>
+</tr>
+<tr class="odd">
+<td>B-cell</td>
+<td>0.62</td>
+</tr>
+</tbody>
+</table>
+<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。</p>
+<p><code>fineTuningRound</code> 里有行代码：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>agg_scores <span class="ot">=</span> agg_scores[<span class="sc">-</span><span class="fu">length</span>(agg_scores)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。</p>
+<hr>
+</section>
+</section>
+<section id="bioconductor-版训练和分类拆开c-加速" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="bioconductor-版训练和分类拆开c-加速"><span class="header-section-number">3</span> Bioconductor 版：训练和分类拆开，C++ 加速</h2>
+<p>跟老版本最大的不同：训练一次，分类可以反复用。参考数据只建一次索引，之后不同测试集直接分类就行。老版本每次都得从头跑。</p>
+<p>整个管线拆成两个函数：<code>trainSingleR</code> 训练，<code>classifySingleR</code> 分类。</p>
+<section id="trainsingler训练" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="trainsingler训练"><span class="header-section-number">3.1</span> trainSingleR：训练</h3>
+<section id="de-基因选法三种" class="level4" data-number="3.1.1">
+<h4 data-number="3.1.1" class="anchored" data-anchor-id="de-基因选法三种"><span class="header-section-number">3.1.1</span> DE 基因选法（三种）</h4>
+<p><strong>classic</strong>（默认）：跟 legacy 一样，中位表达差排序。<code>de.n</code> 默认 <span class="math inline">\(500 \times (2/3)^{\log_2(N)}\)</span>。适合 bulk 参考。</p>
+<p><strong>wilcox</strong>（单细胞参考推荐）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">all.pairwise=</span>de.n, <span class="at">compute.auc=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>用 AUC 排名。单细胞数据太稀疏（超 50% 零值），median 经常是 0，classic 方法会失效。AUC 是秩统计量，不受零膨胀影响。默认 <code>de.n = 10</code>。</p>
+<p><strong>t</strong>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">compute.cohens.d=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>用 Cohen’s d。比 AUC 快。默认也是 <code>de.n = 10</code>。</p>
+</section>
+<section id="c-索引" class="level4" data-number="3.1.2">
+<h4 data-number="3.1.2" class="anchored" data-anchor-id="c-索引"><span class="header-section-number">3.1.2</span> C++ 索引</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>built <span class="ot">&lt;-</span> <span class="fu">.build_index</span>(<span class="at">ref=</span>curref, <span class="at">labels=</span>curlabels, <span class="at">ulabels=</span>ulabels, </span>
+<span id="cb11-2"><a href="#cb11-2"></a>                       <span class="at">test.genes=</span>test.genes, <span class="at">markers=</span>markers, </span>
+<span id="cb11-3"><a href="#cb11-3"></a>                       <span class="at">num.threads=</span>num.threads)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>先通过 <code>beachmat</code> 的 <code>initializeCpp(ref)</code> 把 R 矩阵变成 C++ 能读的结构，然后调 singlepp 的 <code>train_single</code>。<code>built</code> 是一个 <strong>external pointer</strong>——R 里存的是指针，实际数据在 C++ 堆上。不能 <code>saveRDS</code> 保存。</p>
+</section>
+<section id="参考聚合" class="level4" data-number="3.1.3">
+<h4 data-number="3.1.3" class="anchored" data-anchor-id="参考聚合"><span class="header-section-number">3.1.3</span> 参考聚合</h4>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="cf">if</span> (aggr.ref) {</span>
+<span id="cb12-2"><a href="#cb12-2"></a>  aggr <span class="ot">&lt;-</span> <span class="fu">aggregateReference</span>(<span class="at">ref=</span>curref, <span class="at">label=</span>curlabels, ...)</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  curref <span class="ot">&lt;-</span> <span class="fu">assay</span>(aggr)</span>
+<span id="cb12-4"><a href="#cb12-4"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>参考数据如果是单细胞级别的（几万甚至几十万个细胞），会先用向量量化把同类细胞压成少量伪-bulk 样本。压缩后 KNN 搜索快很多，信息损失不大。</p>
+</section>
+</section>
+<section id="classifysingler分类" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="classifysingler分类"><span class="header-section-number">3.2</span> classifySingleR：分类</h3>
+<p>训练好的索引传给 <code>classifySingleR</code>，对测试数据逐细胞做 KNN 搜索和得分计算。</p>
+<section id="为什么能用-knn-替代-spearman-相关" class="level4" data-number="3.2.1">
+<h4 data-number="3.2.1" class="anchored" data-anchor-id="为什么能用-knn-替代-spearman-相关"><span class="header-section-number">3.2.1</span> 为什么能用 KNN 替代 Spearman 相关</h4>
+<p>这是整个加速的数学基础。Spearman 秩相关系数的标准公式是：</p>
+<p><span class="math display">\[\rho = 1 - \frac{6 \sum_{i=1}^{n} d_i^2}{n(n^2 - 1)}\]</span></p>
+<p>其中 <span class="math inline">\(d_i = rank(x_i) - rank(y_i)\)</span>，<span class="math inline">\(n\)</span> 是基因数。<span class="math inline">\(\sum d_i^2\)</span> 就是两条秩向量之间的平方欧氏距离。</p>
+<p>也就是说：<strong>算 Spearman 相关，等价于先把表达值转成秩，然后算欧氏距离</strong>。相关系数最高的参考样本 = 秩空间中距离最近的邻居。</p>
+<p>这样一来，分类问题就变成了”在秩空间里搜最近邻”——这是个已经研究透的问题，有大量高效的 ANN 算法可以用。</p>
+</section>
+<section id="singlepp-的具体做法" class="level4" data-number="3.2.2">
+<h4 data-number="3.2.2" class="anchored" data-anchor-id="singlepp-的具体做法"><span class="header-section-number">3.2.2</span> singlepp 的具体做法</h4>
+<p>训练时，<code>train_single</code> 对每个参考细胞类型的每个标签，在秩空间里建一个 KNN 索引（用的就是单细胞数据和 DE 基因子集对应的秩值）。</p>
+<p>分类时，<code>classify_single</code> 对每个测试细胞：</p>
+<ol type="1">
+<li>提取 DE 基因的表达值，转成秩</li>
+<li>对每个参考标签，在索引里搜 K 个最近邻参考样本</li>
+<li>对每个标签，用搜出来的距离 <span class="math inline">\(d\)</span> 通过公式反推 Spearman 相关 <span class="math inline">\(r\)</span>：<span class="math inline">\(r = 1 - 6d^2 / (n(n^2 - 1))\)</span></li>
+<li>对每个标签的所有 K 个相关值取用户指定的分位数（默认 0.8），得到该标签的得分</li>
+<li>得分最高的标签就是初版注释</li>
+<li>如果需要 fine-tuning，用候选标签的特异基因子集再做一轮 KNN 搜索</li>
+</ol>
+<p>关键参数： - <strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略 - <strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p>
+<p>整套流程的复杂度从传统的 <span class="math inline">\(O(T \times R \times G)\)</span> 降到了 <span class="math inline">\(O(T \times \log R)\)</span>，ANN 索引让搜索不用遍历所有参考样本。</p>
+<p>R 端的入口：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>out <span class="ot">&lt;-</span> <span class="fu">classify_single</span>(</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="at">test =</span> parsed, </span>
+<span id="cb13-3"><a href="#cb13-3"></a>  <span class="at">prebuilt =</span> trained<span class="sc">$</span>built, </span>
+<span id="cb13-4"><a href="#cb13-4"></a>  <span class="at">quantile =</span> quantile, </span>
+<span id="cb13-5"><a href="#cb13-5"></a>  <span class="at">use_fine_tune =</span> fine.tune, </span>
+<span id="cb13-6"><a href="#cb13-6"></a>  <span class="at">fine_tune_threshold =</span> tune.thresh, </span>
+<span id="cb13-7"><a href="#cb13-7"></a>  <span class="at">nthreads =</span> num.threads</span>
+<span id="cb13-8"><a href="#cb13-8"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="fine-tuning-和-pruning" class="level4" data-number="3.2.3">
+<h4 data-number="3.2.3" class="anchored" data-anchor-id="fine-tuning-和-pruning"><span class="header-section-number">3.2.3</span> Fine-tuning 和 Pruning</h4>
+<p>Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
+<p>Pruning 是为了解决一个根本问题：SingleR 默认<strong>总会</strong>给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>pruneScores <span class="ot">&lt;-</span> <span class="cf">function</span>(results, <span class="at">nmads=</span><span class="dv">3</span>, <span class="at">min.diff.med=</span><span class="sc">-</span><span class="cn">Inf</span>, <span class="at">min.diff.next=</span><span class="dv">0</span>) {</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  delta <span class="ot">&lt;-</span> <span class="fu">getDeltaFromMedian</span>(results)</span>
+<span id="cb14-3"><a href="#cb14-3"></a>  thresholds[[l]] <span class="ot">&lt;-</span> curthresh <span class="ot">&lt;-</span> med <span class="sc">-</span> nmads <span class="sc">*</span> MAD</span>
+<span id="cb14-4"><a href="#cb14-4"></a>  keep[idx] <span class="ot">&lt;-</span> keep[idx] <span class="sc">&amp;</span> current <span class="sc">&gt;=</span> curthresh</span>
+<span id="cb14-5"><a href="#cb14-5"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>三个判断维度：</p>
+<p><strong>delta</strong>：<span class="math inline">\(delta_i = score_{best} - median(score_{all\ labels})\)</span>。delta 很小说明对各类型得分都差不多，分配的意义不大。</p>
+<p><strong>标签级异常值</strong>：对每个标签，把所有被分配到这个标签的细胞的 delta 拉出来算分布： <span class="math display">\[threshold = median(delta) - nmads \times MAD(delta)\]</span> 低于阈值的标记为低质量。<code>nmads = 3</code> 相当于砍掉正态分布 3-sigma 的末端。</p>
+<p><strong>delta.next</strong>：fine-tuning 后最佳和第二得分的差。小于 <code>min.diff.next</code>（默认 0），说明区分不开，这个注释也标记为不可靠。</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="两版对比" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="两版对比"><span class="header-section-number">4</span> 两版对比</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>维度</th>
+<th>Legacy</th>
+<th>Bioconductor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>实现</td>
+<td>纯 R</td>
+<td>R + C++</td>
+</tr>
+<tr class="even">
+<td>速度</td>
+<td>遍历所有配对</td>
+<td>KNN 索引加速</td>
+</tr>
+<tr class="odd">
+<td>DE 选法</td>
+<td>classic 一种</td>
+<td>classic / wilcox / t</td>
+</tr>
+<tr class="even">
+<td>训练复用</td>
+<td>不支持</td>
+<td>训练一次分类多次</td>
+</tr>
+<tr class="odd">
+<td>质量过滤</td>
+<td>卡方检验</td>
+<td>delta + MAD</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

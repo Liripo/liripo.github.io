@@ -6,4 +6,277 @@ categories: [single-cell, R, bioinformatics]
 image: "avatar.png"
 ---
 
-这篇源码整理成了 PPT，[下载 PPTX](./SingleR%20源码解读.pptx)
+## 引言
+
+做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。
+
+2019 年发在 _Nature Immunology_ 上之后，SingleR 有过两个版本：
+
+- **纯 R 版**（v1.0.0，[dviraran/SingleR](https://github.com/dviraran/SingleR)）：代码直白好读。已经停更了。
+- **Bioconductor 版**（v2.8.0+，[SingleR-inc/SingleR](https://github.com/SingleR-inc/SingleR)）：Aaron Lun 重写的，核心挪到 C++（底层是 [singlepp](https://github.com/SingleR-inc/singlepp)），训练和分类拆开，比老版本快几十倍。
+
+---
+
+## 纯 R 版本
+
+整体管线分六步：
+
+1. `medianMatrix` → 算每个细胞类型的中位表达
+2. DE 基因选择 → $n = 500 \times (2/3)^{\log_2(N)}$
+3. `cor.stable` → Spearman 相关计算
+4. `quantileMatrix` → 0.8 分位数聚合得分
+5. `chisq.out.test` → 置信度检验
+6. `fineTuningRound` → 迭代微调
+
+### 第一步：算中位表达矩阵
+
+```r
+mat = medianMatrix(ref_data, types)
+```
+
+`medianMatrix` 按 `types` 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。
+
+### 第二步：挑差异基因
+
+选多少基因？$n$ 跟参考细胞类型数 $N$ 的关系是：
+
+$$n = 500 \times \left( \frac{2}{3} \right)^{\log_2(N)}$$
+
+2 个类型时 $n = 500$，16 个类型时 $n \approx 125$。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。
+
+对应的源码（`SingleR.R:fineTuningRound`）：
+
+```r
+n = round(500*(2/3)^(log2(c(ncol(mat)))))
+genes.filtered = unique(unlist(unlist(
+  lapply(1:ncol(mat), function(j) {
+    lapply(1:ncol(mat), function(i) {
+      s=sort(mat[,j]-mat[,i],decreasing=T);
+      s=s[s>0];names(s)[1:min(n,length(s))]
+    })
+  }))))
+```
+
+拆开来看：
+1. 两层循环 (`j`, `i`) 遍历所有细胞类型对
+2. `mat[,j] - mat[,i]` 就是类型 j 相对类型 i 的表达差
+3. `s = s[s > 0]` 只留 j 里上调的
+4. 差值从大到小取前 n 个
+5. 所有配对的基因取**并集**（`unique(unlist(...))`）
+
+出来的基因集会覆盖到每种细胞类型的高表达标志基因。
+
+### 第三步：Spearman 相关
+
+```r
+r = cor.stable(sc_data, ref_data, method='spearman')
+```
+
+`cor.stable` 是 `cor()` 的稳健封装。输出一个 $M \times K$ 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。
+
+### 第四步：分位数聚合
+
+```r
+agg_scores = quantileMatrix(r, types, quantile.use)
+```
+
+`quantile.use` 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。
+
+为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在"最相似的那 20% 参考样本"的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 [CellTypist](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/) 里的"投票"思路有点像。
+
+### 第五步：初版注释 + 置信度
+
+```r
+labels = colnames(agg_scores)[max.col(agg_scores)]
+output$pval = SingleR.ConfidenceTest(output$scores)
+```
+
+初版就是挑每行得分最高的那个类型。
+
+置信度用卡方异常值检验：
+
+```r
+SingleR.ConfidenceTest = function(scores) {
+  apply(scores, 1, function(x) chisq.out.test(x)$p.value)
+}
+```
+
+逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 > 0.05），说明各个类型得分差距不大，这个注释不太靠谱。
+
+### 第六步：Fine-tuning 迭代
+
+区分相似细胞类型的核心就靠这一步。
+
+```r
+SingleR.FineTune <- function(sc_data, ref_data, types, scores, 
+                              quantile.use, fine.tune.thres, ...) {
+  labels = pbmclapply(1:N, FUN=function(i){
+    max_score = max(scores[i,])
+    topLabels = names(scores[i, scores[i,] >= max_score - fine.tune.thres])
+    while(length(topLabels) > 1) {
+      topLabels = fineTuningRound(topLabels, types, ref_data, ...)
+    }
+    return (topLabels)
+  }, mc.cores=numCores)
+}
+```
+
+流程：
+
+1. `fine.tune.thres = 0.05`，得分在最高分 0.05 范围内的都进入候选
+2. 只从候选类型里重新挑差异基因
+3. 新基因集重新算相关性
+4. 迭代，直到只剩一个候选
+
+举个实际例子：
+
+| cell type | score |
+|-----------|-------|
+| T-cell    | 0.85  |
+| NK-cell   | 0.82  |
+| B-cell    | 0.62  |
+
+T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种"聚焦再聚焦"的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。
+
+`fineTuningRound` 里有行代码：
+
+```r
+agg_scores = agg_scores[-length(agg_scores)]
+```
+
+每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。
+
+---
+
+## Bioconductor 版：训练和分类拆开，C++ 加速
+
+跟老版本最大的不同：训练一次，分类可以反复用。参考数据只建一次索引，之后不同测试集直接分类就行。老版本每次都得从头跑。
+
+整个管线拆成两个函数：`trainSingleR` 训练，`classifySingleR` 分类。
+
+### trainSingleR：训练
+
+#### DE 基因选法（三种）
+
+**classic**（默认）：跟 legacy 一样，中位表达差排序。`de.n` 默认 $500 \times (2/3)^{\log_2(N)}$。适合 bulk 参考。
+
+**wilcox**（单细胞参考推荐）：
+
+```r
+scrapper::scoreMarkers(ref, groups=labels, all.pairwise=de.n, compute.auc=TRUE, ...)
+```
+
+用 AUC 排名。单细胞数据太稀疏（超 50% 零值），median 经常是 0，classic 方法会失效。AUC 是秩统计量，不受零膨胀影响。默认 `de.n = 10`。
+
+**t**：
+
+```r
+scrapper::scoreMarkers(ref, groups=labels, compute.cohens.d=TRUE, ...)
+```
+
+用 Cohen's d。比 AUC 快。默认也是 `de.n = 10`。
+
+#### C++ 索引
+
+```r
+built <- .build_index(ref=curref, labels=curlabels, ulabels=ulabels, 
+                       test.genes=test.genes, markers=markers, 
+                       num.threads=num.threads)
+```
+
+先通过 `beachmat` 的 `initializeCpp(ref)` 把 R 矩阵变成 C++ 能读的结构，然后调 singlepp 的 `train_single`。`built` 是一个 **external pointer**——R 里存的是指针，实际数据在 C++ 堆上。不能 `saveRDS` 保存。
+
+#### 参考聚合
+
+```r
+if (aggr.ref) {
+  aggr <- aggregateReference(ref=curref, label=curlabels, ...)
+  curref <- assay(aggr)
+}
+```
+
+参考数据如果是单细胞级别的（几万甚至几十万个细胞），会先用向量量化把同类细胞压成少量伪-bulk 样本。压缩后 KNN 搜索快很多，信息损失不大。
+
+### classifySingleR：分类
+
+训练好的索引传给 `classifySingleR`，对测试数据逐细胞做 KNN 搜索和得分计算。
+
+#### 为什么能用 KNN 替代 Spearman 相关
+
+这是整个加速的数学基础。Spearman 秩相关系数的标准公式是：
+
+$$\rho = 1 - \frac{6 \sum_{i=1}^{n} d_i^2}{n(n^2 - 1)}$$
+
+其中 $d_i = rank(x_i) - rank(y_i)$，$n$ 是基因数。$\sum d_i^2$ 就是两条秩向量之间的平方欧氏距离。
+
+也就是说：**算 Spearman 相关，等价于先把表达值转成秩，然后算欧氏距离**。相关系数最高的参考样本 = 秩空间中距离最近的邻居。
+
+这样一来，分类问题就变成了"在秩空间里搜最近邻"——这是个已经研究透的问题，有大量高效的 ANN 算法可以用。
+
+#### singlepp 的具体做法
+
+训练时，`train_single` 对每个参考细胞类型的每个标签，在秩空间里建一个 KNN 索引（用的就是单细胞数据和 DE 基因子集对应的秩值）。
+
+分类时，`classify_single` 对每个测试细胞：
+
+1. 提取 DE 基因的表达值，转成秩
+2. 对每个参考标签，在索引里搜 K 个最近邻参考样本
+3. 对每个标签，用搜出来的距离 $d$ 通过公式反推 Spearman 相关 $r$：$r = 1 - 6d^2 / (n(n^2 - 1))$
+4. 对每个标签的所有 K 个相关值取用户指定的分位数（默认 0.8），得到该标签的得分
+5. 得分最高的标签就是初版注释
+6. 如果需要 fine-tuning，用候选标签的特异基因子集再做一轮 KNN 搜索
+
+关键参数：
+- **quantile**（0.8）：相关值分布的分位数，控制聚合策略
+- **K**：每个标签搜的最近邻居数，越大越精确但越慢
+
+整套流程的复杂度从传统的 $O(T \times R \times G)$ 降到了 $O(T \times \log R)$，ANN 索引让搜索不用遍历所有参考样本。
+
+R 端的入口：
+
+```r
+out <- classify_single(
+  test = parsed, 
+  prebuilt = trained$built, 
+  quantile = quantile, 
+  use_fine_tune = fine.tune, 
+  fine_tune_threshold = tune.thresh, 
+  nthreads = num.threads
+)
+```
+
+#### Fine-tuning 和 Pruning
+
+Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。`tune.thresh = 0.05` 控制候选筛选。
+
+Pruning 是为了解决一个根本问题：SingleR 默认**总会**给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。
+
+```r
+pruneScores <- function(results, nmads=3, min.diff.med=-Inf, min.diff.next=0) {
+  delta <- getDeltaFromMedian(results)
+  thresholds[[l]] <- curthresh <- med - nmads * MAD
+  keep[idx] <- keep[idx] & current >= curthresh
+}
+```
+
+三个判断维度：
+
+**delta**：$delta_i = score_{best} - median(score_{all\ labels})$。delta 很小说明对各类型得分都差不多，分配的意义不大。
+
+**标签级异常值**：对每个标签，把所有被分配到这个标签的细胞的 delta 拉出来算分布：
+$$threshold = median(delta) - nmads \times MAD(delta)$$
+低于阈值的标记为低质量。`nmads = 3` 相当于砍掉正态分布 3-sigma 的末端。
+
+**delta.next**：fine-tuning 后最佳和第二得分的差。小于 `min.diff.next`（默认 0），说明区分不开，这个注释也标记为不可靠。
+
+---
+
+## 两版对比
+
+| 维度 | Legacy | Bioconductor |
+|------|--------|-------------|
+| 实现 | 纯 R | R + C++ |
+| 速度 | 遍历所有配对 | KNN 索引加速 |
+| DE 选法 | classic 一种 | classic / wilcox / t |
+| 训练复用 | 不支持 | 训练一次分类多次 |
+| 质量过滤 | 卡方检验 | delta + MAD |
