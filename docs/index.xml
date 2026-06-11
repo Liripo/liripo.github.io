@@ -10,7 +10,30 @@
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
 <generator>quarto-1.9.37</generator>
-<lastBuildDate>Sun, 07 Jun 2026 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 10 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>SingleR 源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/singleR/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<p>这篇源码整理成了 PPT，<a href="./SingleR 源码解读.pptx">下载 PPTX</a></p>
+
+
+
+ ]]></description>
+  <category>single-cell</category>
+  <category>R</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/singleR/</guid>
+  <pubDate>Wed, 10 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/singleR/avatar.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>scDblFinder 识别双胞源码解读</title>
   <dc:creator>Liripo </dc:creator>
@@ -32,7 +55,7 @@
   <category>bioinformatics</category>
   <guid>https://liripo.github.io/posts/scDblfinder/</guid>
   <pubDate>Sun, 07 Jun 2026 16:00:00 GMT</pubDate>
-  <media:content url="https://liripo.github.io/posts/scDblfinder/cover.png" medium="image" type="image/png" height="76" width="144"/>
+  <media:content url="https://liripo.github.io/posts/scDblfinder/sticker.svg" medium="image" type="image/svg+xml"/>
 </item>
 <item>
   <title>系统地比较 11 种空间转录组方法</title>
@@ -56,7 +79,7 @@
   <category>bioinformatics</category>
   <guid>https://liripo.github.io/posts/spatial-compare/</guid>
   <pubDate>Sun, 07 Jun 2026 16:00:00 GMT</pubDate>
-  <media:content url="https://liripo.github.io/posts/spatial-compare/cover.png" medium="image" type="image/png" height="76" width="144"/>
+  <media:content url="https://liripo.github.io/posts/spatial-compare/cover.png" medium="image" type="image/png" height="65" width="144"/>
 </item>
 <item>
   <title>CellChat 源码解读</title>

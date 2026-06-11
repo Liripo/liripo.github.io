@@ -1,0 +1,9 @@
+---
+title: "SingleR 源码解读"
+author: "Liripo"
+date: "2026-06-11"
+categories: [single-cell, R, bioinformatics]
+image: "avatar.png"
+---
+
+这篇源码整理成了 PPT，[下载 PPTX](./SingleR%20源码解读.pptx)

@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/singleR/index.html",
       "/posts/scDblfinder/index.html",
       "/posts/spatial-compare/index.html",
       "/posts/cellchat/index.html",
