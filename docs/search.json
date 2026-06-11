@@ -1,52 +1,52 @@
 [
   {
-    "objectID": "posts/容器资源监控/index.html",
-    "href": "posts/容器资源监控/index.html",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "objectID": "posts/scDblfinder/index.html",
+    "href": "posts/scDblfinder/index.html",
+    "title": "scDblFinder 识别双胞源码解读",
     "section": "",
-    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+    "text": "这篇源码整理成了 PPT，下载 PPTX"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#简介",
-    "href": "posts/容器资源监控/index.html#简介",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "objectID": "posts/singleR/index.html",
+    "href": "posts/singleR/index.html",
+    "title": "SingleR 源码解读",
     "section": "",
-    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+    "text": "这篇源码整理成了 PPT，下载 PPTX"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#cadvisor-部署",
-    "href": "posts/容器资源监控/index.html#cadvisor-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "2 cAdvisor 部署",
-    "text": "2 cAdvisor 部署\n对需要监控的主机启动如下容器：\nsudo docker run \\\n  --volume=/:/rootfs:ro \\\n  --volume=/var/run:/var/run:ro \\\n  --volume=/sys:/sys:ro \\\n  --volume=/var/lib/docker/:/var/lib/docker:ro \\\n  --volume=/dev/disk/:/dev/disk:ro \\\n  --publish=8080:8080 \\\n  --detach=true \\\n  --name=cadvisor \\\n  --privileged \\\n  --device=/dev/kmsg \\\n  gcr.io/cadvisor/cadvisor\n\n\n\n\n\n\nTip\n\n\n\n&lt;ip&gt; 记得更换为自己的 ip 地址。\n\n\ncAdvisor 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。\nhttp://&lt;ip&gt;:8080/metrics 端口可以看到 prometheus 所需要的信息。"
-  },
-  {
-    "objectID": "posts/容器资源监控/index.html#prometheus-部署",
-    "href": "posts/容器资源监控/index.html#prometheus-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "3 prometheus 部署",
-    "text": "3 prometheus 部署\n当前文件夹下新建配置文件prometheus.yml：\n\n\nprometheus.yml\n\nscrape_configs:\n- job_name: cadvisor\n  scrape_interval: 5s\n  static_configs:\n  - targets:\n    - &lt;ip&gt;:8080\n\ndocker run --name prometheus -d \\\n    -p 9090:9090 \\\n    -v ./prometheus.yml:/etc/prometheus/prometheus.yml \\\n    prom/prometheus \\\n    --config.file=/etc/prometheus/prometheus.yml \\\n    --web.enable-lifecycle \\\n    --storage.tsdb.retention.time=15d\n\n# 参数解释\n--config.file，指定配置文件\n--storage.tsdb.path，指定数据存储目录\n--storage.tsdb.retention，指定数据过期时间，默认 15 天\n--query.max-concurrency，最大支持的并发查询量\n--web.enable-lifecycle，启用热加载\n打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。\n\n此时所有监控目标的状态都是 UP，表明 prometheus 可以正常获取到监控数据。"
-  },
-  {
-    "objectID": "posts/容器资源监控/index.html#grafana-部署",
-    "href": "posts/容器资源监控/index.html#grafana-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "4 grafana 部署",
-    "text": "4 grafana 部署\ndocker run -d --name=grafana -p 3000:3000 grafana/grafana\n\n4.1 使用\n打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。\n\n中文设置，个人资料中设置：\n\n\n\n添加 prometheus 数据源，在下图红框位置填写 prometheus 地址即可\n\n\n\n仪表板查看容器的相关资源\n\n\n导入仪表板\n\n\n\n选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：14282 ，点击加载按钮后选择刚刚的数据源即可。\n\n\n然后就可以查看容器资源监控的仪表板，如下所示："
-  },
-  {
-    "objectID": "posts/容器资源监控/index.html#windowns-部署命令",
-    "href": "posts/容器资源监控/index.html#windowns-部署命令",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "5 windowns 部署命令",
-    "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
-  },
-  {
-    "objectID": "posts/spatial-compare/index.html",
-    "href": "posts/spatial-compare/index.html",
-    "title": "系统地比较 11 种空间转录组方法",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Blog",
     "section": "",
-    "text": "下载 PPTX"
+    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nSingleR 源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 11, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nscDblFinder 识别双胞源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n系统地比较 11 种空间转录组方法\n\n\n\n\n\n\nspatial-transcriptomics\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\ncellchat\n\nR\n\nbioinformatics\n\ncell-communication\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nagent\n\nbiomni\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\nagent\n\ntypescript\n\nsource-reading\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\nquarto\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ncadvisor\n\nprometheus\n\ngrafana\n\ndocker\n\nobservability\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\ndash\n\nweb\n\npython\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\ndash\n\nweb\n\npython\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\nblog\n\ngithub-pages\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/umami/index.html",
+    "href": "posts/umami/index.html",
+    "title": "用 Umami 分析网站访客",
+    "section": "",
+    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
+  },
+  {
+    "objectID": "posts/umami/index.html#umami-cloud",
+    "href": "posts/umami/index.html#umami-cloud",
+    "title": "用 Umami 分析网站访客",
+    "section": "",
+    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
+  },
+  {
+    "objectID": "posts/umami/index.html#接入步骤",
+    "href": "posts/umami/index.html#接入步骤",
+    "title": "用 Umami 分析网站访客",
+    "section": "2 接入步骤",
+    "text": "2 接入步骤\n\n注册Umami Cloud, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；\n给要分析的网站，增加追踪代码：\n\n&lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"6aca168c-471e-41f9-9977-ac136a20c1c1\"&gt;&lt;/script&gt;\n上面代码data-website-id='*'记得改为对应的追踪 id。"
+  },
+  {
+    "objectID": "posts/umami/index.html#放到-quarto-配置中",
+    "href": "posts/umami/index.html#放到-quarto-配置中",
+    "title": "用 Umami 分析网站访客",
+    "section": "3 放到 Quarto 配置中",
+    "text": "3 放到 Quarto 配置中\n对 Quarto 网站来说，可以把脚本放到 _quarto.yml 的 include-in-header 中，这样每个页面都会自动带上统计脚本：\nformat:\n  html:\n    include-in-header:\n      - text: |\n          &lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"你的站点 ID\"&gt;&lt;/script&gt;"
   },
   {
     "objectID": "posts/quarto_blog/index.html",
@@ -124,13 +124,6 @@
     "title": "CellChat 源码解读",
     "section": "3 原理解读",
     "text": "3 原理解读\nCellChat 的分析管线大致分六步：\n\n过滤不在数据库里的基因\n识别每个细胞群的 marker\n识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）\n推断不同细胞群之间通过配体-受体对发生的潜在通信\n将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度\n统计交互次数（数量）以及计算总通信概率（权重）\n\n下面重点拆第 4 步的 computeCommunProb。\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵\"] --&gt; B[\"过滤非数据库基因\"]\n    B --&gt; C[\"识别每个细胞群的 marker\"]\n    C --&gt; D[\"识别过表达的 LR 对\"]\n    D --&gt; E[\"computeCommunProb&lt;br&gt;通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway&lt;br&gt;通路水平聚合\"]\n    F --&gt; G[\"aggregateNet&lt;br&gt;交互次数 & 权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality&lt;br&gt;中心性分析\"]\n    G --&gt; I[\"identifyCommunicationPatterns&lt;br&gt;NMF 模式识别\"]\n    H --&gt; J[\"可视化&lt;br&gt;弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n\n3.1 第一步：计算每个细胞群每个基因的平均表达量\n为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：\n\\[EM = \\frac{1}{2}Q_2 + \\frac{1}{4}\\left( Q_1 + Q_3 \\right)\\]\n\\(Q_1\\)、\\(Q_2\\)、\\(Q_3\\) 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n遇到复合体时，用几何平均合并亚基表达：\n\\[\\text{Expr(complex)} = \\sqrt[N]{\\prod_{i=1}^{N} \\text{Expr(subunit}_i)}\\]\n任何亚基表达为零，复合物就失活。\n\n\n3.2 第二步：共刺激/共抑制受体调节\n利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。\n\n\n3.3 第三步：计算通讯概率\n对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：\n# 1. 配体与受体表达量的外积\n# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达\ndataLR[j, k] = L[j] * R[k]\n\n# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值\n# Kh（半最大效应浓度，默认 0.5）\n#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）\n#   - dataLR = Kh → P1 = 0.5（半最大概率）\n#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）\n# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为\nP1 &lt;- dataLR^n / (Kh^n + dataLR^n)\n\n# 3. 激动剂调制：有激动剂时增强信号\n#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1\n#    当前 L-R 对没有激动剂记录时 P2 = 1\nP2 &lt;- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)\n\n# 4. 拮抗剂调制：有拮抗剂时抑制信号\n#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0\n#    当前 L-R 对没有拮抗剂记录时 P3 = 1\nP3 &lt;- Kh^n / (Kh^n + antagonist_expr^n)\n\n# 5. 空间约束：非空间数据下 P.spatial 全部为 1\nPnull = P1 * P2 * P3 * P.spatial\n\n\n3.4 置换检验\n通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？\n做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 nboot = 100 次，每次得到一个随机化的概率分布：\n# 简化示意：实际循环 100 次，每次打乱标签后重算\nfor (i in 1:100) {\n  shuffled_labels &lt;- sample(cell_labels)                     # 打乱\n  shuffled_prob   &lt;- compute_prob(data, shuffled_labels)     # 重算\n  null_dist[i]    &lt;- shuffled_prob\n}\n\n# 真实概率在零分布中的位置 → p 值\np_value &lt;- sum(null_dist &gt;= observed_prob) / nboot\n\np 值越小，说明真实概率越不太可能是随机噪音\n默认 nboot = 100，对于严格的使用可以提高到 500 或 1000\n结果存在 net$pval 里，跟 net$prob 维度相同"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Blog",
-    "section": "",
-    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nSingleR 源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 11, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nscDblFinder 识别双胞源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n系统地比较 11 种空间转录组方法\n\n\n\n\n\n\nspatial-transcriptomics\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\ncellchat\n\nR\n\nbioinformatics\n\ncell-communication\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nagent\n\nbiomni\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\nagent\n\ntypescript\n\nsource-reading\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\nquarto\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ncadvisor\n\nprometheus\n\ngrafana\n\ndocker\n\nobservability\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\ndash\n\nweb\n\npython\n\ngranian\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\ndash\n\nweb\n\npython\n\ngunicorn\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\nblog\n\ngithub-pages\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/biomni/index.html",
@@ -273,52 +266,52 @@
     "text": "7 配置与扩展\n\n7.1 配置文件\npi 使用多个配置文件：\n\n\n\n文件\n位置\n用途\n\n\n\n\nsettings.json\n~/.pi/agent/ 或 .pi/\n全局/项目设置\n\n\nauth.json\n~/.pi/agent/\nAPI 密钥和 OAuth 凭证\n\n\nmodels.json\n~/.pi/agent/\n自定义提供商和模型\n\n\nkeybindings.json\n~/.pi/agent/\n快捷键自定义\n\n\n\n\n\n7.2 技能系统\n技能是按需加载的能力包，遵循 Agent Skills 标准：\n# SKILL.md 格式\n---\nname: my-skill\ndescription: 描述技能功能\n---\n\n## 使用说明\n...\n\n通过 /skill:name 调用\n或由 Agent 自动加载\n在系统提示中显示为可用能力\n\n\n\n7.3 上下文文件\npi 会自动加载 AGENTS.md（或 CLAUDE.md）：\n\n全局配置目录\n父目录\n当前目录\n\n所有匹配的文件会连接到系统提示中。"
   },
   {
-    "objectID": "posts/scDblfinder/index.html",
-    "href": "posts/scDblfinder/index.html",
-    "title": "scDblFinder 识别双胞源码解读",
-    "section": "",
-    "text": "这篇源码整理成了 PPT，下载 PPTX"
-  },
-  {
-    "objectID": "posts/umami/index.html",
-    "href": "posts/umami/index.html",
-    "title": "用 Umami 分析网站访客",
-    "section": "",
-    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
-  },
-  {
-    "objectID": "posts/umami/index.html#umami-cloud",
-    "href": "posts/umami/index.html#umami-cloud",
-    "title": "用 Umami 分析网站访客",
-    "section": "",
-    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
-  },
-  {
-    "objectID": "posts/umami/index.html#接入步骤",
-    "href": "posts/umami/index.html#接入步骤",
-    "title": "用 Umami 分析网站访客",
-    "section": "2 接入步骤",
-    "text": "2 接入步骤\n\n注册Umami Cloud, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；\n给要分析的网站，增加追踪代码：\n\n&lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"6aca168c-471e-41f9-9977-ac136a20c1c1\"&gt;&lt;/script&gt;\n上面代码data-website-id='*'记得改为对应的追踪 id。"
-  },
-  {
-    "objectID": "posts/umami/index.html#放到-quarto-配置中",
-    "href": "posts/umami/index.html#放到-quarto-配置中",
-    "title": "用 Umami 分析网站访客",
-    "section": "3 放到 Quarto 配置中",
-    "text": "3 放到 Quarto 配置中\n对 Quarto 网站来说，可以把脚本放到 _quarto.yml 的 include-in-header 中，这样每个页面都会自动带上统计脚本：\nformat:\n  html:\n    include-in-header:\n      - text: |\n          &lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"你的站点 ID\"&gt;&lt;/script&gt;"
-  },
-  {
-    "objectID": "docs/posts/spatial-compare/index.html",
-    "href": "docs/posts/spatial-compare/index.html",
+    "objectID": "posts/spatial-compare/index.html",
+    "href": "posts/spatial-compare/index.html",
     "title": "系统地比较 11 种空间转录组方法",
     "section": "",
     "text": "下载 PPTX"
   },
   {
-    "objectID": "posts/singleR/index.html",
-    "href": "posts/singleR/index.html",
-    "title": "SingleR 源码解读",
+    "objectID": "posts/容器资源监控/index.html",
+    "href": "posts/容器资源监控/index.html",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
     "section": "",
-    "text": "这篇源码整理成了 PPT，下载 PPTX"
+    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#简介",
+    "href": "posts/容器资源监控/index.html#简介",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "",
+    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#cadvisor-部署",
+    "href": "posts/容器资源监控/index.html#cadvisor-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "2 cAdvisor 部署",
+    "text": "2 cAdvisor 部署\n对需要监控的主机启动如下容器：\nsudo docker run \\\n  --volume=/:/rootfs:ro \\\n  --volume=/var/run:/var/run:ro \\\n  --volume=/sys:/sys:ro \\\n  --volume=/var/lib/docker/:/var/lib/docker:ro \\\n  --volume=/dev/disk/:/dev/disk:ro \\\n  --publish=8080:8080 \\\n  --detach=true \\\n  --name=cadvisor \\\n  --privileged \\\n  --device=/dev/kmsg \\\n  gcr.io/cadvisor/cadvisor\n\n\n\n\n\n\nTip\n\n\n\n&lt;ip&gt; 记得更换为自己的 ip 地址。\n\n\ncAdvisor 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。\nhttp://&lt;ip&gt;:8080/metrics 端口可以看到 prometheus 所需要的信息。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#prometheus-部署",
+    "href": "posts/容器资源监控/index.html#prometheus-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "3 prometheus 部署",
+    "text": "3 prometheus 部署\n当前文件夹下新建配置文件prometheus.yml：\n\n\nprometheus.yml\n\nscrape_configs:\n- job_name: cadvisor\n  scrape_interval: 5s\n  static_configs:\n  - targets:\n    - &lt;ip&gt;:8080\n\ndocker run --name prometheus -d \\\n    -p 9090:9090 \\\n    -v ./prometheus.yml:/etc/prometheus/prometheus.yml \\\n    prom/prometheus \\\n    --config.file=/etc/prometheus/prometheus.yml \\\n    --web.enable-lifecycle \\\n    --storage.tsdb.retention.time=15d\n\n# 参数解释\n--config.file，指定配置文件\n--storage.tsdb.path，指定数据存储目录\n--storage.tsdb.retention，指定数据过期时间，默认 15 天\n--query.max-concurrency，最大支持的并发查询量\n--web.enable-lifecycle，启用热加载\n打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。\n\n此时所有监控目标的状态都是 UP，表明 prometheus 可以正常获取到监控数据。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#grafana-部署",
+    "href": "posts/容器资源监控/index.html#grafana-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "4 grafana 部署",
+    "text": "4 grafana 部署\ndocker run -d --name=grafana -p 3000:3000 grafana/grafana\n\n4.1 使用\n打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。\n\n中文设置，个人资料中设置：\n\n\n\n添加 prometheus 数据源，在下图红框位置填写 prometheus 地址即可\n\n\n\n仪表板查看容器的相关资源\n\n\n导入仪表板\n\n\n\n选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：14282 ，点击加载按钮后选择刚刚的数据源即可。\n\n\n然后就可以查看容器资源监控的仪表板，如下所示："
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#windowns-部署命令",
+    "href": "posts/容器资源监控/index.html#windowns-部署命令",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "5 windowns 部署命令",
+    "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
   }
 ]

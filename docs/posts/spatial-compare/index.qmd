@@ -1,8 +1,0 @@
----
-title: "系统地比较 11 种空间转录组方法"
-author: "Liripo"
-date: "2026-06-08"
-categories: [spatial-transcriptomics, single-cell, R, bioinformatics]
----
-
-[下载 PPTX](./系统地比较11种空间转录组方法.pptx)

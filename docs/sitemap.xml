@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://liripo.github.io/posts/容器资源监控/index.html</loc>
-    <lastmod>2026-06-01T04:10:44.119Z</lastmod>
+    <loc>https://liripo.github.io/posts/scDblfinder/index.html</loc>
+    <lastmod>2026-06-08T09:29:20.209Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/posts/spatial-compare/index.html</loc>
-    <lastmod>2026-06-08T03:49:12.489Z</lastmod>
+    <loc>https://liripo.github.io/posts/singleR/index.html</loc>
+    <lastmod>2026-06-11T09:27:40.922Z</lastmod>
+  </url>
+  <url>
+    <loc>https://liripo.github.io/index.html</loc>
+    <lastmod>2026-06-01T04:14:15.601Z</lastmod>
+  </url>
+  <url>
+    <loc>https://liripo.github.io/posts/umami/index.html</loc>
+    <lastmod>2026-06-01T04:10:24.215Z</lastmod>
   </url>
   <url>
     <loc>https://liripo.github.io/posts/quarto_blog/index.html</loc>
@@ -21,14 +29,6 @@
     <lastmod>2026-06-04T13:20:58.057Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/index.html</loc>
-    <lastmod>2026-06-01T04:14:15.601Z</lastmod>
-  </url>
-  <url>
-    <loc>https://liripo.github.io/about.html</loc>
-    <lastmod>2026-06-01T04:14:15.471Z</lastmod>
-  </url>
-  <url>
     <loc>https://liripo.github.io/posts/biomni/index.html</loc>
     <lastmod>2026-06-01T04:10:44.388Z</lastmod>
   </url>
@@ -41,19 +41,11 @@
     <lastmod>2026-06-01T04:10:44.254Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/posts/scDblfinder/index.html</loc>
-    <lastmod>2026-06-08T03:49:07.707Z</lastmod>
+    <loc>https://liripo.github.io/posts/spatial-compare/index.html</loc>
+    <lastmod>2026-06-08T03:49:12.489Z</lastmod>
   </url>
   <url>
-    <loc>https://liripo.github.io/posts/umami/index.html</loc>
-    <lastmod>2026-06-01T04:10:24.215Z</lastmod>
-  </url>
-  <url>
-    <loc>https://liripo.github.io/docs/posts/spatial-compare/index.html</loc>
-    <lastmod>2026-06-08T03:41:54.353Z</lastmod>
-  </url>
-  <url>
-    <loc>https://liripo.github.io/posts/singleR/index.html</loc>
-    <lastmod>2026-06-11T09:27:40.922Z</lastmod>
+    <loc>https://liripo.github.io/posts/容器资源监控/index.html</loc>
+    <lastmod>2026-06-01T04:10:44.119Z</lastmod>
   </url>
 </urlset>
