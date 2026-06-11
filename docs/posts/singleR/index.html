@@ -451,7 +451,7 @@ window.Quarto = {
 <h3 data-number="2.2" class="anchored" data-anchor-id="第二步挑差异基因"><span class="header-section-number">2.2</span> 第二步：挑差异基因</h3>
 <p>选多少基因？<span class="math inline">\(n\)</span> 跟参考细胞类型数 <span class="math inline">\(N\)</span> 的关系是：</p>
 <p><span class="math display">\[n = 500 \times \left( \frac{2}{3} \right)^{\log_2(N)}\]</span></p>
-<p>2 个类型时 <span class="math inline">\(n = 500\)</span>，16 个类型时 <span class="math inline">\(n \approx 125\)</span>。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。</p>
+<p>2 个类型时 <span class="math inline">\(n = 333\)</span>，16 个类型时 <span class="math inline">\(n \approx 99\)</span>。类型越多，配对比较的次数按 <span class="math inline">\(N^2\)</span> 增长，每个配对挑的基因数就得相应减少，不然总基因集会太多。</p>
 <p>对应的源码（<code>SingleR.R:fineTuningRound</code>）：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>n <span class="ot">=</span> <span class="fu">round</span>(<span class="dv">500</span><span class="sc">*</span>(<span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)<span class="sc">^</span>(<span class="fu">log2</span>(<span class="fu">c</span>(<span class="fu">ncol</span>(mat)))))</span>
 <span id="cb2-2"><a href="#cb2-2"></a>genes.filtered <span class="ot">=</span> <span class="fu">unique</span>(<span class="fu">unlist</span>(<span class="fu">unlist</span>(</span>
@@ -461,45 +461,82 @@ window.Quarto = {
 <span id="cb2-6"><a href="#cb2-6"></a>      s<span class="ot">=</span>s[s<span class="sc">&gt;</span><span class="dv">0</span>];<span class="fu">names</span>(s)[<span class="dv">1</span><span class="sc">:</span><span class="fu">min</span>(n,<span class="fu">length</span>(s))]</span>
 <span id="cb2-7"><a href="#cb2-7"></a>    })</span>
 <span id="cb2-8"><a href="#cb2-8"></a>  }))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>拆开来看： 1. 两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对 2. <code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差 3. <code>s = s[s &gt; 0]</code> 只留 j 里上调的 4. 差值从大到小取前 n 个 5. 所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p>
+<p>拆开来看：</p>
+<ol type="1">
+<li><p>两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对</p></li>
+<li><p><code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差</p></li>
+<li><p><code>s = s[s &gt; 0]</code> 只留 j 里上调的</p></li>
+<li><p>差值从大到小取前 n 个</p></li>
+<li><p>所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p></li>
+</ol>
 <p>出来的基因集会覆盖到每种细胞类型的高表达标志基因。</p>
 </section>
 <section id="第三步spearman-相关" class="level3" data-number="2.3">
 <h3 data-number="2.3" class="anchored" data-anchor-id="第三步spearman-相关"><span class="header-section-number">2.3</span> 第三步：Spearman 相关</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>r <span class="ot">=</span> <span class="fu">cor.stable</span>(sc_data, ref_data, <span class="at">method=</span><span class="st">'spearman'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装。输出一个 <span class="math inline">\(M \times K\)</span> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
+<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装，处理了某些列标准差为零的情况（来源：<a href="https://github.com/dviraran/SingleR/blob/master/R/HelperFunctions.R">HelperFunctions.R</a>）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>cor.stable <span class="ot">&lt;-</span> <span class="cf">function</span> (x, y, <span class="at">method=</span><span class="st">"pearson"</span>, ...) {</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  omit1 <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">apply</span>(x, <span class="dv">2</span>, sd) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb4-3"><a href="#cb4-3"></a>  omit2 <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">apply</span>(y, <span class="dv">2</span>, sd) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb4-4"><a href="#cb4-4"></a>  <span class="cf">if</span> (<span class="fu">length</span>(omit1) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;&amp;</span> <span class="fu">length</span>(omit2) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb4-5"><a href="#cb4-5"></a>    r <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(x), <span class="fu">ncol</span>(y))</span>
+<span id="cb4-6"><a href="#cb4-6"></a>    r[<span class="sc">-</span>omit1,<span class="sc">-</span>omit2] <span class="ot">=</span> <span class="fu">cor</span>(x[,<span class="sc">-</span>omit1], y[,<span class="sc">-</span>omit2], <span class="at">method=</span>method, ...)</span>
+<span id="cb4-7"><a href="#cb4-7"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(omit1) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb4-8"><a href="#cb4-8"></a>    r <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(x), <span class="fu">ncol</span>(y))</span>
+<span id="cb4-9"><a href="#cb4-9"></a>    r[<span class="sc">-</span>omit1,] <span class="ot">=</span> <span class="fu">cor</span>(x[,<span class="sc">-</span>omit1], y, <span class="at">method=</span>method, ...)</span>
+<span id="cb4-10"><a href="#cb4-10"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">length</span>(omit2) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb4-11"><a href="#cb4-11"></a>    r <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(x), <span class="fu">ncol</span>(y))</span>
+<span id="cb4-12"><a href="#cb4-12"></a>    r[,<span class="sc">-</span>omit2] <span class="ot">=</span> <span class="fu">cor</span>(x, y[,<span class="sc">-</span>omit2], <span class="at">method=</span>method, ...)</span>
+<span id="cb4-13"><a href="#cb4-13"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-14"><a href="#cb4-14"></a>    r <span class="ot">=</span> <span class="fu">cor</span>(x, y, <span class="at">method=</span>method, ...)</span>
+<span id="cb4-15"><a href="#cb4-15"></a>  }</span>
+<span id="cb4-16"><a href="#cb4-16"></a>  <span class="fu">return</span>(r)</span>
+<span id="cb4-17"><a href="#cb4-17"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>输出一个 <span class="math inline">\(M \times K\)</span> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
 </section>
 <section id="第四步分位数聚合" class="level3" data-number="2.4">
 <h3 data-number="2.4" class="anchored" data-anchor-id="第四步分位数聚合"><span class="header-section-number">2.4</span> 第四步：分位数聚合</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>agg_scores <span class="ot">=</span> <span class="fu">quantileMatrix</span>(r, types, quantile.use)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>agg_scores <span class="ot">=</span> <span class="fu">quantileMatrix</span>(r, types, quantile.use)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>quantile.use</code> 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。</p>
-<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/">CellTypist</a> 里的”投票”思路有点像。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。</p>
+</div>
+</div>
 </section>
 <section id="第五步初版注释-置信度" class="level3" data-number="2.5">
 <h3 data-number="2.5" class="anchored" data-anchor-id="第五步初版注释-置信度"><span class="header-section-number">2.5</span> 第五步：初版注释 + 置信度</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>labels <span class="ot">=</span> <span class="fu">colnames</span>(agg_scores)[<span class="fu">max.col</span>(agg_scores)]</span>
-<span id="cb5-2"><a href="#cb5-2"></a>output<span class="sc">$</span>pval <span class="ot">=</span> <span class="fu">SingleR.ConfidenceTest</span>(output<span class="sc">$</span>scores)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>labels <span class="ot">=</span> <span class="fu">colnames</span>(agg_scores)[<span class="fu">max.col</span>(agg_scores)]</span>
+<span id="cb6-2"><a href="#cb6-2"></a>output<span class="sc">$</span>pval <span class="ot">=</span> <span class="fu">SingleR.ConfidenceTest</span>(output<span class="sc">$</span>scores)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>初版就是挑每行得分最高的那个类型。</p>
 <p>置信度用卡方异常值检验：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>SingleR.ConfidenceTest <span class="ot">=</span> <span class="cf">function</span>(scores) {</span>
-<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">apply</span>(scores, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">chisq.out.test</span>(x)<span class="sc">$</span>p.value)</span>
-<span id="cb6-3"><a href="#cb6-3"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>SingleR.ConfidenceTest <span class="ot">=</span> <span class="cf">function</span>(scores) {</span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">apply</span>(scores, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">chisq.out.test</span>(x)<span class="sc">$</span>p.value)</span>
+<span id="cb7-3"><a href="#cb7-3"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。</p>
 </section>
 <section id="第六步fine-tuning-迭代" class="level3" data-number="2.6">
 <h3 data-number="2.6" class="anchored" data-anchor-id="第六步fine-tuning-迭代"><span class="header-section-number">2.6</span> 第六步：Fine-tuning 迭代</h3>
 <p>区分相似细胞类型的核心就靠这一步。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>SingleR.FineTune <span class="ot">&lt;-</span> <span class="cf">function</span>(sc_data, ref_data, types, scores, </span>
-<span id="cb7-2"><a href="#cb7-2"></a>                              quantile.use, fine.tune.thres, ...) {</span>
-<span id="cb7-3"><a href="#cb7-3"></a>  labels <span class="ot">=</span> <span class="fu">pbmclapply</span>(<span class="dv">1</span><span class="sc">:</span>N, <span class="at">FUN=</span><span class="cf">function</span>(i){</span>
-<span id="cb7-4"><a href="#cb7-4"></a>    max_score <span class="ot">=</span> <span class="fu">max</span>(scores[i,])</span>
-<span id="cb7-5"><a href="#cb7-5"></a>    topLabels <span class="ot">=</span> <span class="fu">names</span>(scores[i, scores[i,] <span class="sc">&gt;=</span> max_score <span class="sc">-</span> fine.tune.thres])</span>
-<span id="cb7-6"><a href="#cb7-6"></a>    <span class="cf">while</span>(<span class="fu">length</span>(topLabels) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
-<span id="cb7-7"><a href="#cb7-7"></a>      topLabels <span class="ot">=</span> <span class="fu">fineTuningRound</span>(topLabels, types, ref_data, ...)</span>
-<span id="cb7-8"><a href="#cb7-8"></a>    }</span>
-<span id="cb7-9"><a href="#cb7-9"></a>    <span class="fu">return</span> (topLabels)</span>
-<span id="cb7-10"><a href="#cb7-10"></a>  }, <span class="at">mc.cores=</span>numCores)</span>
-<span id="cb7-11"><a href="#cb7-11"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>SingleR.FineTune <span class="ot">&lt;-</span> <span class="cf">function</span>(sc_data, ref_data, types, scores, </span>
+<span id="cb8-2"><a href="#cb8-2"></a>                              quantile.use, fine.tune.thres, ...) {</span>
+<span id="cb8-3"><a href="#cb8-3"></a>  labels <span class="ot">=</span> <span class="fu">pbmclapply</span>(<span class="dv">1</span><span class="sc">:</span>N, <span class="at">FUN=</span><span class="cf">function</span>(i){</span>
+<span id="cb8-4"><a href="#cb8-4"></a>    max_score <span class="ot">=</span> <span class="fu">max</span>(scores[i,])</span>
+<span id="cb8-5"><a href="#cb8-5"></a>    topLabels <span class="ot">=</span> <span class="fu">names</span>(scores[i, scores[i,] <span class="sc">&gt;=</span> max_score <span class="sc">-</span> fine.tune.thres])</span>
+<span id="cb8-6"><a href="#cb8-6"></a>    <span class="cf">while</span>(<span class="fu">length</span>(topLabels) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
+<span id="cb8-7"><a href="#cb8-7"></a>      topLabels <span class="ot">=</span> <span class="fu">fineTuningRound</span>(topLabels, types, ref_data, ...)</span>
+<span id="cb8-8"><a href="#cb8-8"></a>    }</span>
+<span id="cb8-9"><a href="#cb8-9"></a>    <span class="fu">return</span> (topLabels)</span>
+<span id="cb8-10"><a href="#cb8-10"></a>  }, <span class="at">mc.cores=</span>numCores)</span>
+<span id="cb8-11"><a href="#cb8-11"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>流程：</p>
 <ol type="1">
 <li><code>fine.tune.thres = 0.05</code>，得分在最高分 0.05 范围内的都进入候选</li>
@@ -530,9 +567,9 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。</p>
+<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种亚群区分上效果很好。</p>
 <p><code>fineTuningRound</code> 里有行代码：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>agg_scores <span class="ot">=</span> agg_scores[<span class="sc">-</span><span class="fu">length</span>(agg_scores)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>agg_scores <span class="ot">=</span> agg_scores[<span class="sc">-</span><span class="fu">length</span>(agg_scores)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。</p>
 <hr>
 </section>
@@ -545,27 +582,27 @@ window.Quarto = {
 <h3 data-number="3.1" class="anchored" data-anchor-id="trainsingler训练"><span class="header-section-number">3.1</span> trainSingleR：训练</h3>
 <section id="de-基因选法三种" class="level4" data-number="3.1.1">
 <h4 data-number="3.1.1" class="anchored" data-anchor-id="de-基因选法三种"><span class="header-section-number">3.1.1</span> DE 基因选法（三种）</h4>
-<p><strong>classic</strong>（默认）：跟 legacy 一样，中位表达差排序。<code>de.n</code> 默认 <span class="math inline">\(500 \times (2/3)^{\log_2(N)}\)</span>。适合 bulk 参考。</p>
+<p><strong>classic</strong>（默认）：跟纯 R 版本一样，中位表达差排序。<code>de.n</code> 默认 <span class="math inline">\(500 \times (2/3)^{\log_2(N)}\)</span>。适合 bulk 参考。</p>
 <p><strong>wilcox</strong>（单细胞参考推荐）：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">all.pairwise=</span>de.n, <span class="at">compute.auc=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">all.pairwise=</span>de.n, <span class="at">compute.auc=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>用 AUC 排名。单细胞数据太稀疏（超 50% 零值），median 经常是 0，classic 方法会失效。AUC 是秩统计量，不受零膨胀影响。默认 <code>de.n = 10</code>。</p>
 <p><strong>t</strong>：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">compute.cohens.d=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>scrapper<span class="sc">::</span><span class="fu">scoreMarkers</span>(ref, <span class="at">groups=</span>labels, <span class="at">compute.cohens.d=</span><span class="cn">TRUE</span>, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>用 Cohen’s d。比 AUC 快。默认也是 <code>de.n = 10</code>。</p>
 </section>
 <section id="c-索引" class="level4" data-number="3.1.2">
 <h4 data-number="3.1.2" class="anchored" data-anchor-id="c-索引"><span class="header-section-number">3.1.2</span> C++ 索引</h4>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>built <span class="ot">&lt;-</span> <span class="fu">.build_index</span>(<span class="at">ref=</span>curref, <span class="at">labels=</span>curlabels, <span class="at">ulabels=</span>ulabels, </span>
-<span id="cb11-2"><a href="#cb11-2"></a>                       <span class="at">test.genes=</span>test.genes, <span class="at">markers=</span>markers, </span>
-<span id="cb11-3"><a href="#cb11-3"></a>                       <span class="at">num.threads=</span>num.threads)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>built <span class="ot">&lt;-</span> <span class="fu">.build_index</span>(<span class="at">ref=</span>curref, <span class="at">labels=</span>curlabels, <span class="at">ulabels=</span>ulabels, </span>
+<span id="cb12-2"><a href="#cb12-2"></a>                       <span class="at">test.genes=</span>test.genes, <span class="at">markers=</span>markers, </span>
+<span id="cb12-3"><a href="#cb12-3"></a>                       <span class="at">num.threads=</span>num.threads)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>先通过 <code>beachmat</code> 的 <code>initializeCpp(ref)</code> 把 R 矩阵变成 C++ 能读的结构，然后调 singlepp 的 <code>train_single</code>。<code>built</code> 是一个 <strong>external pointer</strong>——R 里存的是指针，实际数据在 C++ 堆上。不能 <code>saveRDS</code> 保存。</p>
 </section>
 <section id="参考聚合" class="level4" data-number="3.1.3">
 <h4 data-number="3.1.3" class="anchored" data-anchor-id="参考聚合"><span class="header-section-number">3.1.3</span> 参考聚合</h4>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="cf">if</span> (aggr.ref) {</span>
-<span id="cb12-2"><a href="#cb12-2"></a>  aggr <span class="ot">&lt;-</span> <span class="fu">aggregateReference</span>(<span class="at">ref=</span>curref, <span class="at">label=</span>curlabels, ...)</span>
-<span id="cb12-3"><a href="#cb12-3"></a>  curref <span class="ot">&lt;-</span> <span class="fu">assay</span>(aggr)</span>
-<span id="cb12-4"><a href="#cb12-4"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="cf">if</span> (aggr.ref) {</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  aggr <span class="ot">&lt;-</span> <span class="fu">aggregateReference</span>(<span class="at">ref=</span>curref, <span class="at">label=</span>curlabels, ...)</span>
+<span id="cb13-3"><a href="#cb13-3"></a>  curref <span class="ot">&lt;-</span> <span class="fu">assay</span>(aggr)</span>
+<span id="cb13-4"><a href="#cb13-4"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>参考数据如果是单细胞级别的（几万甚至几十万个细胞），会先用向量量化把同类细胞压成少量伪-bulk 样本。压缩后 KNN 搜索快很多，信息损失不大。</p>
 </section>
 </section>
@@ -595,24 +632,24 @@ window.Quarto = {
 <p>关键参数： - <strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略 - <strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p>
 <p>整套流程的复杂度从传统的 <span class="math inline">\(O(T \times R \times G)\)</span> 降到了 <span class="math inline">\(O(T \times \log R)\)</span>，ANN 索引让搜索不用遍历所有参考样本。</p>
 <p>R 端的入口：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>out <span class="ot">&lt;-</span> <span class="fu">classify_single</span>(</span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="at">test =</span> parsed, </span>
-<span id="cb13-3"><a href="#cb13-3"></a>  <span class="at">prebuilt =</span> trained<span class="sc">$</span>built, </span>
-<span id="cb13-4"><a href="#cb13-4"></a>  <span class="at">quantile =</span> quantile, </span>
-<span id="cb13-5"><a href="#cb13-5"></a>  <span class="at">use_fine_tune =</span> fine.tune, </span>
-<span id="cb13-6"><a href="#cb13-6"></a>  <span class="at">fine_tune_threshold =</span> tune.thresh, </span>
-<span id="cb13-7"><a href="#cb13-7"></a>  <span class="at">nthreads =</span> num.threads</span>
-<span id="cb13-8"><a href="#cb13-8"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>out <span class="ot">&lt;-</span> <span class="fu">classify_single</span>(</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="at">test =</span> parsed, </span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="at">prebuilt =</span> trained<span class="sc">$</span>built, </span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="at">quantile =</span> quantile, </span>
+<span id="cb14-5"><a href="#cb14-5"></a>  <span class="at">use_fine_tune =</span> fine.tune, </span>
+<span id="cb14-6"><a href="#cb14-6"></a>  <span class="at">fine_tune_threshold =</span> tune.thresh, </span>
+<span id="cb14-7"><a href="#cb14-7"></a>  <span class="at">nthreads =</span> num.threads</span>
+<span id="cb14-8"><a href="#cb14-8"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="fine-tuning-和-pruning" class="level4" data-number="3.2.3">
 <h4 data-number="3.2.3" class="anchored" data-anchor-id="fine-tuning-和-pruning"><span class="header-section-number">3.2.3</span> Fine-tuning 和 Pruning</h4>
-<p>Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
+<p>Fine-tuning 逻辑跟纯 R 版本一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
 <p>Pruning 是为了解决一个根本问题：SingleR 默认<strong>总会</strong>给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>pruneScores <span class="ot">&lt;-</span> <span class="cf">function</span>(results, <span class="at">nmads=</span><span class="dv">3</span>, <span class="at">min.diff.med=</span><span class="sc">-</span><span class="cn">Inf</span>, <span class="at">min.diff.next=</span><span class="dv">0</span>) {</span>
-<span id="cb14-2"><a href="#cb14-2"></a>  delta <span class="ot">&lt;-</span> <span class="fu">getDeltaFromMedian</span>(results)</span>
-<span id="cb14-3"><a href="#cb14-3"></a>  thresholds[[l]] <span class="ot">&lt;-</span> curthresh <span class="ot">&lt;-</span> med <span class="sc">-</span> nmads <span class="sc">*</span> MAD</span>
-<span id="cb14-4"><a href="#cb14-4"></a>  keep[idx] <span class="ot">&lt;-</span> keep[idx] <span class="sc">&amp;</span> current <span class="sc">&gt;=</span> curthresh</span>
-<span id="cb14-5"><a href="#cb14-5"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>pruneScores <span class="ot">&lt;-</span> <span class="cf">function</span>(results, <span class="at">nmads=</span><span class="dv">3</span>, <span class="at">min.diff.med=</span><span class="sc">-</span><span class="cn">Inf</span>, <span class="at">min.diff.next=</span><span class="dv">0</span>) {</span>
+<span id="cb15-2"><a href="#cb15-2"></a>  delta <span class="ot">&lt;-</span> <span class="fu">getDeltaFromMedian</span>(results)</span>
+<span id="cb15-3"><a href="#cb15-3"></a>  thresholds[[l]] <span class="ot">&lt;-</span> curthresh <span class="ot">&lt;-</span> med <span class="sc">-</span> nmads <span class="sc">*</span> MAD</span>
+<span id="cb15-4"><a href="#cb15-4"></a>  keep[idx] <span class="ot">&lt;-</span> keep[idx] <span class="sc">&amp;</span> current <span class="sc">&gt;=</span> curthresh</span>
+<span id="cb15-5"><a href="#cb15-5"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>三个判断维度：</p>
 <p><strong>delta</strong>：<span class="math inline">\(delta_i = score_{best} - median(score_{all\ labels})\)</span>。delta 很小说明对各类型得分都差不多，分配的意义不大。</p>
 <p><strong>标签级异常值</strong>：对每个标签，把所有被分配到这个标签的细胞的 delta 拉出来算分布： <span class="math display">\[threshold = median(delta) - nmads \times MAD(delta)\]</span> 低于阈值的标记为低质量。<code>nmads = 3</code> 相当于砍掉正态分布 3-sigma 的末端。</p>

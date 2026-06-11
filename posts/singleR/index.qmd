@@ -42,7 +42,7 @@ mat = medianMatrix(ref_data, types)
 
 $$n = 500 \times \left( \frac{2}{3} \right)^{\log_2(N)}$$
 
-2 个类型时 $n = 500$，16 个类型时 $n \approx 125$。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。
+2 个类型时 $n = 333$，16 个类型时 $n \approx 99$。类型越多，配对比较的次数按 $N^2$ 增长，每个配对挑的基因数就得相应减少，不然总基因集会太多。
 
 对应的源码（`SingleR.R:fineTuningRound`）：
 
@@ -58,10 +58,15 @@ genes.filtered = unique(unlist(unlist(
 ```
 
 拆开来看：
+
 1. 两层循环 (`j`, `i`) 遍历所有细胞类型对
+
 2. `mat[,j] - mat[,i]` 就是类型 j 相对类型 i 的表达差
+
 3. `s = s[s > 0]` 只留 j 里上调的
+
 4. 差值从大到小取前 n 个
+
 5. 所有配对的基因取**并集**（`unique(unlist(...))`）
 
 出来的基因集会覆盖到每种细胞类型的高表达标志基因。
@@ -72,7 +77,29 @@ genes.filtered = unique(unlist(unlist(
 r = cor.stable(sc_data, ref_data, method='spearman')
 ```
 
-`cor.stable` 是 `cor()` 的稳健封装。输出一个 $M \times K$ 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。
+`cor.stable` 是 `cor()` 的稳健封装，处理了某些列标准差为零的情况（来源：[HelperFunctions.R](https://github.com/dviraran/SingleR/blob/master/R/HelperFunctions.R)）：
+
+```r
+cor.stable <- function (x, y, method="pearson", ...) {
+  omit1 <- which(apply(x, 2, sd) == 0)
+  omit2 <- which(apply(y, 2, sd) == 0)
+  if (length(omit1) > 0 && length(omit2) > 0) {
+    r <- matrix(0, ncol(x), ncol(y))
+    r[-omit1,-omit2] = cor(x[,-omit1], y[,-omit2], method=method, ...)
+  } else if (length(omit1) > 0) {
+    r <- matrix(0, ncol(x), ncol(y))
+    r[-omit1,] = cor(x[,-omit1], y, method=method, ...)
+  } else if (length(omit2) > 0) {
+    r <- matrix(0, ncol(x), ncol(y))
+    r[,-omit2] = cor(x, y[,-omit2], method=method, ...)
+  } else {
+    r = cor(x, y, method=method, ...)
+  }
+  return(r)
+}
+```
+
+输出一个 $M \times K$ 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。
 
 ### 第四步：分位数聚合
 
@@ -82,7 +109,9 @@ agg_scores = quantileMatrix(r, types, quantile.use)
 
 `quantile.use` 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。
 
-为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在"最相似的那 20% 参考样本"的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 [CellTypist](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/) 里的"投票"思路有点像。
+::: {.callout-note}
+为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在"最相似的那 20% 参考样本"的水平——对离群值不敏感，但比中位数更靠近高相关的那端。
+:::
 
 ### 第五步：初版注释 + 置信度
 
@@ -136,7 +165,7 @@ SingleR.FineTune <- function(sc_data, ref_data, types, scores,
 | NK-cell   | 0.82  |
 | B-cell    | 0.62  |
 
-T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种"聚焦再聚焦"的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。
+T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种"聚焦再聚焦"的打法，在 CD4+/CD8+ T 这种亚群区分上效果很好。
 
 `fineTuningRound` 里有行代码：
 
@@ -158,7 +187,7 @@ agg_scores = agg_scores[-length(agg_scores)]
 
 #### DE 基因选法（三种）
 
-**classic**（默认）：跟 legacy 一样，中位表达差排序。`de.n` 默认 $500 \times (2/3)^{\log_2(N)}$。适合 bulk 参考。
+**classic**（默认）：跟纯 R 版本一样，中位表达差排序。`de.n` 默认 $500 \times (2/3)^{\log_2(N)}$。适合 bulk 参考。
 
 **wilcox**（单细胞参考推荐）：
 
@@ -247,7 +276,7 @@ out <- classify_single(
 
 #### Fine-tuning 和 Pruning
 
-Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。`tune.thresh = 0.05` 控制候选筛选。
+Fine-tuning 逻辑跟纯 R 版本一样，全用 C++ 实现。`tune.thresh = 0.05` 控制候选筛选。
 
 Pruning 是为了解决一个根本问题：SingleR 默认**总会**给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。
 

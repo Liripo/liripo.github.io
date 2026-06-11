@@ -56,7 +56,7 @@ font-style: inherit;">medianMatrix</span>(ref_data, types)</span></code></pre></
 <h3 data-number="2.2" class="anchored" data-anchor-id="第二步挑差异基因"><span class="header-section-number">2.2</span> 第二步：挑差异基因</h3>
 <p>选多少基因？<img src="https://latex.codecogs.com/png.latex?n"> 跟参考细胞类型数 <img src="https://latex.codecogs.com/png.latex?N"> 的关系是：</p>
 <p><img src="https://latex.codecogs.com/png.latex?n%20=%20500%20%5Ctimes%20%5Cleft(%20%5Cfrac%7B2%7D%7B3%7D%20%5Cright)%5E%7B%5Clog_2(N)%7D"></p>
-<p>2 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20=%20500">，16 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20%5Capprox%20125">。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。</p>
+<p>2 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20=%20333">，16 个类型时 <img src="https://latex.codecogs.com/png.latex?n%20%5Capprox%2099">。类型越多，配对比较的次数按 <img src="https://latex.codecogs.com/png.latex?N%5E2"> 增长，每个配对挑的基因数就得相应减少，不然总基因集会太多。</p>
 <p>对应的源码（<code>SingleR.R:fineTuningRound</code>）：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1">n <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -142,7 +142,14 @@ background-color: null;
 font-style: inherit;">length</span>(s))]</span>
 <span id="cb2-7">    })</span>
 <span id="cb2-8">  }))))</span></code></pre></div></div>
-<p>拆开来看： 1. 两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对 2. <code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差 3. <code>s = s[s &gt; 0]</code> 只留 j 里上调的 4. 差值从大到小取前 n 个 5. 所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p>
+<p>拆开来看：</p>
+<ol type="1">
+<li><p>两层循环 (<code>j</code>, <code>i</code>) 遍历所有细胞类型对</p></li>
+<li><p><code>mat[,j] - mat[,i]</code> 就是类型 j 相对类型 i 的表达差</p></li>
+<li><p><code>s = s[s &gt; 0]</code> 只留 j 里上调的</p></li>
+<li><p>差值从大到小取前 n 个</p></li>
+<li><p>所有配对的基因取<strong>并集</strong>（<code>unique(unlist(...))</code>）</p></li>
+</ol>
 <p>出来的基因集会覆盖到每种细胞类型的高表达标志基因。</p>
 </section>
 <section id="第三步spearman-相关" class="level3" data-number="2.3">
@@ -156,28 +163,207 @@ background-color: null;
 font-style: inherit;">method=</span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">'spearman'</span>)</span></code></pre></div></div>
-<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装。输出一个 <img src="https://latex.codecogs.com/png.latex?M%20%5Ctimes%20K"> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
+<p><code>cor.stable</code> 是 <code>cor()</code> 的稳健封装，处理了某些列标准差为零的情况（来源：<a href="https://github.com/dviraran/SingleR/blob/master/R/HelperFunctions.R">HelperFunctions.R</a>）：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1">cor.stable <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span> (x, y, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pearson"</span>, ...) {</span>
+<span id="cb4-2">  omit1 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">which</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apply</span>(x, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, sd) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb4-3">  omit2 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">which</span>(<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">apply</span>(y, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>, sd) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb4-4">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(omit1) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&amp;&amp;</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(omit2) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb4-5">    r <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">matrix</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(x), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(y))</span>
+<span id="cb4-6">    r[<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit1,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit2] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cor</span>(x[,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit1], y[,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit2], <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span>method, ...)</span>
+<span id="cb4-7">  } <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(omit1) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb4-8">    r <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">matrix</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(x), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(y))</span>
+<span id="cb4-9">    r[<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit1,] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cor</span>(x[,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit1], y, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span>method, ...)</span>
+<span id="cb4-10">  } <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">length</span>(omit2) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) {</span>
+<span id="cb4-11">    r <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">matrix</span>(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>, <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(x), <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(y))</span>
+<span id="cb4-12">    r[,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit2] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cor</span>(x, y[,<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>omit2], <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span>method, ...)</span>
+<span id="cb4-13">  } <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> {</span>
+<span id="cb4-14">    r <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">cor</span>(x, y, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">method=</span>method, ...)</span>
+<span id="cb4-15">  }</span>
+<span id="cb4-16">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">return</span>(r)</span>
+<span id="cb4-17">}</span></code></pre></div></div>
+<p>输出一个 <img src="https://latex.codecogs.com/png.latex?M%20%5Ctimes%20K"> 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。</p>
 </section>
 <section id="第四步分位数聚合" class="level3" data-number="2.4">
 <h3 data-number="2.4" class="anchored" data-anchor-id="第四步分位数聚合"><span class="header-section-number">2.4</span> 第四步：分位数聚合</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1">agg_scores <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1">agg_scores <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">quantileMatrix</span>(r, types, quantile.use)</span></code></pre></div></div>
 <p><code>quantile.use</code> 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。</p>
-<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7613558/">CellTypist</a> 里的”投票”思路有点像。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。</p>
+</div>
+</div>
 </section>
 <section id="第五步初版注释-置信度" class="level3" data-number="2.5">
 <h3 data-number="2.5" class="anchored" data-anchor-id="第五步初版注释-置信度"><span class="header-section-number">2.5</span> 第五步：初版注释 + 置信度</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1">labels <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1">labels <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">colnames</span>(agg_scores)[<span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">max.col</span>(agg_scores)]</span>
-<span id="cb5-2">output<span class="sc" style="color: #5E5E5E;
+<span id="cb6-2">output<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">$</span>pval <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -188,13 +374,13 @@ background-color: null;
 font-style: inherit;">$</span>scores)</span></code></pre></div></div>
 <p>初版就是挑每行得分最高的那个类型。</p>
 <p>置信度用卡方异常值检验：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1">SingleR.ConfidenceTest <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1">SingleR.ConfidenceTest <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">function</span>(scores) {</span>
-<span id="cb6-2">  <span class="fu" style="color: #4758AB;
+<span id="cb7-2">  <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">apply</span>(scores, <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -206,20 +392,20 @@ background-color: null;
 font-style: inherit;">chisq.out.test</span>(x)<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">$</span>p.value)</span>
-<span id="cb6-3">}</span></code></pre></div></div>
+<span id="cb7-3">}</span></code></pre></div></div>
 <p>逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。</p>
 </section>
 <section id="第六步fine-tuning-迭代" class="level3" data-number="2.6">
 <h3 data-number="2.6" class="anchored" data-anchor-id="第六步fine-tuning-迭代"><span class="header-section-number">2.6</span> 第六步：Fine-tuning 迭代</h3>
 <p>区分相似细胞类型的核心就靠这一步。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1">SingleR.FineTune <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1">SingleR.FineTune <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">function</span>(sc_data, ref_data, types, scores, </span>
-<span id="cb7-2">                              quantile.use, fine.tune.thres, ...) {</span>
-<span id="cb7-3">  labels <span class="ot" style="color: #003B4F;
+<span id="cb8-2">                              quantile.use, fine.tune.thres, ...) {</span>
+<span id="cb8-3">  labels <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
@@ -233,12 +419,12 @@ font-style: inherit;">FUN=</span><span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">function</span>(i){</span>
-<span id="cb7-4">    max_score <span class="ot" style="color: #003B4F;
+<span id="cb8-4">    max_score <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">max</span>(scores[i,])</span>
-<span id="cb7-5">    topLabels <span class="ot" style="color: #003B4F;
+<span id="cb8-5">    topLabels <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
@@ -247,7 +433,7 @@ background-color: null;
 font-style: inherit;">&gt;=</span> max_score <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">-</span> fine.tune.thres])</span>
-<span id="cb7-6">    <span class="cf" style="color: #003B4F;
+<span id="cb8-6">    <span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">while</span>(<span class="fu" style="color: #4758AB;
@@ -257,19 +443,19 @@ background-color: null;
 font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>) {</span>
-<span id="cb7-7">      topLabels <span class="ot" style="color: #003B4F;
+<span id="cb8-7">      topLabels <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">fineTuningRound</span>(topLabels, types, ref_data, ...)</span>
-<span id="cb7-8">    }</span>
-<span id="cb7-9">    <span class="fu" style="color: #4758AB;
+<span id="cb8-8">    }</span>
+<span id="cb8-9">    <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">return</span> (topLabels)</span>
-<span id="cb7-10">  }, <span class="at" style="color: #657422;
+<span id="cb8-10">  }, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">mc.cores=</span>numCores)</span>
-<span id="cb7-11">}</span></code></pre></div></div>
+<span id="cb8-11">}</span></code></pre></div></div>
 <p>流程：</p>
 <ol type="1">
 <li><code>fine.tune.thres = 0.05</code>，得分在最高分 0.05 范围内的都进入候选</li>
@@ -300,9 +486,9 @@ font-style: inherit;">mc.cores=</span>numCores)</span>
 </tr>
 </tbody>
 </table>
-<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。</p>
+<p>T-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种亚群区分上效果很好。</p>
 <p><code>fineTuningRound</code> 里有行代码：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1">agg_scores <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1">agg_scores <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">=</span> agg_scores[<span class="sc" style="color: #5E5E5E;
 background-color: null;
@@ -321,9 +507,9 @@ font-style: inherit;">length</span>(agg_scores)]</span></code></pre></div></div>
 <h3 data-number="3.1" class="anchored" data-anchor-id="trainsingler训练"><span class="header-section-number">3.1</span> trainSingleR：训练</h3>
 <section id="de-基因选法三种" class="level4" data-number="3.1.1">
 <h4 data-number="3.1.1" class="anchored" data-anchor-id="de-基因选法三种"><span class="header-section-number">3.1.1</span> DE 基因选法（三种）</h4>
-<p><strong>classic</strong>（默认）：跟 legacy 一样，中位表达差排序。<code>de.n</code> 默认 <img src="https://latex.codecogs.com/png.latex?500%20%5Ctimes%20(2/3)%5E%7B%5Clog_2(N)%7D">。适合 bulk 参考。</p>
+<p><strong>classic</strong>（默认）：跟纯 R 版本一样，中位表达差排序。<code>de.n</code> 默认 <img src="https://latex.codecogs.com/png.latex?500%20%5Ctimes%20(2/3)%5E%7B%5Clog_2(N)%7D">。适合 bulk 参考。</p>
 <p><strong>wilcox</strong>（单细胞参考推荐）：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1">scrapper<span class="sc" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1">scrapper<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -338,7 +524,7 @@ background-color: null;
 font-style: inherit;">TRUE</span>, ...)</span></code></pre></div></div>
 <p>用 AUC 排名。单细胞数据太稀疏（超 50% 零值），median 经常是 0，classic 方法会失效。AUC 是秩统计量，不受零膨胀影响。默认 <code>de.n = 10</code>。</p>
 <p><strong>t</strong>：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1">scrapper<span class="sc" style="color: #5E5E5E;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1">scrapper<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -353,7 +539,7 @@ font-style: inherit;">TRUE</span>, ...)</span></code></pre></div></div>
 </section>
 <section id="c-索引" class="level4" data-number="3.1.2">
 <h4 data-number="3.1.2" class="anchored" data-anchor-id="c-索引"><span class="header-section-number">3.1.2</span> C++ 索引</h4>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1">built <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1">built <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
@@ -364,23 +550,23 @@ background-color: null;
 font-style: inherit;">labels=</span>curlabels, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">ulabels=</span>ulabels, </span>
-<span id="cb11-2">                       <span class="at" style="color: #657422;
+<span id="cb12-2">                       <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">test.genes=</span>test.genes, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">markers=</span>markers, </span>
-<span id="cb11-3">                       <span class="at" style="color: #657422;
+<span id="cb12-3">                       <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">num.threads=</span>num.threads)</span></code></pre></div></div>
 <p>先通过 <code>beachmat</code> 的 <code>initializeCpp(ref)</code> 把 R 矩阵变成 C++ 能读的结构，然后调 singlepp 的 <code>train_single</code>。<code>built</code> 是一个 <strong>external pointer</strong>——R 里存的是指针，实际数据在 C++ 堆上。不能 <code>saveRDS</code> 保存。</p>
 </section>
 <section id="参考聚合" class="level4" data-number="3.1.3">
 <h4 data-number="3.1.3" class="anchored" data-anchor-id="参考聚合"><span class="header-section-number">3.1.3</span> 参考聚合</h4>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><span class="cf" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><span class="cf" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> (aggr.ref) {</span>
-<span id="cb12-2">  aggr <span class="ot" style="color: #003B4F;
+<span id="cb13-2">  aggr <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
@@ -389,12 +575,12 @@ background-color: null;
 font-style: inherit;">ref=</span>curref, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">label=</span>curlabels, ...)</span>
-<span id="cb12-3">  curref <span class="ot" style="color: #003B4F;
+<span id="cb13-3">  curref <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">assay</span>(aggr)</span>
-<span id="cb12-4">}</span></code></pre></div></div>
+<span id="cb13-4">}</span></code></pre></div></div>
 <p>参考数据如果是单细胞级别的（几万甚至几十万个细胞），会先用向量量化把同类细胞压成少量伪-bulk 样本。压缩后 KNN 搜索快很多，信息损失不大。</p>
 </section>
 </section>
@@ -424,38 +610,38 @@ font-style: inherit;">assay</span>(aggr)</span>
 <p>关键参数： - <strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略 - <strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p>
 <p>整套流程的复杂度从传统的 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20R%20%5Ctimes%20G)"> 降到了 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20%5Clog%20R)">，ANN 索引让搜索不用遍历所有参考样本。</p>
 <p>R 端的入口：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1">out <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1">out <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">classify_single</span>(</span>
-<span id="cb13-2">  <span class="at" style="color: #657422;
+<span id="cb14-2">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">test =</span> parsed, </span>
-<span id="cb13-3">  <span class="at" style="color: #657422;
+<span id="cb14-3">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">prebuilt =</span> trained<span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">$</span>built, </span>
-<span id="cb13-4">  <span class="at" style="color: #657422;
+<span id="cb14-4">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">quantile =</span> quantile, </span>
-<span id="cb13-5">  <span class="at" style="color: #657422;
+<span id="cb14-5">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">use_fine_tune =</span> fine.tune, </span>
-<span id="cb13-6">  <span class="at" style="color: #657422;
+<span id="cb14-6">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">fine_tune_threshold =</span> tune.thresh, </span>
-<span id="cb13-7">  <span class="at" style="color: #657422;
+<span id="cb14-7">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">nthreads =</span> num.threads</span>
-<span id="cb13-8">)</span></code></pre></div></div>
+<span id="cb14-8">)</span></code></pre></div></div>
 </section>
 <section id="fine-tuning-和-pruning" class="level4" data-number="3.2.3">
 <h4 data-number="3.2.3" class="anchored" data-anchor-id="fine-tuning-和-pruning"><span class="header-section-number">3.2.3</span> Fine-tuning 和 Pruning</h4>
-<p>Fine-tuning 逻辑跟 legacy 一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
+<p>Fine-tuning 逻辑跟纯 R 版本一样，全用 C++ 实现。<code>tune.thresh = 0.05</code> 控制候选筛选。</p>
 <p>Pruning 是为了解决一个根本问题：SingleR 默认<strong>总会</strong>给每个细胞一个标签，哪怕这个细胞的真实类型不在参考数据里。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1">pruneScores <span class="ot" style="color: #003B4F;
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1">pruneScores <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
 background-color: null;
@@ -475,12 +661,12 @@ background-color: null;
 font-style: inherit;">min.diff.next=</span><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>) {</span>
-<span id="cb14-2">  delta <span class="ot" style="color: #003B4F;
+<span id="cb15-2">  delta <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;">getDeltaFromMedian</span>(results)</span>
-<span id="cb14-3">  thresholds[[l]] <span class="ot" style="color: #003B4F;
+<span id="cb15-3">  thresholds[[l]] <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> curthresh <span class="ot" style="color: #003B4F;
 background-color: null;
@@ -489,14 +675,14 @@ background-color: null;
 font-style: inherit;">-</span> nmads <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">*</span> MAD</span>
-<span id="cb14-4">  keep[idx] <span class="ot" style="color: #003B4F;
+<span id="cb15-4">  keep[idx] <span class="ot" style="color: #003B4F;
 background-color: null;
 font-style: inherit;">&lt;-</span> keep[idx] <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">&amp;</span> current <span class="sc" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">&gt;=</span> curthresh</span>
-<span id="cb14-5">}</span></code></pre></div></div>
+<span id="cb15-5">}</span></code></pre></div></div>
 <p>三个判断维度：</p>
 <p><strong>delta</strong>：<img src="https://latex.codecogs.com/png.latex?delta_i%20=%20score_%7Bbest%7D%20-%20median(score_%7Ball%5C%20labels%7D)">。delta 很小说明对各类型得分都差不多，分配的意义不大。</p>
 <p><strong>标签级异常值</strong>：对每个标签，把所有被分配到这个标签的细胞的 delta 拉出来算分布： <img src="https://latex.codecogs.com/png.latex?threshold%20=%20median(delta)%20-%20nmads%20%5Ctimes%20MAD(delta)"> 低于阈值的标记为低质量。<code>nmads = 3</code> 相当于砍掉正态分布 3-sigma 的末端。</p>
