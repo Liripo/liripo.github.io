@@ -10,7 +10,30 @@
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
 <generator>quarto-1.9.37</generator>
-<lastBuildDate>Wed, 10 Jun 2026 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 11 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>scrublet 识别双细胞源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/scrublet/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<p>这篇源码整理成了 PPT，<a href="./scrublet 识别双细胞.pptx">下载 PPTX</a></p>
+
+
+
+ ]]></description>
+  <category>single-cell</category>
+  <category>python</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/scrublet/</guid>
+  <pubDate>Thu, 11 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/scrublet/scrublet.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>SingleR 源码解读</title>
   <dc:creator>Liripo </dc:creator>
@@ -591,23 +614,27 @@ font-style: inherit;">assay</span>(aggr)</span>
 <h4 data-number="3.2.1" class="anchored" data-anchor-id="为什么能用-knn-替代-spearman-相关"><span class="header-section-number">3.2.1</span> 为什么能用 KNN 替代 Spearman 相关</h4>
 <p>这是整个加速的数学基础。Spearman 秩相关系数的标准公式是：</p>
 <p><img src="https://latex.codecogs.com/png.latex?%5Crho%20=%201%20-%20%5Cfrac%7B6%20%5Csum_%7Bi=1%7D%5E%7Bn%7D%20d_i%5E2%7D%7Bn(n%5E2%20-%201)%7D"></p>
-<p>其中 <img src="https://latex.codecogs.com/png.latex?d_i%20=%20rank(x_i)%20-%20rank(y_i)">，<img src="https://latex.codecogs.com/png.latex?n"> 是基因数。<img src="https://latex.codecogs.com/png.latex?%5Csum%20d_i%5E2"> 就是两条秩向量之间的平方欧氏距离。</p>
-<p>也就是说：<strong>算 Spearman 相关，等价于先把表达值转成秩，然后算欧氏距离</strong>。相关系数最高的参考样本 = 秩空间中距离最近的邻居。</p>
+<p>其中 <img src="https://latex.codecogs.com/png.latex?d_i%20=%20rank(x_i)%20-%20rank(y_i)">，即基因 i 在两条表达向量中的秩差。<img src="https://latex.codecogs.com/png.latex?%5Csum%20d_i%5E2"> 是秩差的平方和，也就是秩向量之间<strong>欧氏距离的平方</strong>。</p>
+<p>反过来看：两个细胞的秩向量越接近，欧氏距离越小，Spearman 相关系数就越接近 1。所以找相关最高的参考细胞 = 在秩空间里找欧氏距离最近的邻居。</p>
 <p>这样一来，分类问题就变成了”在秩空间里搜最近邻”——这是个已经研究透的问题，有大量高效的 ANN 算法可以用。</p>
 </section>
 <section id="singlepp-的具体做法" class="level4" data-number="3.2.2">
 <h4 data-number="3.2.2" class="anchored" data-anchor-id="singlepp-的具体做法"><span class="header-section-number">3.2.2</span> singlepp 的具体做法</h4>
-<p>训练时，<code>train_single</code> 对每个参考细胞类型的每个标签，在秩空间里建一个 KNN 索引（用的就是单细胞数据和 DE 基因子集对应的秩值）。</p>
+<p>训练时，<code>train_single</code> 把所有参考细胞的秩值建成一个统一的 KNN 索引（用的是 DE 基因子集对应的秩值）。</p>
 <p>分类时，<code>classify_single</code> 对每个测试细胞：</p>
 <ol type="1">
 <li>提取 DE 基因的表达值，转成秩</li>
-<li>对每个参考标签，在索引里搜 K 个最近邻参考样本</li>
-<li>对每个标签，用搜出来的距离 <img src="https://latex.codecogs.com/png.latex?d"> 通过公式反推 Spearman 相关 <img src="https://latex.codecogs.com/png.latex?r">：<img src="https://latex.codecogs.com/png.latex?r%20=%201%20-%206d%5E2%20/%20(n(n%5E2%20-%201))"></li>
-<li>对每个标签的所有 K 个相关值取用户指定的分位数（默认 0.8），得到该标签的得分</li>
+<li>在整个索引里搜 K 个最近邻的参考细胞（不管什么标签，全局搜最近的 K 个）</li>
+<li>按标签分组：每个标签拿出属于它的那部分邻居，KNN 返回的欧氏距离平方后代入 <img src="https://latex.codecogs.com/png.latex?%5Crho%20=%201%20-%206%5Csum%20d_i%5E2%20/%20(n(n%5E2%20-%201))"> 得到 Spearman 相关</li>
+<li>每个标签内的 K 个相关值取分位数（默认 0.8），得到该标签的最终得分</li>
 <li>得分最高的标签就是初版注释</li>
 <li>如果需要 fine-tuning，用候选标签的特异基因子集再做一轮 KNN 搜索</li>
 </ol>
-<p>关键参数： - <strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略 - <strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p>
+<p>关键参数：</p>
+<ul>
+<li><p><strong>quantile</strong>（0.8）：相关值分布的分位数，控制聚合策略</p></li>
+<li><p><strong>K</strong>：每个标签搜的最近邻居数，越大越精确但越慢</p></li>
+</ul>
 <p>整套流程的复杂度从传统的 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20R%20%5Ctimes%20G)"> 降到了 <img src="https://latex.codecogs.com/png.latex?O(T%20%5Ctimes%20%5Clog%20R)">，ANN 索引让搜索不用遍历所有参考样本。</p>
 <p>R 端的入口：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1">out <span class="ot" style="color: #003B4F;

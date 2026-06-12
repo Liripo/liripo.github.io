@@ -1,0 +1,9 @@
+---
+title: "scrublet 识别双细胞源码解读"
+author: "Liripo"
+date: "2026-06-12"
+categories: [single-cell, python, bioinformatics]
+image: "scrublet.jpg"
+---
+
+这篇源码整理成了 PPT，[下载 PPTX](./scrublet%20识别双细胞.pptx)

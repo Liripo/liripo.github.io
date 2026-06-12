@@ -46,5 +46,11 @@
   },
   "posts/singleR/index.qmd": {
     "index.html": "2415b0ab"
+  },
+  "posts/scrublet/index.qmd": {
+    "index.html": "fbfb0daa"
+  },
+  "docs/posts/scrublet/index.qmd": {
+    "index.html": "27bf4ff1"
   }
 }
