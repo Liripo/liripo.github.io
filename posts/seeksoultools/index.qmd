@@ -1,7 +1,6 @@
 ---
 title: "SeekSoulTools 1.3.0 源码解读"
 subtitle: "寻因单细胞分析管线的 scRNA 与 V(D)J 流程"
-description: "从入口 CLI 到 scRNA 计数、VDJ 组装，逐层拆解 SeekSoulTools 1.3.0 的实现思路与关键算法。"
 author: "Liripo"
 date: "2026-06-16"
 categories: [single-cell, python, bioinformatics]
