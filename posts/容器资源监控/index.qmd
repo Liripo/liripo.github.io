@@ -5,7 +5,7 @@ description: "记录 cAdvisor、Prometheus 和 Grafana 的 Docker 部署方式�
 author: "Liripo"
 date: "2024-06-16"
 date-modified: "2026-06-01"
-categories: [cadvisor, prometheus, grafana, docker, observability]
+categories: [devops, docker]
 image: "cadvisor.png"
 ---
 

@@ -5,7 +5,7 @@ description: "梳理 Stanford SNAP Biomni 的数据湖、评测集、224 个工�
 author: "Liripo"
 date: "2026-06-01"
 date-modified: "2026-06-01"
-categories: [agent, biomni, python, bioinformatics]
+categories: [single-cell, python, bioinformatics]
 image: "biomni.png"
 ---
 

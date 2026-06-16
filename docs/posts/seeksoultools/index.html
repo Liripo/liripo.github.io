@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Liripo">
+<meta name="dcterms.date" content="2026-06-16">
+<meta name="description" content="从入口 CLI 到 scRNA 计数、VDJ 组装，逐层拆解 SeekSoulTools 1.3.0 的实现思路与关键算法。">
+
+<title>SeekSoulTools 1.3.0 源码解读 – Liripo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Liripo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Liripo"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/Liripo_zzz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">SeekSoulTools 1.3.0 源码解读</h1>
+            <p class="subtitle lead">寻因单细胞分析管线的 scRNA 与 V(D)J 流程</p>
+                  <div>
+        <div class="description">
+          从入口 CLI 到 scRNA 计数、VDJ 组装，逐层拆解 SeekSoulTools 1.3.0 的实现思路与关键算法。
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">single-cell</div>
+                <div class="quarto-category">python</div>
+                <div class="quarto-category">bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Liripo </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 16, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#scrna-流程" id="toc-scrna-流程" class="nav-link active" data-scroll-target="#scrna-流程"><span class="header-section-number">1</span> scRNA 流程</a>
+  <ul class="collapse">
+  <li><a href="#step1把-barcodeumi-提到-fastq-里" id="toc-step1把-barcodeumi-提到-fastq-里" class="nav-link" data-scroll-target="#step1把-barcodeumi-提到-fastq-里"><span class="header-section-number">1.1</span> step1：把 barcode/UMI 提到 FASTQ 里</a></li>
+  <li><a href="#step2比对与基因计数" id="toc-step2比对与基因计数" class="nav-link" data-scroll-target="#step2比对与基因计数"><span class="header-section-number">1.2</span> step2：比对与基因计数</a></li>
+  <li><a href="#step3umi-折叠与-cell-calling" id="toc-step3umi-折叠与-cell-calling" class="nav-link" data-scroll-target="#step3umi-折叠与-cell-calling"><span class="header-section-number">1.3</span> step3：UMI 折叠与 cell calling</a></li>
+  <li><a href="#step4seurat" id="toc-step4seurat" class="nav-link" data-scroll-target="#step4seurat"><span class="header-section-number">1.4</span> step4：Seurat</a></li>
+  </ul></li>
+  <li><a href="#vdj-流程" id="toc-vdj-流程" class="nav-link" data-scroll-target="#vdj-流程"><span class="header-section-number">2</span> V(D)J 流程</a>
+  <ul class="collapse">
+  <li><a href="#simpleqc跟-scrna-共用" id="toc-simpleqc跟-scrna-共用" class="nav-link" data-scroll-target="#simpleqc跟-scrna-共用"><span class="header-section-number">2.1</span> simpleqc：跟 scRNA 共用</a></li>
+  <li><a href="#enrichment_qcreads-mapped-to-any-vdj-gene" id="toc-enrichment_qcreads-mapped-to-any-vdj-gene" class="nav-link" data-scroll-target="#enrichment_qcreads-mapped-to-any-vdj-gene"><span class="header-section-number">2.2</span> enrichment_qc：Reads Mapped to Any V(D)J Gene</a></li>
+  <li><a href="#fastq-extractor-与-subset_reads" id="toc-fastq-extractor-与-subset_reads" class="nav-link" data-scroll-target="#fastq-extractor-与-subset_reads"><span class="header-section-number">2.3</span> fastq-extractor 与 subset_reads</a></li>
+  <li><a href="#filter_umisvdj-的-umi-校正" id="toc-filter_umisvdj-的-umi-校正" class="nav-link" data-scroll-target="#filter_umisvdj-的-umi-校正"><span class="header-section-number">2.4</span> filter_umis：VDJ 的 UMI 校正</a></li>
+  <li><a href="#trust4-组装-re_assign" id="toc-trust4-组装-re_assign" class="nav-link" data-scroll-target="#trust4-组装-re_assign"><span class="header-section-number">2.5</span> trust4 组装 + re_assign</a></li>
+  <li><a href="#报告生成" id="toc-报告生成" class="nav-link" data-scroll-target="#报告生成"><span class="header-section-number">2.6</span> 报告生成</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+
+<p>寻因（SeekGene）的 <strong>SeekSoulTools</strong>（<a href="https://github.com/seekgenebio/seeksoultools">seekgenebio/seeksoultools</a>，本文基于 <code>v1.3.0</code>）是一套开源单细胞管线，从 FASTQ 一路到表达矩阵和 V(D)J 组装。它整体用 Python（click）串流程，重计算的部分交给 Rust（<code>simpleqc</code>、<code>search-pattern</code>）和成熟的外部工具（STAR、featureCounts、trust4、qualimap）。</p>
+<p>下面按数据流记一下我读源码时觉得值得留的点，分 scRNA 和 V(D)J 两块。</p>
+<section id="scrna-流程" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="scrna-流程"><span class="header-section-number">1</span> scRNA 流程</h2>
+<p>scRNA 的核心命令是 <code>rna run</code>，一条龙跑完 step1→step4。四个 step 分别做：</p>
+<ol type="1">
+<li><strong>step1</strong>：barcode 提取——交给 Rust 写的 <code>simpleqc</code></li>
+<li><strong>step2</strong>：比对+计数到基因——STAR、featureCounts 等</li>
+<li><strong>step3</strong>：UMI 折叠+矩阵+cell calling</li>
+<li><strong>step4</strong>：Seurat 降维聚类</li>
+</ol>
+<p>每个 step 也可以单独跑（<code>rna step1/step2/step3/step4</code>）。</p>
+<section id="step1把-barcodeumi-提到-fastq-里" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="step1把-barcodeumi-提到-fastq-里"><span class="header-section-number">1.1</span> step1：把 barcode/UMI 提到 FASTQ 里</h3>
+<p>这步交给 Rust 写的 <code>simpleqc</code>。它做两件事：质控统计 + 把 read1 里的 cell barcode、UMI 校正后写到新的 R1，把 cDNA read（R2）原样输出。后续 STAR 直接拿这个 R2 比对。</p>
+<p>输出到 <code>Analysis/qc/</code> 目录下，文件大概是这些：</p>
+<pre><code>Analysis/qc/
+├── demo_r1.fq.gz          # 校正后的 barcode+UMI
+├── demo_r1.multi.fq.gz    # 多匹配的 barcode（默认丢弃）
+├── demo_r2.fq.gz          # cDNA read
+├── demo_r1_base_stat.csv
+├── demo_r1_qual_stat.csv
+├── demo_r2_base_stat.csv
+├── demo_r2_qual_stat.csv
+└── demo_summary.txt</code></pre>
+<p><code>simpleqc</code> 的 read 结构用「Read Structure」描述（<a href="https://github.com/fulcrumgenomics/fgbio/wiki/Read-Structures">fgbio 规范</a>），比如 <code>17C12M+T</code> 表示 17 个碱基的 Cell barcode（C）、12 个碱基的 UMI（M）、然后是模板（T）。上层用更可读的 <code>bc:0:16,um:17:28</code>，再由 <code>readFormat2rs</code> 函数翻译：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">def</span> readFormat2rs(readFormat:<span class="bu">str</span>):</span>
+<span id="cb2-2"><a href="#cb2-2"></a>    <span class="co"># "bc:0:15,um:16:25" -&gt; "17C25M+T"</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>    rs <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>    tmp <span class="op">=</span> <span class="bu">sorted</span>(</span>
+<span id="cb2-5"><a href="#cb2-5"></a>        [p.split(<span class="st">":"</span>) <span class="cf">for</span> p <span class="kw">in</span> readFormat.split(<span class="st">","</span>)],</span>
+<span id="cb2-6"><a href="#cb2-6"></a>        key<span class="op">=</span><span class="kw">lambda</span> x: <span class="bu">int</span>(x[<span class="dv">1</span>])</span>
+<span id="cb2-7"><a href="#cb2-7"></a>    )</span>
+<span id="cb2-8"><a href="#cb2-8"></a>    <span class="cf">for</span> (p, start, end) <span class="kw">in</span> tmp:</span>
+<span id="cb2-9"><a href="#cb2-9"></a>        start <span class="op">=</span> <span class="bu">int</span>(start)<span class="op">;</span> end <span class="op">=</span> <span class="bu">int</span>(end)</span>
+<span id="cb2-10"><a href="#cb2-10"></a>        <span class="cf">if</span> p <span class="op">==</span> <span class="st">"bc"</span>:</span>
+<span id="cb2-11"><a href="#cb2-11"></a>            rs <span class="op">+=</span> <span class="ss">f"</span><span class="sc">{</span>end<span class="op">-</span>start<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">C"</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a>        <span class="cf">elif</span> p <span class="op">==</span> <span class="st">"um"</span>:</span>
+<span id="cb2-13"><a href="#cb2-13"></a>            rs <span class="op">+=</span> <span class="ss">f"</span><span class="sc">{</span>end<span class="op">-</span>start<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">M"</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a>    rs <span class="op">+=</span> <span class="st">"+T"</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a>    <span class="cf">return</span> rs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>按 start 排序是为了保证 bc 永远在 um 前面——即便用户写反了。</p>
+</section>
+<section id="step2比对与基因计数" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="step2比对与基因计数"><span class="header-section-number">1.2</span> step2：比对与基因计数</h3>
+<p><code>align</code> 函数串起 STAR → 排序 → qualimap → featureCounts → 按名字排序，每一步都可由 <code>steps</code> 参数跳过：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="cf">if</span> (<span class="st">"steps"</span> <span class="kw">not</span> <span class="kw">in</span> kwargs) <span class="kw">or</span> (<span class="kw">not</span> kwargs[<span class="st">"steps"</span>]):</span>
+<span id="cb3-2"><a href="#cb3-2"></a>    kwargs[<span class="st">"steps"</span>] <span class="op">=</span> [<span class="st">"STAR"</span>, <span class="st">"SortByPos"</span>, <span class="st">"qualimap"</span>, <span class="st">"FeatureCounts"</span>, <span class="st">"SortByName"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>整个 step2 的关键不是「怎么比对」，而是<strong>怎么从几个工具的输出里凑出 10x 风格的 QC 指标</strong>。<code>mapping_summary</code> 把 STAR 的 <code>Log.final.out</code> 和 qualimap 的 <code>rnaseq_qc_results.txt</code> 拆开读，重新算了一套：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>计算</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Reads Mapped to Genome</td>
+<td>(unique + multi + too many) / Total</td>
+</tr>
+<tr class="even">
+<td>Reads Mapped Confidently to Genome</td>
+<td>(aligned to genes + no feature) / Total</td>
+</tr>
+<tr class="odd">
+<td>Reads Mapped to Exonic Regions</td>
+<td>exonic / Total</td>
+</tr>
+<tr class="even">
+<td>Reads Mapped to Intronic Regions</td>
+<td>intronic / Total</td>
+</tr>
+<tr class="odd">
+<td>Reads Mapped to Intergenic Regions</td>
+<td>intergenic / Total</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>注意 “Mapped Confidently to Genome” 的算法：是 <code>aligned to genes + no feature assigned</code>。qualimap 里 “no feature” 指没落到任何注释区间，看似该排除，但这里把它算进 confident——因为落不到 feature 上不代表比对错，只是注释没覆盖到。比对的正确性由 STAR 的 unique mapping 决定，feature 是否注释上是另一回事。</p>
+</div>
+</div>
+<p><code>region</code> 参数控制计数时是否含内含子（<code>--include-introns</code>）。featureCounts 的链向通过 <code>sc5p</code> 推断：5’ 数据反向（<code>-s 2</code>）， otherwise 正向（<code>-s 1</code>）。</p>
+<p>最后一步 <code>SortByName</code> 很关键：featureCounts 出来的 bam 要按 read name 排序，因为 step3 的计数逻辑是 <code>groupby(sam_file, key=lambda x: x.qname.split("_",1)[0])</code>——<strong>按 barcode 名分组</strong>遍历 bam。坐标排序没法高效做到这件事。</p>
+</section>
+<section id="step3umi-折叠与-cell-calling" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="step3umi-折叠与-cell-calling"><span class="header-section-number">1.3</span> step3：UMI 折叠与 cell calling</h3>
+<p>这是整个 scRNA 最绕的一步。输入是按 barcode 分组好的 bam，输出是 raw matrix 和 filtered matrix。</p>
+<section id="按-barcode-gene-分桶-umi-校正" class="level4" data-number="1.3.1">
+<h4 data-number="1.3.1" class="anchored" data-anchor-id="按-barcode-gene-分桶-umi-校正"><span class="header-section-number">1.3.1</span> 按 (barcode, gene) 分桶 + UMI 校正</h4>
+<p><code>bam2table</code> 外层按 barcode 分组，内层对每个 barcode 再按 read name（<code>barcode_umi</code>）二次分组：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a><span class="cf">for</span> barcode, g <span class="kw">in</span> groupby(sam_file, key<span class="op">=</span><span class="kw">lambda</span> x: x.qname.split(<span class="st">"_"</span>, <span class="dv">1</span>)[<span class="dv">0</span>]):</span>
+<span id="cb4-2"><a href="#cb4-2"></a>    counts_dict, geneid_umi_dict <span class="op">=</span> umi_count(g, ...)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>umi_count</code> 里每个 read 拿 featureCounts 打的 <code>XT</code> tag（基因 id），落到 <code>(gene_id, umi)</code> 桶里。这里有个多比对处理：一个 read 的 <code>XT</code> 可能是逗号分隔的多个基因（<code>XT:Z:A,B</code>），要调 <code>multiple_alignment</code> 用 IntervalTree 判断它到底真落哪个基因——只匹配到一个才采纳，否则丢弃。</p>
+<p>UMI 校正用的 <code>UMIClusterer</code>，看实现就是 umi_tools 那套「adjacency + 连通图」聚类：汉明距离 ≤ 1 的 UMI 连边，每个连通分量里 count 最高的留下、其余并过去。<code>umi_correct_method</code> 支持三种（<code>cluster</code>/<code>adjacency</code>/<code>directional</code>），默认 <code>adjacency</code>。</p>
+<p>校正完每个 <code>(barcode, gene)</code> 就是确定的 UMI 数，写到 <code>counts.xls</code>（<code>cellID / geneID / UMINum / ReadsNum</code>），这文件直接能转 raw matrix。</p>
+</section>
+<section id="从-counts.xls-到稀疏矩阵" class="level4" data-number="1.3.2">
+<h4 data-number="1.3.2" class="anchored" data-anchor-id="从-counts.xls-到稀疏矩阵"><span class="header-section-number">1.3.2</span> 从 counts.xls 到稀疏矩阵</h4>
+<p><code>write_raw_matrix</code> 按 barcode 分块读 <code>counts.xls</code>，攒成 COO 三元组再压成稀疏矩阵：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a>mat <span class="op">=</span> coo_matrix((data, (row, col)), shape<span class="op">=</span>(name_df.shape[<span class="dv">0</span>], n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>输出 10x 三件套：<code>matrix.mtx.gz</code>、<code>features.tsv.gz</code>、<code>barcodes.tsv.gz</code>。</p>
+</section>
+<section id="cell-callingemptydrops-的实现" class="level4" data-number="1.3.3">
+<h4 data-number="1.3.3" class="anchored" data-anchor-id="cell-callingemptydrops-的实现"><span class="header-section-number">1.3.3</span> cell calling：EmptyDrops 的实现</h4>
+<p>判定哪些 barcode 是真细胞，走的是 <code>cell_identify.R</code> 这个 R 脚本。它不是调 DropletUtils 的现成函数，而是<strong>把 10x cellranger 的 EmptyDrops 算法用 R 重写了一遍</strong>——分位数法找 top barcode、估背景 profile、多项式模拟算 p 值。</p>
+<p>流程是：</p>
+<ol type="1">
+<li><strong>找 top barcode</strong>：<code>find_top_umi_barcode</code>，按预期细胞数 <code>recovered_cells</code> 的 0.99 分位定基线，基线的 10% 作为 cutoff，bootstrap 100 次取均值。这一批是确定细胞的”种子”。</li>
+<li><strong>找 ambient candidate</strong>：UMI ≥ <code>max(500, median*0.01)</code>、且不是 top 的 barcode。这是”可能是细胞也可能是空滴”的待判集合，限制最多 20000 个。</li>
+<li><strong>估背景 profile</strong>：<code>find_ambient_background</code> 取 UMI 排名靠后的那批（假设是纯空滴），<code>goodTuringProportions</code> 做 Good-Turing 平滑得到每个基因的背景比例 <code>ambient_prop</code>。</li>
+<li><strong>算每个 candidate 的 p 值</strong>：核心假设是——空滴的表达应该服从背景的多项式分布。<code>compute_simulate_pvalues</code> 模拟 10000 次多项式采样，算出每个总 UMI 数 n 对应的 log-likelihood 分布；<code>compute_ambient_candidate_pvalues</code> 把真实 candidate 的 likelihood 跟模拟分布比，<code>(1 + 比它小的次数)/(1 + 模拟次数)</code> 就是 p 值。</li>
+<li><strong>BH 校正 + cutoff</strong>：<code>p.adjust(method="BH")</code>，小于 <code>pvalue</code>（默认 0.01）的 candidate 也算细胞，跟 top 合起来输出。</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>forceCell 模式</strong>：如果不信任自动 calling，<code>--forceCell N</code> 直接取 UMI 最多的前 N 个 barcode，跳过整个模拟。<code>cell_calling</code> 里 <code>if kwargs["forceCell"] != None</code> 就走这条分支。</p>
+</div>
+</div>
+<p>模拟那块有个性能优化：相邻的 n（比如 n=100 和 n=101）不用各采一次样，而是在 n=100 的 <code>curr_counts</code> 基础上<strong>再加一个基因</strong>增量更新 likelihood（<code>curr_loglk + log(p_j) + log(n/curr_counts[j])</code>），省掉大量重算。</p>
+</section>
+</section>
+<section id="step4seurat" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="step4seurat"><span class="header-section-number">1.4</span> step4：Seurat</h3>
+<p><code>do_seurat</code> 调 R 脚本跑标准 Seurat 流程（NormalizeData → FindVariableFeatures → ScaleData → PCA → clustering → FindMarkers），输出降维聚类结果，没什么特别的。</p>
+</section>
+</section>
+<section id="vdj-流程" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="vdj-流程"><span class="header-section-number">2</span> V(D)J 流程</h2>
+<p>V(D)J 入口是 <code>run_trust4</code> 函数。它没有从头造轮子，而是在 <a href="https://github.com/liulab-dfci/TRUST4">trust4</a> 基础上包了一层 QC、UMI 校正、contig 重分配。整个流程：</p>
+<pre><code>simpleqc → enrichment_qc → fastq-extractor → subset_reads
+        → filter_umis → trust4 组装 → re_assign → report</code></pre>
+<section id="simpleqc跟-scrna-共用" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="simpleqc跟-scrna-共用"><span class="header-section-number">2.1</span> simpleqc：跟 scRNA 共用</h3>
+<p>跟 step1 一样，输出 <code>_r1.fq.gz</code> / <code>_r2.fq.gz</code>。<code>summary_simpleqc</code> 从 <code>_summary.txt</code> 读 <code>total_num</code> / <code>valid_num</code>，从 qual stat csv 算 Q30。<strong>注意：后续所有比例的分母都是 <code>Number of Valid Reads</code>（校正后的有效 read），不是原始 read 数</strong>。</p>
+</section>
+<section id="enrichment_qcreads-mapped-to-any-vdj-gene" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="enrichment_qcreads-mapped-to-any-vdj-gene"><span class="header-section-number">2.2</span> enrichment_qc：Reads Mapped to Any V(D)J Gene</h3>
+<p>这步回答”数据里到底有没有 V(D)J”。做法是：对 <code>bcrtcr.fa</code>（所有 BCR/TCR 的 V/D/J/C 序列）建 STAR 索引，把 R2 比上去，数每条链的 read 数。</p>
+<p><code>count_chain</code> 有个细节值得说：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a><span class="cf">with</span> pysam.AlignmentFile(bam) <span class="im">as</span> bamfh:</span>
+<span id="cb7-2"><a href="#cb7-2"></a>    <span class="cf">for</span> r <span class="kw">in</span> bamfh:</span>
+<span id="cb7-3"><a href="#cb7-3"></a>        chain <span class="op">=</span> r.reference_name[:<span class="dv">3</span>]   <span class="co"># "TRBV1" -&gt; "TRB"</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a>        <span class="cf">if</span> r.get_tag(<span class="st">"NH"</span>)<span class="op">==</span><span class="dv">1</span>:         <span class="co"># 唯一比对</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>            d[chain] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a>        <span class="cf">else</span>:</span>
+<span id="cb7-7"><a href="#cb7-7"></a>            tmp[r.qname][chain] <span class="op">+=</span> <span class="dv">1</span>   <span class="co"># 多比对先攒着</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>NH tag = 1 表示唯一比对，直接计。多比对的 read（比如同时软比对到 TRBV 和 TRBJ）按 read name 攒到 dict，最后仲裁：只比对到一个链就计入；比对到多个链就比 count，count 相同判 unknown。这样避免一条 read 被多个链重复计。</p>
+<p><code>summary_enrichment_qc</code> 算链比例时按 chain 类型筛：</p>
+<ul>
+<li><strong>TR 数据</strong>：只看 TRA + TRB，<strong>忽略 IG 链</strong>（IGH/IGK/IGL）。TCR 文库混入 IG 是噪声，不该计入 “Any V(D)J”。</li>
+<li><strong>IG 数据</strong>：看 IGH + IGK + IGL。</li>
+</ul>
+<p>而且有个硬卡：<code>Reads Mapped to Any V(D)J Gene &lt; 0.01</code> 直接 <code>logger.error</code>，提示数据里没这个链，大概率是 chain 选错了或者文库搞错了。</p>
+</section>
+<section id="fastq-extractor-与-subset_reads" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="fastq-extractor-与-subset_reads"><span class="header-section-number">2.3</span> fastq-extractor 与 subset_reads</h3>
+<p>trust4 的 <code>fastq-extractor</code> 负责：用 bcrtcr.fa 抓 R2 里命中 V(D)J 的 read，把对应的 barcode/UMI 从 R1 抽出来，输出三件套（<code>_preassemble_bc.fa</code> / <code>_preassemble_umi.fa</code> / <code>_preassemble.fq</code>），同时统计每个 barcode 的 UMI 数和 read 数（<code>_bc_count.tsv</code>）。</p>
+<p>然后是 <code>subset_reads</code>：<strong>reads 数过高的 barcode 截断到 <code>reads_limit</code>（默认 80000）</strong>。原因是一些 barcode 可能是 doublet 或气泡污染，read 数异常高，直接组装会拖慢又影响克隆定量。做法是把每个 barcode 的 read 数封顶，多余的 read 砍掉。原始全量计数存到 <code>_{samplename}_bc_count.tsv</code>（带下划线前缀），截断后的覆盖 <code>{samplename}_bc_count.tsv</code>——这样后面算 “Fraction Reads in Cells” 时还能拿到原始数。</p>
+</section>
+<section id="filter_umisvdj-的-umi-校正" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="filter_umisvdj-的-umi-校正"><span class="header-section-number">2.4</span> filter_umis：VDJ 的 UMI 校正</h3>
+<p>trust4 原版对 VDJ UMI 校正比较粗，seeksoultools 自己加了一步 <code>filter_umis</code>。两阶段：</p>
+<p><strong>1. 按阅读量过滤</strong></p>
+<p>每个 barcode 内，先算 UMI count 的 N50：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">def</span> calculate_n50(umi_counts: <span class="bu">dict</span>):</span>
+<span id="cb8-2"><a href="#cb8-2"></a>    counts <span class="op">=</span> <span class="bu">sorted</span>(umi_counts.values(), reverse<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    total_sum <span class="op">=</span> <span class="bu">sum</span>(counts)</span>
+<span id="cb8-4"><a href="#cb8-4"></a>    threshold <span class="op">=</span> total_sum <span class="op">*</span> <span class="fl">0.5</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>    current_sum <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a>    <span class="cf">for</span> count <span class="kw">in</span> counts:</span>
+<span id="cb8-7"><a href="#cb8-7"></a>        current_sum <span class="op">+=</span> count</span>
+<span id="cb8-8"><a href="#cb8-8"></a>        <span class="cf">if</span> current_sum <span class="op">&gt;=</span> threshold:</span>
+<span id="cb8-9"><a href="#cb8-9"></a>            <span class="cf">return</span> count</span>
+<span id="cb8-10"><a href="#cb8-10"></a>    <span class="cf">return</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>N50 是组装/基因组学里的指标：把 UMI 按支持 read 数从高到低排，累计到总量 50% 时的那个 read 数。然后阈值定在 <code>0.1 * N50</code>，count 低于它的 UMI 丢掉。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>为什么用 N50 而不是固定阈值？不同 barcode 的测序深度差异大，固定阈值（比如丢掉 count&lt;3 的）在深测序样本里会误杀真 UMI、在浅测序样本里又滤不干净。N50 是个自适应的”该 barcode 自身规模”的度量，乘 0.1 当下限。</p>
+</div>
+</div>
+<p><strong>2. adjacency 聚类校正</strong></p>
+<p>跟 scRNA 那步一样，<code>UMIClusterer("adjacency")</code> 把汉明距离 1 的 UMI 合并到 count 高的那个。校正过程写到 <code>_{samplename}_filter.detail.xls</code>，长这样：</p>
+<pre><code>barcode    original_umi  original_count  corrected_umi  corrected_count
+TGATCAGATGGATTTGA  ACCGGCGTTTTC  11   ACCGGCGTTTTA  33
+TGATCAGATGGATTTGA  ACCGGCGTTTTG   6   ACCGGCGTTTTA  39</code></pre>
+<p>最后重写出新的 barcode/UMI/R2 fastq，UMI 改了之后连 read name 都同步改掉（<code>name_parts[1] = corrected_umi</code>）。</p>
+</section>
+<section id="trust4-组装-re_assign" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="trust4-组装-re_assign"><span class="header-section-number">2.5</span> trust4 组装 + re_assign</h3>
+<p>trust4 那几个子命令（<code>trust4</code> 组装、<code>annotator</code> 注释、<code>trust-barcoderep</code>/<code>trust-simplerep</code>/<code>trust-airr</code> 报告）seeksoultools 都用了，但加了自己的料。</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>trust4_wrapper</code> 里组装那步硬编码了 <code>-t 8</code>，跟上层传进来的 <code>threads</code> 脱节：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1"></a>cmd1 <span class="op">=</span> (<span class="ss">f"trust4  -t 8 -f </span><span class="sc">{</span>fa<span class="sc">}</span><span class="ss"> -o </span><span class="sc">{</span>wd<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>samplename<span class="sc">}</span><span class="ss"> ..."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>源码里也标了注释（参考笔记：“脚本代码固定了 8 个线程，应该修改下”）。如果你跑大批量样本，这里会成为瓶颈，建议改成 <code>-t {threads}</code>。</p>
+</div>
+</div>
+<p><strong>annotator 加了 <code>--readAssignment</code></strong>：输出 <code>_assign.out</code>，两列 <code>read_name \t contig</code>，记录每条 read 归属的 contig。这是为了下一步的 re_assign。</p>
+<section id="re_assign按-umi-重新分配-contig" class="level4" data-number="2.5.1">
+<h4 data-number="2.5.1" class="anchored" data-anchor-id="re_assign按-umi-重新分配-contig"><span class="header-section-number">2.5.1</span> re_assign：按 UMI 重新分配 contig</h4>
+<p>这是 seeksoultools 最有自己想法的一步（<code>utils/reassign.py</code>）。trust4 默认按 read 分配 contig，但 VDJ 里真正该数的是 <strong>UMI</strong>——一个 UMI 对应一个原始 mRNA 分子。re_assign 把分配单位从 read 换成 UMI。</p>
+<p>逻辑是：对每个 <code>(barcode, UMI)</code>，统计它下面的 read 落到各 contig 的次数，然后按 ratio 仲裁。<code>process_assign_file</code> 用多进程分块统计：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a><span class="cf">for</span> barcode_umi, contig_counts <span class="kw">in</span> global_barcode_umi_dict.items():</span>
+<span id="cb11-2"><a href="#cb11-2"></a>    sorted_counts <span class="op">=</span> <span class="bu">sorted</span>(contig_counts.items(), key<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="dv">1</span>], reverse<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-3"><a href="#cb11-3"></a>    <span class="cf">if</span> <span class="bu">len</span>(sorted_counts) <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb11-4"><a href="#cb11-4"></a>        final_contig_barcodes[sorted_counts[<span class="dv">0</span>][<span class="dv">0</span>]].add(barcode_umi)</span>
+<span id="cb11-5"><a href="#cb11-5"></a>    <span class="cf">else</span>:</span>
+<span id="cb11-6"><a href="#cb11-6"></a>        ratio <span class="op">=</span> sorted_counts[<span class="dv">1</span>][<span class="dv">1</span>] <span class="op">/</span> sorted_counts[<span class="dv">0</span>][<span class="dv">1</span>]</span>
+<span id="cb11-7"><a href="#cb11-7"></a>        <span class="cf">if</span> ratio <span class="op">&lt;</span> <span class="fl">0.15</span>:</span>
+<span id="cb11-8"><a href="#cb11-8"></a>            final_contig_barcodes[sorted_counts[<span class="dv">0</span>][<span class="dv">0</span>]].add(barcode_umi)</span>
+<span id="cb11-9"><a href="#cb11-9"></a>        <span class="cf">else</span>:</span>
+<span id="cb11-10"><a href="#cb11-10"></a>            <span class="cf">for</span> contig, _ <span class="kw">in</span> sorted_counts:</span>
+<span id="cb11-11"><a href="#cb11-11"></a>                final_contig_barcodes[contig].add(barcode_umi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>举例，barcode <code>bc1</code> 的某个 UMI 下有：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>contig</th>
+<th>read 数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>contigA</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>contigB</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><code>ratio = 1/20 = 0.05 &lt; 0.15</code>，这个 UMI 归 contigA。</p>
+<p>但如果：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>contig</th>
+<th>read 数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>contigA</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>contigB</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p><code>ratio = 10/20 = 0.5 ≥ 0.15</code>，说明 contigB 也有相当支持，UMI 同时归 contigA 和 contigB。</p>
+<p>分配完，<code>update_cdr3_file</code> 用结果改写 <code>cdr3.out</code> 的第 11 列（UMI count），让每个 contig 的 UMI 数反映重新分配后的结果。这一步直接影响克隆大小的定量。</p>
+</section>
+</section>
+<section id="报告生成" class="level3" data-number="2.6">
+<h3 data-number="2.6" class="anchored" data-anchor-id="报告生成"><span class="header-section-number">2.6</span> 报告生成</h3>
+<p>报告那块调了 <a href="https://github.com/tuonglab/dandelion">dandelion</a>：<code>dandelion.tl.find_clones()</code> 按 CDR3 序列相似度在 VDJ 数据里识别克隆，生成 <code>clone_id</code>。<code>Estimated Number of Cells</code>、<code>Number of Cells with Productive V-J Spanning Pair</code> 这些指标都是从 dandelion 出来的 <code>airr_rearrangement.tsv</code> 算的（<code>get_clone_matrix</code> 函数）。</p>
+<p>最后还有两个输出值得说：</p>
+<p><strong><code>_filtered_contig_annotations.tsv</code></strong>：用 Rust 写的 <code>search-pattern</code> 生成（<code>src/search-pattern</code>）。它基于 LEADER 序列的匹配位置，把每条 contig 切成 FWR1/CDR1/FWR2/CDR2/FWR3/CDR3/FWR4 这些功能区。FWR1 的左边界是 LEADER 匹配终点、右边界是 CDR1 匹配起点，依此类推。10x 的 <code>all_contig_annotations</code> 也是这个结构。</p>
+<p><strong>barcode rank 图</strong>：读 <code>_bc_count.tsv</code>，按 UMI 数降序画。关键是它把曲线<strong>分成三段</strong>画——cell / 混合 / background：</p>
+<pre><code># BBBCC CCBBCBCC BBBBBBBBB
+#       |         |
+#    idx_first  idx_last</code></pre>
+<p>每个逻辑分段单独处理（参考笔记：<code>df_bg.shape[0]==0</code> 全是细胞、<code>df_cells.shape[0]==0</code> 全是背景、普通情况分”第一个 cell 前的混合段” + “中间指数窗口” + “尾段” + “background”）。窗口按 <code>idx_s + 1000*4**n</code> 指数扩张，保证前端密集采样、后端稀疏，画出来曲线平滑。</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/liripo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

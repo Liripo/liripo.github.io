@@ -5,7 +5,7 @@ description: "整理 Gunicorn 部署 Dash 应用时需要暴露的 server 对象
 author: "Liripo"
 date: "2024-06-15"
 date-modified: "2026-06-01"
-categories: [dash, web, python, gunicorn]
+categories: [python, web]
 image: "dash.jpg"
 ---
 

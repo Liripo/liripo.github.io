@@ -5,7 +5,7 @@ description: "记录 Granian 部署 Dash 应用的最小配置、启动命令、
 author: "Liripo"
 date: "2024-06-15"
 date-modified: "2026-06-01"
-categories: [dash, web, python, granian]
+categories: [python, web]
 image: "granian.png"
 filters:
   - line-highlight

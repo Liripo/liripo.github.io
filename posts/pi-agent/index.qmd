@@ -5,7 +5,7 @@ description: "从源码角度梳理 pi-agent 的三层架构、AgentSession、�
 author: "Liripo"
 date: "2026-05-29"
 date-modified: "2026-06-01"
-categories: [agent, typescript, source-reading]
+categories: [typescript, devops]
 image: "pi-agent.png"
 ---
 

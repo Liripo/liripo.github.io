@@ -5,7 +5,7 @@ description: "记录使用 Quarto 搭建个人博客、配置 docs 输出目录�
 author: "Liripo"
 date: "2024-01-02"
 date-modified: "2026-06-01"
-categories: [quarto, blog, github-pages]
+categories: [quarto]
 image: "quarto.png"
 ---
 

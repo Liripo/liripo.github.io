@@ -5,7 +5,7 @@ description: "梳理 CellChat 的 CellChatDB 数据库结构、CellChat 对象�
 author: "Liripo"
 date: "2026-06-04"
 date-modified: "2026-06-04"
-categories: [single-cell, cellchat, R, bioinformatics, cell-communication]
+categories: [single-cell, R, bioinformatics]
 image: "CellChat_Logo.png"
 ---
 

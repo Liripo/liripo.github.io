@@ -10,7 +10,677 @@
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
 <generator>quarto-1.9.37</generator>
-<lastBuildDate>Thu, 11 Jun 2026 16:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 15 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>SeekSoulTools 1.3.0 源码解读</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/seeksoultools/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<p>寻因（SeekGene）的 <strong>SeekSoulTools</strong>（<a href="https://github.com/seekgenebio/seeksoultools">seekgenebio/seeksoultools</a>，本文基于 <code>v1.3.0</code>）是一套开源单细胞管线，从 FASTQ 一路到表达矩阵和 V(D)J 组装。它整体用 Python（click）串流程，重计算的部分交给 Rust（<code>simpleqc</code>、<code>search-pattern</code>）和成熟的外部工具（STAR、featureCounts、trust4、qualimap）。</p>
+<p>下面按数据流记一下我读源码时觉得值得留的点，分 scRNA 和 V(D)J 两块。</p>
+<section id="scrna-流程" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="scrna-流程"><span class="header-section-number">1</span> scRNA 流程</h2>
+<p>scRNA 的核心命令是 <code>rna run</code>，一条龙跑完 step1→step4。四个 step 分别做：</p>
+<ol type="1">
+<li><strong>step1</strong>：barcode 提取——交给 Rust 写的 <code>simpleqc</code></li>
+<li><strong>step2</strong>：比对+计数到基因——STAR、featureCounts 等</li>
+<li><strong>step3</strong>：UMI 折叠+矩阵+cell calling</li>
+<li><strong>step4</strong>：Seurat 降维聚类</li>
+</ol>
+<p>每个 step 也可以单独跑（<code>rna step1/step2/step3/step4</code>）。</p>
+<section id="step1把-barcodeumi-提到-fastq-里" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="step1把-barcodeumi-提到-fastq-里"><span class="header-section-number">1.1</span> step1：把 barcode/UMI 提到 FASTQ 里</h3>
+<p>这步交给 Rust 写的 <code>simpleqc</code>。它做两件事：质控统计 + 把 read1 里的 cell barcode、UMI 校正后写到新的 R1，把 cDNA read（R2）原样输出。后续 STAR 直接拿这个 R2 比对。</p>
+<p>输出到 <code>Analysis/qc/</code> 目录下，文件大概是这些：</p>
+<pre><code>Analysis/qc/
+├── demo_r1.fq.gz          # 校正后的 barcode+UMI
+├── demo_r1.multi.fq.gz    # 多匹配的 barcode（默认丢弃）
+├── demo_r2.fq.gz          # cDNA read
+├── demo_r1_base_stat.csv
+├── demo_r1_qual_stat.csv
+├── demo_r2_base_stat.csv
+├── demo_r2_qual_stat.csv
+└── demo_summary.txt</code></pre>
+<p><code>simpleqc</code> 的 read 结构用「Read Structure」描述（<a href="https://github.com/fulcrumgenomics/fgbio/wiki/Read-Structures">fgbio 规范</a>），比如 <code>17C12M+T</code> 表示 17 个碱基的 Cell barcode（C）、12 个碱基的 UMI（M）、然后是模板（T）。上层用更可读的 <code>bc:0:16,um:17:28</code>，再由 <code>readFormat2rs</code> 函数翻译：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> readFormat2rs(readFormat:<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>):</span>
+<span id="cb2-2">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># "bc:0:15,um:16:25" -&gt; "17C25M+T"</span></span>
+<span id="cb2-3">    rs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span></span>
+<span id="cb2-4">    tmp <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">sorted</span>(</span>
+<span id="cb2-5">        [p.split(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">":"</span>) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> p <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> readFormat.split(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">","</span>)],</span>
+<span id="cb2-6">        key<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">lambda</span> x: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>(x[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>])</span>
+<span id="cb2-7">    )</span>
+<span id="cb2-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> (p, start, end) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> tmp:</span>
+<span id="cb2-9">        start <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>(start)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span> end <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">int</span>(end)</span>
+<span id="cb2-10">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> p <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bc"</span>:</span>
+<span id="cb2-11">            rs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>end<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>start<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">C"</span></span>
+<span id="cb2-12">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">elif</span> p <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"um"</span>:</span>
+<span id="cb2-13">            rs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>end<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span>start<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">M"</span></span>
+<span id="cb2-14">    rs <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"+T"</span></span>
+<span id="cb2-15">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> rs</span></code></pre></div></div>
+<p>按 start 排序是为了保证 bc 永远在 um 前面——即便用户写反了。</p>
+</section>
+<section id="step2比对与基因计数" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="step2比对与基因计数"><span class="header-section-number">1.2</span> step2：比对与基因计数</h3>
+<p><code>align</code> 函数串起 STAR → 排序 → qualimap → featureCounts → 按名字排序，每一步都可由 <code>steps</code> 参数跳过：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"steps"</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> kwargs) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">or</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> kwargs[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"steps"</span>]):</span>
+<span id="cb3-2">    kwargs[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"steps"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"STAR"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"SortByPos"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"qualimap"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"FeatureCounts"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"SortByName"</span>]</span></code></pre></div></div>
+<p>整个 step2 的关键不是「怎么比对」，而是<strong>怎么从几个工具的输出里凑出 10x 风格的 QC 指标</strong>。<code>mapping_summary</code> 把 STAR 的 <code>Log.final.out</code> 和 qualimap 的 <code>rnaseq_qc_results.txt</code> 拆开读，重新算了一套：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>计算</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Reads Mapped to Genome</td>
+<td>(unique + multi + too many) / Total</td>
+</tr>
+<tr class="even">
+<td>Reads Mapped Confidently to Genome</td>
+<td>(aligned to genes + no feature) / Total</td>
+</tr>
+<tr class="odd">
+<td>Reads Mapped to Exonic Regions</td>
+<td>exonic / Total</td>
+</tr>
+<tr class="even">
+<td>Reads Mapped to Intronic Regions</td>
+<td>intronic / Total</td>
+</tr>
+<tr class="odd">
+<td>Reads Mapped to Intergenic Regions</td>
+<td>intergenic / Total</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>注意 “Mapped Confidently to Genome” 的算法：是 <code>aligned to genes + no feature assigned</code>。qualimap 里 “no feature” 指没落到任何注释区间，看似该排除，但这里把它算进 confident——因为落不到 feature 上不代表比对错，只是注释没覆盖到。比对的正确性由 STAR 的 unique mapping 决定，feature 是否注释上是另一回事。</p>
+</div>
+</div>
+<p><code>region</code> 参数控制计数时是否含内含子（<code>--include-introns</code>）。featureCounts 的链向通过 <code>sc5p</code> 推断：5’ 数据反向（<code>-s 2</code>）， otherwise 正向（<code>-s 1</code>）。</p>
+<p>最后一步 <code>SortByName</code> 很关键：featureCounts 出来的 bam 要按 read name 排序，因为 step3 的计数逻辑是 <code>groupby(sam_file, key=lambda x: x.qname.split("_",1)[0])</code>——<strong>按 barcode 名分组</strong>遍历 bam。坐标排序没法高效做到这件事。</p>
+</section>
+<section id="step3umi-折叠与-cell-calling" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="step3umi-折叠与-cell-calling"><span class="header-section-number">1.3</span> step3：UMI 折叠与 cell calling</h3>
+<p>这是整个 scRNA 最绕的一步。输入是按 barcode 分组好的 bam，输出是 raw matrix 和 filtered matrix。</p>
+<section id="按-barcode-gene-分桶-umi-校正" class="level4" data-number="1.3.1">
+<h4 data-number="1.3.1" class="anchored" data-anchor-id="按-barcode-gene-分桶-umi-校正"><span class="header-section-number">1.3.1</span> 按 (barcode, gene) 分桶 + UMI 校正</h4>
+<p><code>bam2table</code> 外层按 barcode 分组，内层对每个 barcode 再按 read name（<code>barcode_umi</code>）二次分组：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> barcode, g <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> groupby(sam_file, key<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">lambda</span> x: x.qname.split(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"_"</span>, <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]):</span>
+<span id="cb4-2">    counts_dict, geneid_umi_dict <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> umi_count(g, ...)</span></code></pre></div></div>
+<p><code>umi_count</code> 里每个 read 拿 featureCounts 打的 <code>XT</code> tag（基因 id），落到 <code>(gene_id, umi)</code> 桶里。这里有个多比对处理：一个 read 的 <code>XT</code> 可能是逗号分隔的多个基因（<code>XT:Z:A,B</code>），要调 <code>multiple_alignment</code> 用 IntervalTree 判断它到底真落哪个基因——只匹配到一个才采纳，否则丢弃。</p>
+<p>UMI 校正用的 <code>UMIClusterer</code>，看实现就是 umi_tools 那套「adjacency + 连通图」聚类：汉明距离 ≤ 1 的 UMI 连边，每个连通分量里 count 最高的留下、其余并过去。<code>umi_correct_method</code> 支持三种（<code>cluster</code>/<code>adjacency</code>/<code>directional</code>），默认 <code>adjacency</code>。</p>
+<p>校正完每个 <code>(barcode, gene)</code> 就是确定的 UMI 数，写到 <code>counts.xls</code>（<code>cellID / geneID / UMINum / ReadsNum</code>），这文件直接能转 raw matrix。</p>
+</section>
+<section id="从-counts.xls-到稀疏矩阵" class="level4" data-number="1.3.2">
+<h4 data-number="1.3.2" class="anchored" data-anchor-id="从-counts.xls-到稀疏矩阵"><span class="header-section-number">1.3.2</span> 从 counts.xls 到稀疏矩阵</h4>
+<p><code>write_raw_matrix</code> 按 barcode 分块读 <code>counts.xls</code>，攒成 COO 三元组再压成稀疏矩阵：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1">mat <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> coo_matrix((data, (row, col)), shape<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>(name_df.shape[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>], n))</span></code></pre></div></div>
+<p>输出 10x 三件套：<code>matrix.mtx.gz</code>、<code>features.tsv.gz</code>、<code>barcodes.tsv.gz</code>。</p>
+</section>
+<section id="cell-callingemptydrops-的实现" class="level4" data-number="1.3.3">
+<h4 data-number="1.3.3" class="anchored" data-anchor-id="cell-callingemptydrops-的实现"><span class="header-section-number">1.3.3</span> cell calling：EmptyDrops 的实现</h4>
+<p>判定哪些 barcode 是真细胞，走的是 <code>cell_identify.R</code> 这个 R 脚本。它不是调 DropletUtils 的现成函数，而是<strong>把 10x cellranger 的 EmptyDrops 算法用 R 重写了一遍</strong>——分位数法找 top barcode、估背景 profile、多项式模拟算 p 值。</p>
+<p>流程是：</p>
+<ol type="1">
+<li><strong>找 top barcode</strong>：<code>find_top_umi_barcode</code>，按预期细胞数 <code>recovered_cells</code> 的 0.99 分位定基线，基线的 10% 作为 cutoff，bootstrap 100 次取均值。这一批是确定细胞的”种子”。</li>
+<li><strong>找 ambient candidate</strong>：UMI ≥ <code>max(500, median*0.01)</code>、且不是 top 的 barcode。这是”可能是细胞也可能是空滴”的待判集合，限制最多 20000 个。</li>
+<li><strong>估背景 profile</strong>：<code>find_ambient_background</code> 取 UMI 排名靠后的那批（假设是纯空滴），<code>goodTuringProportions</code> 做 Good-Turing 平滑得到每个基因的背景比例 <code>ambient_prop</code>。</li>
+<li><strong>算每个 candidate 的 p 值</strong>：核心假设是——空滴的表达应该服从背景的多项式分布。<code>compute_simulate_pvalues</code> 模拟 10000 次多项式采样，算出每个总 UMI 数 n 对应的 log-likelihood 分布；<code>compute_ambient_candidate_pvalues</code> 把真实 candidate 的 likelihood 跟模拟分布比，<code>(1 + 比它小的次数)/(1 + 模拟次数)</code> 就是 p 值。</li>
+<li><strong>BH 校正 + cutoff</strong>：<code>p.adjust(method="BH")</code>，小于 <code>pvalue</code>（默认 0.01）的 candidate 也算细胞，跟 top 合起来输出。</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>forceCell 模式</strong>：如果不信任自动 calling，<code>--forceCell N</code> 直接取 UMI 最多的前 N 个 barcode，跳过整个模拟。<code>cell_calling</code> 里 <code>if kwargs["forceCell"] != None</code> 就走这条分支。</p>
+</div>
+</div>
+<p>模拟那块有个性能优化：相邻的 n（比如 n=100 和 n=101）不用各采一次样，而是在 n=100 的 <code>curr_counts</code> 基础上<strong>再加一个基因</strong>增量更新 likelihood（<code>curr_loglk + log(p_j) + log(n/curr_counts[j])</code>），省掉大量重算。</p>
+</section>
+</section>
+<section id="step4seurat" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="step4seurat"><span class="header-section-number">1.4</span> step4：Seurat</h3>
+<p><code>do_seurat</code> 调 R 脚本跑标准 Seurat 流程（NormalizeData → FindVariableFeatures → ScaleData → PCA → clustering → FindMarkers），输出降维聚类结果，没什么特别的。</p>
+</section>
+</section>
+<section id="vdj-流程" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="vdj-流程"><span class="header-section-number">2</span> V(D)J 流程</h2>
+<p>V(D)J 入口是 <code>run_trust4</code> 函数。它没有从头造轮子，而是在 <a href="https://github.com/liulab-dfci/TRUST4">trust4</a> 基础上包了一层 QC、UMI 校正、contig 重分配。整个流程：</p>
+<pre><code>simpleqc → enrichment_qc → fastq-extractor → subset_reads
+        → filter_umis → trust4 组装 → re_assign → report</code></pre>
+<section id="simpleqc跟-scrna-共用" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="simpleqc跟-scrna-共用"><span class="header-section-number">2.1</span> simpleqc：跟 scRNA 共用</h3>
+<p>跟 step1 一样，输出 <code>_r1.fq.gz</code> / <code>_r2.fq.gz</code>。<code>summary_simpleqc</code> 从 <code>_summary.txt</code> 读 <code>total_num</code> / <code>valid_num</code>，从 qual stat csv 算 Q30。<strong>注意：后续所有比例的分母都是 <code>Number of Valid Reads</code>（校正后的有效 read），不是原始 read 数</strong>。</p>
+</section>
+<section id="enrichment_qcreads-mapped-to-any-vdj-gene" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="enrichment_qcreads-mapped-to-any-vdj-gene"><span class="header-section-number">2.2</span> enrichment_qc：Reads Mapped to Any V(D)J Gene</h3>
+<p>这步回答”数据里到底有没有 V(D)J”。做法是：对 <code>bcrtcr.fa</code>（所有 BCR/TCR 的 V/D/J/C 序列）建 STAR 索引，把 R2 比上去，数每条链的 read 数。</p>
+<p><code>count_chain</code> 有个细节值得说：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> pysam.AlignmentFile(bam) <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> bamfh:</span>
+<span id="cb7-2">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> r <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> bamfh:</span>
+<span id="cb7-3">        chain <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> r.reference_name[:<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>]   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># "TRBV1" -&gt; "TRB"</span></span>
+<span id="cb7-4">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> r.get_tag(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"NH"</span>)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>:         <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 唯一比对</span></span>
+<span id="cb7-5">            d[chain] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb7-6">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb7-7">            tmp[r.qname][chain] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 多比对先攒着</span></span></code></pre></div></div>
+<p>NH tag = 1 表示唯一比对，直接计。多比对的 read（比如同时软比对到 TRBV 和 TRBJ）按 read name 攒到 dict，最后仲裁：只比对到一个链就计入；比对到多个链就比 count，count 相同判 unknown。这样避免一条 read 被多个链重复计。</p>
+<p><code>summary_enrichment_qc</code> 算链比例时按 chain 类型筛：</p>
+<ul>
+<li><strong>TR 数据</strong>：只看 TRA + TRB，<strong>忽略 IG 链</strong>（IGH/IGK/IGL）。TCR 文库混入 IG 是噪声，不该计入 “Any V(D)J”。</li>
+<li><strong>IG 数据</strong>：看 IGH + IGK + IGL。</li>
+</ul>
+<p>而且有个硬卡：<code>Reads Mapped to Any V(D)J Gene &lt; 0.01</code> 直接 <code>logger.error</code>，提示数据里没这个链，大概率是 chain 选错了或者文库搞错了。</p>
+</section>
+<section id="fastq-extractor-与-subset_reads" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="fastq-extractor-与-subset_reads"><span class="header-section-number">2.3</span> fastq-extractor 与 subset_reads</h3>
+<p>trust4 的 <code>fastq-extractor</code> 负责：用 bcrtcr.fa 抓 R2 里命中 V(D)J 的 read，把对应的 barcode/UMI 从 R1 抽出来，输出三件套（<code>_preassemble_bc.fa</code> / <code>_preassemble_umi.fa</code> / <code>_preassemble.fq</code>），同时统计每个 barcode 的 UMI 数和 read 数（<code>_bc_count.tsv</code>）。</p>
+<p>然后是 <code>subset_reads</code>：<strong>reads 数过高的 barcode 截断到 <code>reads_limit</code>（默认 80000）</strong>。原因是一些 barcode 可能是 doublet 或气泡污染，read 数异常高，直接组装会拖慢又影响克隆定量。做法是把每个 barcode 的 read 数封顶，多余的 read 砍掉。原始全量计数存到 <code>_{samplename}_bc_count.tsv</code>（带下划线前缀），截断后的覆盖 <code>{samplename}_bc_count.tsv</code>——这样后面算 “Fraction Reads in Cells” 时还能拿到原始数。</p>
+</section>
+<section id="filter_umisvdj-的-umi-校正" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="filter_umisvdj-的-umi-校正"><span class="header-section-number">2.4</span> filter_umis：VDJ 的 UMI 校正</h3>
+<p>trust4 原版对 VDJ UMI 校正比较粗，seeksoultools 自己加了一步 <code>filter_umis</code>。两阶段：</p>
+<p><strong>1. 按阅读量过滤</strong></p>
+<p>每个 barcode 内，先算 UMI count 的 N50：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> calculate_n50(umi_counts: <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">dict</span>):</span>
+<span id="cb8-2">    counts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">sorted</span>(umi_counts.values(), reverse<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb8-3">    total_sum <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">sum</span>(counts)</span>
+<span id="cb8-4">    threshold <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> total_sum <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.5</span></span>
+<span id="cb8-5">    current_sum <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb8-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> count <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> counts:</span>
+<span id="cb8-7">        current_sum <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> count</span>
+<span id="cb8-8">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> current_sum <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;=</span> threshold:</span>
+<span id="cb8-9">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> count</span>
+<span id="cb8-10">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span></code></pre></div></div>
+<p>N50 是组装/基因组学里的指标：把 UMI 按支持 read 数从高到低排，累计到总量 50% 时的那个 read 数。然后阈值定在 <code>0.1 * N50</code>，count 低于它的 UMI 丢掉。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>为什么用 N50 而不是固定阈值？不同 barcode 的测序深度差异大，固定阈值（比如丢掉 count&lt;3 的）在深测序样本里会误杀真 UMI、在浅测序样本里又滤不干净。N50 是个自适应的”该 barcode 自身规模”的度量，乘 0.1 当下限。</p>
+</div>
+</div>
+<p><strong>2. adjacency 聚类校正</strong></p>
+<p>跟 scRNA 那步一样，<code>UMIClusterer("adjacency")</code> 把汉明距离 1 的 UMI 合并到 count 高的那个。校正过程写到 <code>_{samplename}_filter.detail.xls</code>，长这样：</p>
+<pre><code>barcode    original_umi  original_count  corrected_umi  corrected_count
+TGATCAGATGGATTTGA  ACCGGCGTTTTC  11   ACCGGCGTTTTA  33
+TGATCAGATGGATTTGA  ACCGGCGTTTTG   6   ACCGGCGTTTTA  39</code></pre>
+<p>最后重写出新的 barcode/UMI/R2 fastq，UMI 改了之后连 read name 都同步改掉（<code>name_parts[1] = corrected_umi</code>）。</p>
+</section>
+<section id="trust4-组装-re_assign" class="level3" data-number="2.5">
+<h3 data-number="2.5" class="anchored" data-anchor-id="trust4-组装-re_assign"><span class="header-section-number">2.5</span> trust4 组装 + re_assign</h3>
+<p>trust4 那几个子命令（<code>trust4</code> 组装、<code>annotator</code> 注释、<code>trust-barcoderep</code>/<code>trust-simplerep</code>/<code>trust-airr</code> 报告）seeksoultools 都用了，但加了自己的料。</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>trust4_wrapper</code> 里组装那步硬编码了 <code>-t 8</code>，跟上层传进来的 <code>threads</code> 脱节：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1">cmd1 <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"trust4  -t 8 -f </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>fa<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> -o </span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>wd<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>samplename<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;"> ..."</span>)</span></code></pre></div></div>
+<p>源码里也标了注释（参考笔记：“脚本代码固定了 8 个线程，应该修改下”）。如果你跑大批量样本，这里会成为瓶颈，建议改成 <code>-t {threads}</code>。</p>
+</div>
+</div>
+<p><strong>annotator 加了 <code>--readAssignment</code></strong>：输出 <code>_assign.out</code>，两列 <code>read_name \t contig</code>，记录每条 read 归属的 contig。这是为了下一步的 re_assign。</p>
+<section id="re_assign按-umi-重新分配-contig" class="level4" data-number="2.5.1">
+<h4 data-number="2.5.1" class="anchored" data-anchor-id="re_assign按-umi-重新分配-contig"><span class="header-section-number">2.5.1</span> re_assign：按 UMI 重新分配 contig</h4>
+<p>这是 seeksoultools 最有自己想法的一步（<code>utils/reassign.py</code>）。trust4 默认按 read 分配 contig，但 VDJ 里真正该数的是 <strong>UMI</strong>——一个 UMI 对应一个原始 mRNA 分子。re_assign 把分配单位从 read 换成 UMI。</p>
+<p>逻辑是：对每个 <code>(barcode, UMI)</code>，统计它下面的 read 落到各 contig 的次数，然后按 ratio 仲裁。<code>process_assign_file</code> 用多进程分块统计：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> barcode_umi, contig_counts <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> global_barcode_umi_dict.items():</span>
+<span id="cb11-2">    sorted_counts <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">sorted</span>(contig_counts.items(), key<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">lambda</span> x: x[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>], reverse<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">True</span>)</span>
+<span id="cb11-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(sorted_counts) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">==</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>:</span>
+<span id="cb11-4">        final_contig_barcodes[sorted_counts[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]].add(barcode_umi)</span>
+<span id="cb11-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb11-6">        ratio <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> sorted_counts[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> sorted_counts[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span>
+<span id="cb11-7">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> ratio <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.15</span>:</span>
+<span id="cb11-8">            final_contig_barcodes[sorted_counts[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>][<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]].add(barcode_umi)</span>
+<span id="cb11-9">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb11-10">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> contig, _ <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> sorted_counts:</span>
+<span id="cb11-11">                final_contig_barcodes[contig].add(barcode_umi)</span></code></pre></div></div>
+<p>举例，barcode <code>bc1</code> 的某个 UMI 下有：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>contig</th>
+<th>read 数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>contigA</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>contigB</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><code>ratio = 1/20 = 0.05 &lt; 0.15</code>，这个 UMI 归 contigA。</p>
+<p>但如果：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>contig</th>
+<th>read 数</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>contigA</td>
+<td>20</td>
+</tr>
+<tr class="even">
+<td>contigB</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p><code>ratio = 10/20 = 0.5 ≥ 0.15</code>，说明 contigB 也有相当支持，UMI 同时归 contigA 和 contigB。</p>
+<p>分配完，<code>update_cdr3_file</code> 用结果改写 <code>cdr3.out</code> 的第 11 列（UMI count），让每个 contig 的 UMI 数反映重新分配后的结果。这一步直接影响克隆大小的定量。</p>
+</section>
+</section>
+<section id="报告生成" class="level3" data-number="2.6">
+<h3 data-number="2.6" class="anchored" data-anchor-id="报告生成"><span class="header-section-number">2.6</span> 报告生成</h3>
+<p>报告那块调了 <a href="https://github.com/tuonglab/dandelion">dandelion</a>：<code>dandelion.tl.find_clones()</code> 按 CDR3 序列相似度在 VDJ 数据里识别克隆，生成 <code>clone_id</code>。<code>Estimated Number of Cells</code>、<code>Number of Cells with Productive V-J Spanning Pair</code> 这些指标都是从 dandelion 出来的 <code>airr_rearrangement.tsv</code> 算的（<code>get_clone_matrix</code> 函数）。</p>
+<p>最后还有两个输出值得说：</p>
+<p><strong><code>_filtered_contig_annotations.tsv</code></strong>：用 Rust 写的 <code>search-pattern</code> 生成（<code>src/search-pattern</code>）。它基于 LEADER 序列的匹配位置，把每条 contig 切成 FWR1/CDR1/FWR2/CDR2/FWR3/CDR3/FWR4 这些功能区。FWR1 的左边界是 LEADER 匹配终点、右边界是 CDR1 匹配起点，依此类推。10x 的 <code>all_contig_annotations</code> 也是这个结构。</p>
+<p><strong>barcode rank 图</strong>：读 <code>_bc_count.tsv</code>，按 UMI 数降序画。关键是它把曲线<strong>分成三段</strong>画——cell / 混合 / background：</p>
+<pre><code># BBBCC CCBBCBCC BBBBBBBBB
+#       |         |
+#    idx_first  idx_last</code></pre>
+<p>每个逻辑分段单独处理（参考笔记：<code>df_bg.shape[0]==0</code> 全是细胞、<code>df_cells.shape[0]==0</code> 全是背景、普通情况分”第一个 cell 前的混合段” + “中间指数窗口” + “尾段” + “background”）。窗口按 <code>idx_s + 1000*4**n</code> 指数扩张，保证前端密集采样、后端稀疏，画出来曲线平滑。</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>single-cell</category>
+  <category>python</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/seeksoultools/</guid>
+  <pubDate>Mon, 15 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/seeksoultools/seeksoultools.png" medium="image" type="image/png" height="76" width="144"/>
+</item>
 <item>
   <title>scrublet 识别双细胞源码解读</title>
   <dc:creator>Liripo </dc:creator>
@@ -807,7 +1477,6 @@ font-style: inherit;">&gt;=</span> curthresh</span>
 
 
  ]]></description>
-  <category>spatial-transcriptomics</category>
   <category>single-cell</category>
   <category>R</category>
   <category>bioinformatics</category>
@@ -1298,10 +1967,8 @@ font-style: inherit;">/</span> nboot</span></code></pre></div></div>
 
  ]]></description>
   <category>single-cell</category>
-  <category>cellchat</category>
   <category>R</category>
   <category>bioinformatics</category>
-  <category>cell-communication</category>
   <guid>https://liripo.github.io/posts/cellchat/</guid>
   <pubDate>Wed, 03 Jun 2026 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/cellchat/CellChat_Logo.png" medium="image" type="image/png" height="72" width="144"/>
@@ -2011,8 +2678,7 @@ font-style: inherit;">"Insufficient information to answer the question."</span>]
 </section>
 
  ]]></description>
-  <category>agent</category>
-  <category>biomni</category>
+  <category>single-cell</category>
   <category>python</category>
   <category>bioinformatics</category>
   <guid>https://liripo.github.io/posts/biomni/</guid>
@@ -2881,9 +3547,8 @@ font-style: inherit;">## 使用说明</span></span>
 </section>
 
  ]]></description>
-  <category>agent</category>
   <category>typescript</category>
-  <category>source-reading</category>
+  <category>devops</category>
   <guid>https://liripo.github.io/posts/pi-agent/</guid>
   <pubDate>Thu, 28 May 2026 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/pi-agent/pi-agent.png" medium="image" type="image/png" height="93" width="144"/>
@@ -2972,7 +3637,6 @@ font-style: inherit;">|</span></span>
  ]]></description>
   <category>web</category>
   <category>analytics</category>
-  <category>quarto</category>
   <guid>https://liripo.github.io/posts/umami/</guid>
   <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/umami/app.jpg" medium="image" type="image/jpeg"/>
@@ -3380,11 +4044,8 @@ font-style: inherit;">-p</span> 3000:3000 grafana/grafana</span></code></pre></d
 </section>
 
  ]]></description>
-  <category>cadvisor</category>
-  <category>prometheus</category>
-  <category>grafana</category>
+  <category>devops</category>
   <category>docker</category>
-  <category>observability</category>
   <guid>https://liripo.github.io/posts/容器资源监控/</guid>
   <pubDate>Sat, 15 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/容器资源监控/cadvisor.png" medium="image" type="image/png" height="63" width="144"/>
@@ -4156,10 +4817,8 @@ font-style: inherit;">--help</span>                          显示这条帮助�
 </section>
 
  ]]></description>
-  <category>dash</category>
-  <category>web</category>
   <category>python</category>
-  <category>granian</category>
+  <category>web</category>
   <guid>https://liripo.github.io/posts/granian_dash/</guid>
   <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/granian_dash/granian.png" medium="image" type="image/png" height="90" width="144"/>
@@ -4392,10 +5051,8 @@ Note
 </section>
 
  ]]></description>
-  <category>dash</category>
-  <category>web</category>
   <category>python</category>
-  <category>gunicorn</category>
+  <category>web</category>
   <guid>https://liripo.github.io/posts/gunicorn_dash/</guid>
   <pubDate>Fri, 14 Jun 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/gunicorn_dash/dash.jpg" medium="image" type="image/jpeg"/>
@@ -4531,8 +5188,6 @@ font-style: inherit;">git</span> push</span></code></pre></div></div>
 
  ]]></description>
   <category>quarto</category>
-  <category>blog</category>
-  <category>github-pages</category>
   <guid>https://liripo.github.io/posts/quarto_blog/</guid>
   <pubDate>Mon, 01 Jan 2024 16:00:00 GMT</pubDate>
   <media:content url="https://liripo.github.io/posts/quarto_blog/quarto.png" medium="image" type="image/png" height="72" width="144"/>
