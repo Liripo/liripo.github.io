@@ -55,5 +55,8 @@
   },
   "posts/seeksoultools/index.qmd": {
     "index.html": "1484ef2b"
+  },
+  "posts/fastq-parallel/index.qmd": {
+    "index.html": "860f4db8"
   }
 }

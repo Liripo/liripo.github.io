@@ -12,6 +12,899 @@
 <generator>quarto-1.9.37</generator>
 <lastBuildDate>Mon, 15 Jun 2026 16:00:00 GMT</lastBuildDate>
 <item>
+  <title>用 cutadapt 框架并行处理 FASTQ</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/fastq-parallel/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<section id="为什么用-cutadapt-框架" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="为什么用-cutadapt-框架"><span class="header-section-number">1</span> 为什么用 cutadapt 框架</h2>
+<p>处理 FASTQ 文件时，最常见的需求就是对每条 read 做一些变换（截取、修剪、校正等）。数据量动辄几十 GB，单进程太慢，所以需要并行。</p>
+<p>自己用 <code>multiprocessing.Pool</code> 实现并行 FASTQ 处理看似简单，但细节很多：</p>
+<ul>
+<li>块读取与分发</li>
+<li>进程间通信的序列化开销</li>
+<li>输出的有序写回</li>
+<li>gzip 压缩的线程安全</li>
+</ul>
+<p><a href="https://github.com/marcelm/cutadapt">cutadapt</a> 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：<strong>Modifier</strong>、<strong>Step</strong> 和 <strong>Pipeline</strong>。</p>
+<p>本文解读 cutadapt 的并行架构，并演示如何编写一个 <code>SingleEndModifier</code> 来做 barcode 校正。</p>
+<blockquote class="blockquote">
+<p>完整脚本：<a href="fastq_bc.py">fastq_bc.py</a></p>
+</blockquote>
+</section>
+<section id="架构概览" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="架构概览"><span class="header-section-number">2</span> 架构概览</h2>
+<section id="数据流" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="数据流"><span class="header-section-number">2.1</span> 数据流</h3>
+<p>cutadapt 的并行处理数据流如下：</p>
+<pre><code>ReaderProcess ──pipe──&gt; Worker 1 ──pipe──&gt; ┐
+                      Worker 2 ──pipe──&gt; OrderedChunkWriter ──&gt; 文件
+                      Worker 3 ──pipe──&gt; ┘</code></pre>
+<ul>
+<li><strong>ReaderProcess</strong>：独立进程，用 <code>dnaio.read_chunks()</code> 按块读取 FASTQ，通过 <code>Connection</code> pipe 发送给空闲 worker</li>
+<li><strong>WorkerProcess</strong>：接收数据块，调用 <code>Pipeline.process_reads()</code> 处理，结果通过 pipe 发回主进程</li>
+<li><strong>OrderedChunkWriter</strong>：在主进程中缓冲乱序到达的结果块，按原始顺序写入文件</li>
+</ul>
+<p>这不是 <code>multiprocessing.Pool</code>，而是自定义的进程 + 管道模型，避免了 Pool 的序列化开销。</p>
+</section>
+<section id="核心类关系" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="核心类关系"><span class="header-section-number">2.2</span> 核心类关系</h3>
+<pre><code>make_runner(input_paths, cores)
+    ├── cores == 1  → SerialPipelineRunner
+    └── cores &gt;  1  → ParallelPipelineRunner
+                         ├── ReaderProcess
+                         ├── WorkerProcess × N
+                         └── OrderedChunkWriter
+
+SingleEndPipeline(modifiers, steps)
+    ├── modifiers: List[SingleEndModifier]  # 变换
+    └── steps:     List[SingleEndStep]      # 过滤/输出
+
+OutputFiles(proxied=True/False)
+    ├── open_record_writer() → 直写 或 ProxyRecordWriter
+    └── proxy_files()        → 主进程 drain 代理写入器</code></pre>
+</section>
+</section>
+<section id="pipeline-工作机制" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="pipeline-工作机制"><span class="header-section-number">3</span> Pipeline 工作机制</h2>
+<p><code>SingleEndPipeline.process_reads()</code> 的核心循环非常简洁：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/pipeline.py</span></span>
+<span id="cb3-2">modifiers_and_steps <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._modifiers <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>._steps</span>
+<span id="cb3-3"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> read <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> reader:</span>
+<span id="cb3-4">    info <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> ModificationInfo(read)</span>
+<span id="cb3-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> step <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> modifiers_and_steps:</span>
+<span id="cb3-6">        read <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> step(read, info)</span>
+<span id="cb3-7">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> read <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>:       <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># read 被消费，跳出循环</span></span>
+<span id="cb3-8">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">break</span></span></code></pre></div></div>
+<p>每个 step 接收 read，处理后返回：</p>
+<ul>
+<li><code>SequenceRecord</code> → 传递给下一个 step</li>
+<li><code>None</code> → read 被消费（写入文件或丢弃），不再传递</li>
+</ul>
+<p><code>ModificationInfo</code> 携带 read 的修改信息（adapter 匹配、截取位置等），在 modifier 之间传递。</p>
+</section>
+<section id="关键-api" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="关键-api"><span class="header-section-number">4</span> 关键 API</h2>
+<section id="singleendmodifier" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="singleendmodifier"><span class="header-section-number">4.1</span> SingleEndModifier</h3>
+<p>自定义处理逻辑的核心基类：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/modifiers.py</span></span>
+<span id="cb4-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> SingleEndModifier(ABC):</span>
+<span id="cb4-3">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@abstractmethod</span></span>
+<span id="cb4-4">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read: SequenceRecord, info: ModificationInfo) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> SequenceRecord</span></code></pre></div></div>
+<p><strong>实现要点</strong>：接收一条 read，返回处理后的 read。不能返回 <code>None</code>（消费 read 是 Sink 的职责）。</p>
+<p>cutadapt 内置的 modifier 例子：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 无条件截取前 N 个碱基</span></span>
+<span id="cb5-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> UnconditionalCutter(SingleEndModifier):</span>
+<span id="cb5-3">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read, info):</span>
+<span id="cb5-4">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> read[<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.start:<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.stop]</span></code></pre></div></div>
+</section>
+<section id="singleendsink" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="singleendsink"><span class="header-section-number">4.2</span> SingleEndSink</h3>
+<p>Pipeline 的最终 step，负责写入输出：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/steps.py</span></span>
+<span id="cb6-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> SingleEndSink(SingleEndStep):</span>
+<span id="cb6-3">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read, info):</span>
+<span id="cb6-4">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.writer.write(read)    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 写入</span></span>
+<span id="cb6-5">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>                 <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 消费 read</span></span></code></pre></div></div>
+</section>
+<section id="outputfiles" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="outputfiles"><span class="header-section-number">4.3</span> OutputFiles</h3>
+<p>管理输出文件的写入。关键在于 <code>proxied</code> 参数：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1">outfiles <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> OutputFiles(</span>
+<span id="cb7-2">    proxied<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cores <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>,</span>
+<span id="cb7-3">    qualities<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb7-4">    file_opener<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>file_opener,</span>
+<span id="cb7-5">    interleaved<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb7-6">)</span>
+<span id="cb7-7">writer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> outfiles.open_record_writer(output_path)</span></code></pre></div></div>
+<p>当 <code>proxied=True</code>（多进程模式），<code>open_record_writer()</code> 返回 <code>ProxyRecordWriter</code>。它内部用 <code>BytesIO</code> 缓冲写入内容，主进程通过 <code>proxy_files().drain()</code> 回收并写入实际文件。这样 worker 进程不需要直接操作文件句柄。</p>
+</section>
+<section id="make_runner" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="make_runner"><span class="header-section-number">4.4</span> make_runner</h3>
+<p>工厂函数，根据核心数选择串行或并行 runner：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/runners.py</span></span>
+<span id="cb8-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> make_runner(inpaths, cores, buffer_size<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>):</span>
+<span id="cb8-3">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> cores <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>:</span>
+<span id="cb8-4">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> ParallelPipelineRunner(inpaths, n_workers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cores, ...)</span>
+<span id="cb8-5">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span>:</span>
+<span id="cb8-6">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> SerialPipelineRunner(inpaths.<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">open</span>())</span></code></pre></div></div>
+</section>
+</section>
+<section id="双端模式" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="双端模式"><span class="header-section-number">5</span> 双端模式</h2>
+<p>cutadapt 也提供了完整的双端 API，接口和单端几乎一样，只是每个方法多了一个 read2 参数。</p>
+<section id="核心类" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="核心类"><span class="header-section-number">5.1</span> 核心类</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/modifiers.py</span></span>
+<span id="cb9-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> PairedEndModifier(ABC):</span>
+<span id="cb9-3">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@abstractmethod</span></span>
+<span id="cb9-4">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(</span>
+<span id="cb9-5">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read1: SequenceRecord, read2: SequenceRecord,</span>
+<span id="cb9-6">        info1: ModificationInfo, info2: ModificationInfo,</span>
+<span id="cb9-7">    ) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> Tuple[SequenceRecord, SequenceRecord]</span>
+<span id="cb9-8"></span>
+<span id="cb9-9"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/steps.py</span></span>
+<span id="cb9-10"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> PairedEndStep(ABC):</span>
+<span id="cb9-11">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">@abstractmethod</span></span>
+<span id="cb9-12">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read1, read2, info1, info2) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-&gt;</span> Optional[RecordPair]</span>
+<span id="cb9-13"></span>
+<span id="cb9-14"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cutadapt/steps.py</span></span>
+<span id="cb9-15"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> PairedEndSink(PairedEndStep):</span>
+<span id="cb9-16">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read1, read2, info1, info2):</span>
+<span id="cb9-17">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.writer.write(read1, read2)</span>
+<span id="cb9-18">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span></span></code></pre></div></div>
+</section>
+<section id="组装差异" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="组装差异"><span class="header-section-number">5.2</span> 组装差异</h3>
+<p>双端模式只需把 <code>SingleEndPipeline</code> 替换为 <code>PairedEndPipeline</code>，输入传两个文件路径：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 输入：两个文件</span></span>
+<span id="cb10-2">input_paths <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> InputPaths(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"R1.fastq.gz"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"R2.fastq.gz"</span>, interleaved<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>)</span>
+<span id="cb10-3"></span>
+<span id="cb10-4"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> make_runner(input_paths, cores<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>) <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> runner:</span>
+<span id="cb10-5">    outfiles <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> OutputFiles(</span>
+<span id="cb10-6">        proxied<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cores <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>,</span>
+<span id="cb10-7">        qualities<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb10-8">        file_opener<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>file_opener,</span>
+<span id="cb10-9">        interleaved<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb10-10">    )</span>
+<span id="cb10-11">    writer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> outfiles.open_record_writer(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"R1_out.fq.gz"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"R2_out.fq.gz"</span>)</span>
+<span id="cb10-12"></span>
+<span id="cb10-13">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># modifiers 支持两种形式：</span></span>
+<span id="cb10-14">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 1. PairedEndModifier 子类（直接操作 read pair）</span></span>
+<span id="cb10-15">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 2. 元组 (SingleEndModifier, SingleEndModifier)——分别作用于 R1 和 R2</span></span>
+<span id="cb10-16">    modifiers <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb10-17">        (barcode_corrector_r1, barcode_corrector_r2),  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 元组形式</span></span>
+<span id="cb10-18">        PairedEndRenamer(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"sample"</span>),                     <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># PairedEndModifier 子类</span></span>
+<span id="cb10-19">    ]</span>
+<span id="cb10-20">    sink <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> PairedEndSink(writer)</span>
+<span id="cb10-21"></span>
+<span id="cb10-22">    pipeline <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> PairedEndPipeline(modifiers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>modifiers, steps<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[sink])</span>
+<span id="cb10-23">    stats <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> runner.run(pipeline, DummyProgress(), outfiles)</span></code></pre></div></div>
+<p><code>PairedEndPipeline</code> 的 <code>modifiers</code> 列表支持混合使用：元组形式的 <code>(mod1, mod2)</code> 会被自动包装为 <code>PairedEndModifierWrapper</code>，<code>PairedEndModifier</code> 子类直接使用。元组中的元素可以设为 <code>None</code> 表示只处理其中一端。</p>
+</section>
+</section>
+<section id="实战barcode-校正" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="实战barcode-校正"><span class="header-section-number">6</span> 实战：Barcode 校正</h2>
+<p>以 barcode 校正为例，完整展示如何复用 cutadapt 框架。</p>
+<section id="校正算法" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="校正算法"><span class="header-section-number">6.1</span> 校正算法</h3>
+<p>采用 <a href="https://github.com/shienex/PISA">PISA</a> 的 k-mer 索引方法：</p>
+<ol type="1">
+<li><strong>构建索引</strong>：对白名单中每条 barcode 提取 k-mer（k=5），建立 k-mer → barcode 集合的反向索引</li>
+<li><strong>查询校正</strong>：从 query barcode 提取 k-mer，通过索引召回候选 barcode，逐一计算 Hamming 距离</li>
+<li><strong>唯一命中</strong>：仅接受唯一命中且距离 ≤ max_dist 的结果。多个候选距离相同则返回 None（避免歧义校正）</li>
+</ol>
+<pre><code>白名单: [AGTCGA, AGTTGA, CGTAGC]
+
+构建 k-mer 索引 (k=5):
+  AGTCG → {AGTCGA}
+  GTCGA → {AGTCGA}
+  AGTTG → {AGTTGA}
+  GTTGA → {AGTTGA}
+  CGTAG → {CGTAGC}
+  GTAGC → {CGTAGC}
+
+查询 "AGTCCA" (距离 AGTCGA 为 1):
+  k-mer "AGTCC" → 无命中
+  k-mer "GTCCA" → 无命中
+  → 候选为空，无法校正
+
+查询 "AGTCGT" (距离 AGTCGA 为 1):
+  k-mer "AGTCG" → {AGTCGA}  ✓ 命中候选
+  k-mer "GTCGT" → 无命中
+  → 候选 {AGTCGA}, Hamming=1, 唯一命中 → 校正为 AGTCGA</code></pre>
+</section>
+<section id="实现-singleendmodifier" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="实现-singleendmodifier"><span class="header-section-number">6.2</span> 实现 SingleEndModifier</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.modifiers <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> SingleEndModifier</span>
+<span id="cb12-2"></span>
+<span id="cb12-3"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> BarcodeCorrectorModifier(SingleEndModifier):</span>
+<span id="cb12-4">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__init__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, corrector, barcode_length):</span>
+<span id="cb12-5">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.corrector <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> corrector</span>
+<span id="cb12-6">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.barcode_length <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> barcode_length</span>
+<span id="cb12-7">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb12-8">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.total <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb12-9"></span>
+<span id="cb12-10">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read, info):</span>
+<span id="cb12-11">        <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.total <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb12-12">        bl <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.barcode_length</span>
+<span id="cb12-13">        barcode <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> read.sequence[:bl]</span>
+<span id="cb12-14"></span>
+<span id="cb12-15">        corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.corrector.correct(barcode)</span>
+<span id="cb12-16">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> corrected <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> barcode:</span>
+<span id="cb12-17">            <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span>
+<span id="cb12-18">            new_seq <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> read.sequence[bl:]</span>
+<span id="cb12-19">            read <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> SequenceRecord(read.name, new_seq, read.qualities)</span>
+<span id="cb12-20"></span>
+<span id="cb12-21">        corr_tag <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> corrected <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (corrected <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> corrected <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">!=</span> barcode) <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">""</span></span>
+<span id="cb12-22">        read <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> SequenceRecord(</span>
+<span id="cb12-23">            <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">f"</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>read<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span>name<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|||CR:Z:</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>barcode<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">|||CB:Z:</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">{</span>corr_tag<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">}</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>,</span>
+<span id="cb12-24">            read.sequence, read.qualities,</span>
+<span id="cb12-25">        )</span>
+<span id="cb12-26">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> read</span></code></pre></div></div>
+<p>逻辑很简单：提取前 N 个碱基作为 barcode，调用校正器，成功则替换序列。</p>
+</section>
+<section id="组装-pipeline" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="组装-pipeline"><span class="header-section-number">6.3</span> 组装 Pipeline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.files <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> InputPaths, OutputFiles, FileOpener</span>
+<span id="cb13-2"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.runners <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> make_runner</span>
+<span id="cb13-3"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.pipeline <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> SingleEndPipeline</span>
+<span id="cb13-4"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.steps <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> SingleEndSink</span>
+<span id="cb13-5"><span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">from</span> cutadapt.utils <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">import</span> DummyProgress</span>
+<span id="cb13-6"></span>
+<span id="cb13-7">input_paths <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> InputPaths(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"input.fastq.gz"</span>)</span>
+<span id="cb13-8">file_opener <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> FileOpener(compression_level<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>, threads<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb13-9"></span>
+<span id="cb13-10"><span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">with</span> make_runner(input_paths, cores<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>) <span class="im" style="color: #00769E;
+background-color: null;
+font-style: inherit;">as</span> runner:</span>
+<span id="cb13-11">    outfiles <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> OutputFiles(</span>
+<span id="cb13-12">        proxied<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>cores <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>,</span>
+<span id="cb13-13">        qualities<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb13-14">        file_opener<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>file_opener,</span>
+<span id="cb13-15">        interleaved<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">False</span>,</span>
+<span id="cb13-16">    )</span>
+<span id="cb13-17">    writer <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> outfiles.open_record_writer(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"output.fastq.gz"</span>)</span>
+<span id="cb13-18"></span>
+<span id="cb13-19">    bc_modifier <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> BarcodeCorrectorModifier(corrector, barcode_length)</span>
+<span id="cb13-20">    sink <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> SingleEndSink(writer)</span>
+<span id="cb13-21"></span>
+<span id="cb13-22">    pipeline <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> SingleEndPipeline(</span>
+<span id="cb13-23">        modifiers<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[bc_modifier],</span>
+<span id="cb13-24">        steps<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>[sink],</span>
+<span id="cb13-25">    )</span>
+<span id="cb13-26">    stats <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> runner.run(pipeline, DummyProgress(), outfiles)</span></code></pre></div></div>
+<p>整个流程就是：构建 modifier → 构建 sink → 组装 pipeline → 运行。cutadapt 负责：</p>
+<ul>
+<li>多进程的创建和通信</li>
+<li>FASTQ 的按块读取和有序写回</li>
+<li>gzip 的并行压缩</li>
+<li>进程异常处理</li>
+</ul>
+<p>你只需要关注自己的处理逻辑。</p>
+</section>
+<section id="完整脚本" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="完整脚本"><span class="header-section-number">6.4</span> 完整脚本</h3>
+<p>完整脚本封装为 typer CLI 工具：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 安装依赖</span></span>
+<span id="cb14-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install cutadapt dnaio typer</span>
+<span id="cb14-3"></span>
+<span id="cb14-4"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 运行</span></span>
+<span id="cb14-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">python</span> fastq_bc.py input.fastq.gz <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-w</span> whitelist.txt <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-o</span> output.fastq.gz <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-c</span> 4</span></code></pre></div></div>
+<p>参数说明：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>input_files</code></td>
+<td>输入 FASTQ 文件</td>
+</tr>
+<tr class="even">
+<td><code>-w, --whitelist</code></td>
+<td>barcode 白名单文件，每行一条</td>
+</tr>
+<tr class="odd">
+<td><code>-o, --output</code></td>
+<td>输出文件路径</td>
+</tr>
+<tr class="even">
+<td><code>-c, --cores</code></td>
+<td>并行进程数，默认使用全部 CPU</td>
+</tr>
+<tr class="odd">
+<td><code>-l, --barcode-length</code></td>
+<td>barcode 长度，默认自动检测</td>
+</tr>
+<tr class="even">
+<td><code>-d, --max-dist</code></td>
+<td>最大 Hamming 距离，默认 1</td>
+</tr>
+<tr class="odd">
+<td><code>-k, --kmer-size</code></td>
+<td>k-mer 索引的 k 值，默认 5</td>
+</tr>
+<tr class="even">
+<td><code>--compression-level</code></td>
+<td>gzip 压缩等级 1-9</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="扩展思路" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="扩展思路"><span class="header-section-number">7</span> 扩展思路</h2>
+<p>理解了这个框架后，可以很方便地扩展其他处理逻辑：</p>
+<p><strong>添加质量过滤</strong>：实现一个 <code>SingleEndStep</code>，不满足质量阈值时返回 <code>None</code> 丢弃 read：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> QualityFilter(SingleEndStep):</span>
+<span id="cb15-2">    <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">__call__</span>(<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>, read, info):</span>
+<span id="cb15-3">        avg_quality <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">sum</span>(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">ord</span>(c) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">33</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> c <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> read.qualities) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">len</span>(read.qualities)</span>
+<span id="cb15-4">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> avg_quality <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&lt;</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">self</span>.min_quality:</span>
+<span id="cb15-5">            <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 丢弃</span></span>
+<span id="cb15-6">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> read</span></code></pre></div></div>
+<p>多个 modifier 和 step 可以自由组合到同一个 pipeline 中，cutadapt 会按顺序执行。</p>
+</section>
+<section id="参考" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="参考"><span class="header-section-number">8</span> 参考</h2>
+<ul>
+<li><a href="https://github.com/marcelm/cutadapt">cutadapt 源码</a></li>
+<li><a href="https://github.com/shienex/PISA">PISA</a> — k-mer 索引 barcode 校正</li>
+<li><a href="https://github.com/marcelm/dnaio">dnaio</a> — FASTQ/FASTA 读写库</li>
+</ul>
+
+
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/fastq-parallel/</guid>
+  <pubDate>Mon, 15 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/fastq-parallel/fastq-parallel.png" medium="image" type="image/png" height="76" width="144"/>
+</item>
+<item>
   <title>SeekSoulTools 1.3.0 源码解读</title>
   <dc:creator>Liripo </dc:creator>
   <link>https://liripo.github.io/posts/seeksoultools/</link>

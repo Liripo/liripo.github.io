@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Liripo">
+<meta name="dcterms.date" content="2026-06-16">
+<meta name="description" content="解读 cutadapt 的并行架构，演示如何通过 SingleEndModifier 和 SingleEndSink 扩展 pipeline，实现自定义的 FASTQ 处理逻辑。">
+
+<title>用 cutadapt 框架并行处理 FASTQ – Liripo</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-e8964db687007ca8dd88d9d9ce58e3ef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-a0f9fd0d421825b736dc1bbcbcba2219.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script defer="" src="https://cloud.umami.is/script.js" data-website-id="6aca168c-471e-41f9-9977-ac136a20c1c1"></script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Liripo</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/Liripo"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/Liripo_zzz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">用 cutadapt 框架并行处理 FASTQ</h1>
+            <p class="subtitle lead">复用 cutadapt 实现自定义多进程 FASTQ 处理，以 barcode 校正为例</p>
+                  <div>
+        <div class="description">
+          解读 cutadapt 的并行架构，演示如何通过 SingleEndModifier 和 SingleEndSink 扩展 pipeline，实现自定义的 FASTQ 处理逻辑。
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">python</div>
+                <div class="quarto-category">bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Liripo </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 16, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#为什么用-cutadapt-框架" id="toc-为什么用-cutadapt-框架" class="nav-link active" data-scroll-target="#为什么用-cutadapt-框架"><span class="header-section-number">1</span> 为什么用 cutadapt 框架</a></li>
+  <li><a href="#架构概览" id="toc-架构概览" class="nav-link" data-scroll-target="#架构概览"><span class="header-section-number">2</span> 架构概览</a>
+  <ul class="collapse">
+  <li><a href="#数据流" id="toc-数据流" class="nav-link" data-scroll-target="#数据流"><span class="header-section-number">2.1</span> 数据流</a></li>
+  <li><a href="#核心类关系" id="toc-核心类关系" class="nav-link" data-scroll-target="#核心类关系"><span class="header-section-number">2.2</span> 核心类关系</a></li>
+  </ul></li>
+  <li><a href="#pipeline-工作机制" id="toc-pipeline-工作机制" class="nav-link" data-scroll-target="#pipeline-工作机制"><span class="header-section-number">3</span> Pipeline 工作机制</a></li>
+  <li><a href="#关键-api" id="toc-关键-api" class="nav-link" data-scroll-target="#关键-api"><span class="header-section-number">4</span> 关键 API</a>
+  <ul class="collapse">
+  <li><a href="#singleendmodifier" id="toc-singleendmodifier" class="nav-link" data-scroll-target="#singleendmodifier"><span class="header-section-number">4.1</span> SingleEndModifier</a></li>
+  <li><a href="#singleendsink" id="toc-singleendsink" class="nav-link" data-scroll-target="#singleendsink"><span class="header-section-number">4.2</span> SingleEndSink</a></li>
+  <li><a href="#outputfiles" id="toc-outputfiles" class="nav-link" data-scroll-target="#outputfiles"><span class="header-section-number">4.3</span> OutputFiles</a></li>
+  <li><a href="#make_runner" id="toc-make_runner" class="nav-link" data-scroll-target="#make_runner"><span class="header-section-number">4.4</span> make_runner</a></li>
+  </ul></li>
+  <li><a href="#双端模式" id="toc-双端模式" class="nav-link" data-scroll-target="#双端模式"><span class="header-section-number">5</span> 双端模式</a>
+  <ul class="collapse">
+  <li><a href="#核心类" id="toc-核心类" class="nav-link" data-scroll-target="#核心类"><span class="header-section-number">5.1</span> 核心类</a></li>
+  <li><a href="#组装差异" id="toc-组装差异" class="nav-link" data-scroll-target="#组装差异"><span class="header-section-number">5.2</span> 组装差异</a></li>
+  </ul></li>
+  <li><a href="#实战barcode-校正" id="toc-实战barcode-校正" class="nav-link" data-scroll-target="#实战barcode-校正"><span class="header-section-number">6</span> 实战：Barcode 校正</a>
+  <ul class="collapse">
+  <li><a href="#校正算法" id="toc-校正算法" class="nav-link" data-scroll-target="#校正算法"><span class="header-section-number">6.1</span> 校正算法</a></li>
+  <li><a href="#实现-singleendmodifier" id="toc-实现-singleendmodifier" class="nav-link" data-scroll-target="#实现-singleendmodifier"><span class="header-section-number">6.2</span> 实现 SingleEndModifier</a></li>
+  <li><a href="#组装-pipeline" id="toc-组装-pipeline" class="nav-link" data-scroll-target="#组装-pipeline"><span class="header-section-number">6.3</span> 组装 Pipeline</a></li>
+  <li><a href="#完整脚本" id="toc-完整脚本" class="nav-link" data-scroll-target="#完整脚本"><span class="header-section-number">6.4</span> 完整脚本</a></li>
+  </ul></li>
+  <li><a href="#扩展思路" id="toc-扩展思路" class="nav-link" data-scroll-target="#扩展思路"><span class="header-section-number">7</span> 扩展思路</a></li>
+  <li><a href="#参考" id="toc-参考" class="nav-link" data-scroll-target="#参考"><span class="header-section-number">8</span> 参考</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+
+<section id="为什么用-cutadapt-框架" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="为什么用-cutadapt-框架"><span class="header-section-number">1</span> 为什么用 cutadapt 框架</h2>
+<p>处理 FASTQ 文件时，最常见的需求就是对每条 read 做一些变换（截取、修剪、校正等）。数据量动辄几十 GB，单进程太慢，所以需要并行。</p>
+<p>自己用 <code>multiprocessing.Pool</code> 实现并行 FASTQ 处理看似简单，但细节很多：</p>
+<ul>
+<li>块读取与分发</li>
+<li>进程间通信的序列化开销</li>
+<li>输出的有序写回</li>
+<li>gzip 压缩的线程安全</li>
+</ul>
+<p><a href="https://github.com/marcelm/cutadapt">cutadapt</a> 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：<strong>Modifier</strong>、<strong>Step</strong> 和 <strong>Pipeline</strong>。</p>
+<p>本文解读 cutadapt 的并行架构，并演示如何编写一个 <code>SingleEndModifier</code> 来做 barcode 校正。</p>
+<blockquote class="blockquote">
+<p>完整脚本：<a href="fastq_bc.py">fastq_bc.py</a></p>
+</blockquote>
+</section>
+<section id="架构概览" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="架构概览"><span class="header-section-number">2</span> 架构概览</h2>
+<section id="数据流" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="数据流"><span class="header-section-number">2.1</span> 数据流</h3>
+<p>cutadapt 的并行处理数据流如下：</p>
+<pre><code>ReaderProcess ──pipe──&gt; Worker 1 ──pipe──&gt; ┐
+                      Worker 2 ──pipe──&gt; OrderedChunkWriter ──&gt; 文件
+                      Worker 3 ──pipe──&gt; ┘</code></pre>
+<ul>
+<li><strong>ReaderProcess</strong>：独立进程，用 <code>dnaio.read_chunks()</code> 按块读取 FASTQ，通过 <code>Connection</code> pipe 发送给空闲 worker</li>
+<li><strong>WorkerProcess</strong>：接收数据块，调用 <code>Pipeline.process_reads()</code> 处理，结果通过 pipe 发回主进程</li>
+<li><strong>OrderedChunkWriter</strong>：在主进程中缓冲乱序到达的结果块，按原始顺序写入文件</li>
+</ul>
+<p>这不是 <code>multiprocessing.Pool</code>，而是自定义的进程 + 管道模型，避免了 Pool 的序列化开销。</p>
+</section>
+<section id="核心类关系" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="核心类关系"><span class="header-section-number">2.2</span> 核心类关系</h3>
+<pre><code>make_runner(input_paths, cores)
+    ├── cores == 1  → SerialPipelineRunner
+    └── cores &gt;  1  → ParallelPipelineRunner
+                         ├── ReaderProcess
+                         ├── WorkerProcess × N
+                         └── OrderedChunkWriter
+
+SingleEndPipeline(modifiers, steps)
+    ├── modifiers: List[SingleEndModifier]  # 变换
+    └── steps:     List[SingleEndStep]      # 过滤/输出
+
+OutputFiles(proxied=True/False)
+    ├── open_record_writer() → 直写 或 ProxyRecordWriter
+    └── proxy_files()        → 主进程 drain 代理写入器</code></pre>
+</section>
+</section>
+<section id="pipeline-工作机制" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="pipeline-工作机制"><span class="header-section-number">3</span> Pipeline 工作机制</h2>
+<p><code>SingleEndPipeline.process_reads()</code> 的核心循环非常简洁：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># cutadapt/pipeline.py</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>modifiers_and_steps <span class="op">=</span> <span class="va">self</span>._modifiers <span class="op">+</span> <span class="va">self</span>._steps</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="cf">for</span> read <span class="kw">in</span> reader:</span>
+<span id="cb3-4"><a href="#cb3-4"></a>    info <span class="op">=</span> ModificationInfo(read)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>    <span class="cf">for</span> step <span class="kw">in</span> modifiers_and_steps:</span>
+<span id="cb3-6"><a href="#cb3-6"></a>        read <span class="op">=</span> step(read, info)</span>
+<span id="cb3-7"><a href="#cb3-7"></a>        <span class="cf">if</span> read <span class="kw">is</span> <span class="va">None</span>:       <span class="co"># read 被消费，跳出循环</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a>            <span class="cf">break</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>每个 step 接收 read，处理后返回：</p>
+<ul>
+<li><code>SequenceRecord</code> → 传递给下一个 step</li>
+<li><code>None</code> → read 被消费（写入文件或丢弃），不再传递</li>
+</ul>
+<p><code>ModificationInfo</code> 携带 read 的修改信息（adapter 匹配、截取位置等），在 modifier 之间传递。</p>
+</section>
+<section id="关键-api" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="关键-api"><span class="header-section-number">4</span> 关键 API</h2>
+<section id="singleendmodifier" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="singleendmodifier"><span class="header-section-number">4.1</span> SingleEndModifier</h3>
+<p>自定义处理逻辑的核心基类：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># cutadapt/modifiers.py</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">class</span> SingleEndModifier(ABC):</span>
+<span id="cb4-3"><a href="#cb4-3"></a>    <span class="at">@abstractmethod</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read: SequenceRecord, info: ModificationInfo) <span class="op">-&gt;</span> SequenceRecord</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>实现要点</strong>：接收一条 read，返回处理后的 read。不能返回 <code>None</code>（消费 read 是 Sink 的职责）。</p>
+<p>cutadapt 内置的 modifier 例子：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># 无条件截取前 N 个碱基</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">class</span> UnconditionalCutter(SingleEndModifier):</span>
+<span id="cb5-3"><a href="#cb5-3"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read, info):</span>
+<span id="cb5-4"><a href="#cb5-4"></a>        <span class="cf">return</span> read[<span class="va">self</span>.start:<span class="va">self</span>.stop]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="singleendsink" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="singleendsink"><span class="header-section-number">4.2</span> SingleEndSink</h3>
+<p>Pipeline 的最终 step，负责写入输出：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># cutadapt/steps.py</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">class</span> SingleEndSink(SingleEndStep):</span>
+<span id="cb6-3"><a href="#cb6-3"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read, info):</span>
+<span id="cb6-4"><a href="#cb6-4"></a>        <span class="va">self</span>.writer.write(read)    <span class="co"># 写入</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a>        <span class="cf">return</span> <span class="va">None</span>                 <span class="co"># 消费 read</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="outputfiles" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="outputfiles"><span class="header-section-number">4.3</span> OutputFiles</h3>
+<p>管理输出文件的写入。关键在于 <code>proxied</code> 参数：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a>outfiles <span class="op">=</span> OutputFiles(</span>
+<span id="cb7-2"><a href="#cb7-2"></a>    proxied<span class="op">=</span>cores <span class="op">&gt;</span> <span class="dv">1</span>,</span>
+<span id="cb7-3"><a href="#cb7-3"></a>    qualities<span class="op">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb7-4"><a href="#cb7-4"></a>    file_opener<span class="op">=</span>file_opener,</span>
+<span id="cb7-5"><a href="#cb7-5"></a>    interleaved<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb7-6"><a href="#cb7-6"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7"></a>writer <span class="op">=</span> outfiles.open_record_writer(output_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>当 <code>proxied=True</code>（多进程模式），<code>open_record_writer()</code> 返回 <code>ProxyRecordWriter</code>。它内部用 <code>BytesIO</code> 缓冲写入内容，主进程通过 <code>proxy_files().drain()</code> 回收并写入实际文件。这样 worker 进程不需要直接操作文件句柄。</p>
+</section>
+<section id="make_runner" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="make_runner"><span class="header-section-number">4.4</span> make_runner</h3>
+<p>工厂函数，根据核心数选择串行或并行 runner：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># cutadapt/runners.py</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">def</span> make_runner(inpaths, cores, buffer_size<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="cf">if</span> cores <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb8-4"><a href="#cb8-4"></a>        <span class="cf">return</span> ParallelPipelineRunner(inpaths, n_workers<span class="op">=</span>cores, ...)</span>
+<span id="cb8-5"><a href="#cb8-5"></a>    <span class="cf">else</span>:</span>
+<span id="cb8-6"><a href="#cb8-6"></a>        <span class="cf">return</span> SerialPipelineRunner(inpaths.<span class="bu">open</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="双端模式" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="双端模式"><span class="header-section-number">5</span> 双端模式</h2>
+<p>cutadapt 也提供了完整的双端 API，接口和单端几乎一样，只是每个方法多了一个 read2 参数。</p>
+<section id="核心类" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="核心类"><span class="header-section-number">5.1</span> 核心类</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># cutadapt/modifiers.py</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="kw">class</span> PairedEndModifier(ABC):</span>
+<span id="cb9-3"><a href="#cb9-3"></a>    <span class="at">@abstractmethod</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(</span>
+<span id="cb9-5"><a href="#cb9-5"></a>        <span class="va">self</span>, read1: SequenceRecord, read2: SequenceRecord,</span>
+<span id="cb9-6"><a href="#cb9-6"></a>        info1: ModificationInfo, info2: ModificationInfo,</span>
+<span id="cb9-7"><a href="#cb9-7"></a>    ) <span class="op">-&gt;</span> Tuple[SequenceRecord, SequenceRecord]</span>
+<span id="cb9-8"><a href="#cb9-8"></a></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co"># cutadapt/steps.py</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="kw">class</span> PairedEndStep(ABC):</span>
+<span id="cb9-11"><a href="#cb9-11"></a>    <span class="at">@abstractmethod</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read1, read2, info1, info2) <span class="op">-&gt;</span> Optional[RecordPair]</span>
+<span id="cb9-13"><a href="#cb9-13"></a></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co"># cutadapt/steps.py</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="kw">class</span> PairedEndSink(PairedEndStep):</span>
+<span id="cb9-16"><a href="#cb9-16"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read1, read2, info1, info2):</span>
+<span id="cb9-17"><a href="#cb9-17"></a>        <span class="va">self</span>.writer.write(read1, read2)</span>
+<span id="cb9-18"><a href="#cb9-18"></a>        <span class="cf">return</span> <span class="va">None</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="组装差异" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="组装差异"><span class="header-section-number">5.2</span> 组装差异</h3>
+<p>双端模式只需把 <code>SingleEndPipeline</code> 替换为 <code>PairedEndPipeline</code>，输入传两个文件路径：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># 输入：两个文件</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>input_paths <span class="op">=</span> InputPaths(<span class="st">"R1.fastq.gz"</span>, <span class="st">"R2.fastq.gz"</span>, interleaved<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-3"><a href="#cb10-3"></a></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="cf">with</span> make_runner(input_paths, cores<span class="op">=</span><span class="dv">4</span>) <span class="im">as</span> runner:</span>
+<span id="cb10-5"><a href="#cb10-5"></a>    outfiles <span class="op">=</span> OutputFiles(</span>
+<span id="cb10-6"><a href="#cb10-6"></a>        proxied<span class="op">=</span>cores <span class="op">&gt;</span> <span class="dv">1</span>,</span>
+<span id="cb10-7"><a href="#cb10-7"></a>        qualities<span class="op">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb10-8"><a href="#cb10-8"></a>        file_opener<span class="op">=</span>file_opener,</span>
+<span id="cb10-9"><a href="#cb10-9"></a>        interleaved<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb10-10"><a href="#cb10-10"></a>    )</span>
+<span id="cb10-11"><a href="#cb10-11"></a>    writer <span class="op">=</span> outfiles.open_record_writer(<span class="st">"R1_out.fq.gz"</span>, <span class="st">"R2_out.fq.gz"</span>)</span>
+<span id="cb10-12"><a href="#cb10-12"></a></span>
+<span id="cb10-13"><a href="#cb10-13"></a>    <span class="co"># modifiers 支持两种形式：</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a>    <span class="co"># 1. PairedEndModifier 子类（直接操作 read pair）</span></span>
+<span id="cb10-15"><a href="#cb10-15"></a>    <span class="co"># 2. 元组 (SingleEndModifier, SingleEndModifier)——分别作用于 R1 和 R2</span></span>
+<span id="cb10-16"><a href="#cb10-16"></a>    modifiers <span class="op">=</span> [</span>
+<span id="cb10-17"><a href="#cb10-17"></a>        (barcode_corrector_r1, barcode_corrector_r2),  <span class="co"># 元组形式</span></span>
+<span id="cb10-18"><a href="#cb10-18"></a>        PairedEndRenamer(<span class="st">"sample"</span>),                     <span class="co"># PairedEndModifier 子类</span></span>
+<span id="cb10-19"><a href="#cb10-19"></a>    ]</span>
+<span id="cb10-20"><a href="#cb10-20"></a>    sink <span class="op">=</span> PairedEndSink(writer)</span>
+<span id="cb10-21"><a href="#cb10-21"></a></span>
+<span id="cb10-22"><a href="#cb10-22"></a>    pipeline <span class="op">=</span> PairedEndPipeline(modifiers<span class="op">=</span>modifiers, steps<span class="op">=</span>[sink])</span>
+<span id="cb10-23"><a href="#cb10-23"></a>    stats <span class="op">=</span> runner.run(pipeline, DummyProgress(), outfiles)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>PairedEndPipeline</code> 的 <code>modifiers</code> 列表支持混合使用：元组形式的 <code>(mod1, mod2)</code> 会被自动包装为 <code>PairedEndModifierWrapper</code>，<code>PairedEndModifier</code> 子类直接使用。元组中的元素可以设为 <code>None</code> 表示只处理其中一端。</p>
+</section>
+</section>
+<section id="实战barcode-校正" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="实战barcode-校正"><span class="header-section-number">6</span> 实战：Barcode 校正</h2>
+<p>以 barcode 校正为例，完整展示如何复用 cutadapt 框架。</p>
+<section id="校正算法" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="校正算法"><span class="header-section-number">6.1</span> 校正算法</h3>
+<p>采用 <a href="https://github.com/shienex/PISA">PISA</a> 的 k-mer 索引方法：</p>
+<ol type="1">
+<li><strong>构建索引</strong>：对白名单中每条 barcode 提取 k-mer（k=5），建立 k-mer → barcode 集合的反向索引</li>
+<li><strong>查询校正</strong>：从 query barcode 提取 k-mer，通过索引召回候选 barcode，逐一计算 Hamming 距离</li>
+<li><strong>唯一命中</strong>：仅接受唯一命中且距离 ≤ max_dist 的结果。多个候选距离相同则返回 None（避免歧义校正）</li>
+</ol>
+<pre><code>白名单: [AGTCGA, AGTTGA, CGTAGC]
+
+构建 k-mer 索引 (k=5):
+  AGTCG → {AGTCGA}
+  GTCGA → {AGTCGA}
+  AGTTG → {AGTTGA}
+  GTTGA → {AGTTGA}
+  CGTAG → {CGTAGC}
+  GTAGC → {CGTAGC}
+
+查询 "AGTCCA" (距离 AGTCGA 为 1):
+  k-mer "AGTCC" → 无命中
+  k-mer "GTCCA" → 无命中
+  → 候选为空，无法校正
+
+查询 "AGTCGT" (距离 AGTCGA 为 1):
+  k-mer "AGTCG" → {AGTCGA}  ✓ 命中候选
+  k-mer "GTCGT" → 无命中
+  → 候选 {AGTCGA}, Hamming=1, 唯一命中 → 校正为 AGTCGA</code></pre>
+</section>
+<section id="实现-singleendmodifier" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="实现-singleendmodifier"><span class="header-section-number">6.2</span> 实现 SingleEndModifier</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1"></a><span class="im">from</span> cutadapt.modifiers <span class="im">import</span> SingleEndModifier</span>
+<span id="cb12-2"><a href="#cb12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="kw">class</span> BarcodeCorrectorModifier(SingleEndModifier):</span>
+<span id="cb12-4"><a href="#cb12-4"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, corrector, barcode_length):</span>
+<span id="cb12-5"><a href="#cb12-5"></a>        <span class="va">self</span>.corrector <span class="op">=</span> corrector</span>
+<span id="cb12-6"><a href="#cb12-6"></a>        <span class="va">self</span>.barcode_length <span class="op">=</span> barcode_length</span>
+<span id="cb12-7"><a href="#cb12-7"></a>        <span class="va">self</span>.corrected <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-8"><a href="#cb12-8"></a>        <span class="va">self</span>.total <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-9"><a href="#cb12-9"></a></span>
+<span id="cb12-10"><a href="#cb12-10"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read, info):</span>
+<span id="cb12-11"><a href="#cb12-11"></a>        <span class="va">self</span>.total <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a>        bl <span class="op">=</span> <span class="va">self</span>.barcode_length</span>
+<span id="cb12-13"><a href="#cb12-13"></a>        barcode <span class="op">=</span> read.sequence[:bl]</span>
+<span id="cb12-14"><a href="#cb12-14"></a></span>
+<span id="cb12-15"><a href="#cb12-15"></a>        corrected <span class="op">=</span> <span class="va">self</span>.corrector.correct(barcode)</span>
+<span id="cb12-16"><a href="#cb12-16"></a>        <span class="cf">if</span> corrected <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> corrected <span class="op">!=</span> barcode:</span>
+<span id="cb12-17"><a href="#cb12-17"></a>            <span class="va">self</span>.corrected <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb12-18"><a href="#cb12-18"></a>            new_seq <span class="op">=</span> corrected <span class="op">+</span> read.sequence[bl:]</span>
+<span id="cb12-19"><a href="#cb12-19"></a>            read <span class="op">=</span> SequenceRecord(read.name, new_seq, read.qualities)</span>
+<span id="cb12-20"><a href="#cb12-20"></a></span>
+<span id="cb12-21"><a href="#cb12-21"></a>        corr_tag <span class="op">=</span> corrected <span class="cf">if</span> (corrected <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> corrected <span class="op">!=</span> barcode) <span class="cf">else</span> <span class="st">""</span></span>
+<span id="cb12-22"><a href="#cb12-22"></a>        read <span class="op">=</span> SequenceRecord(</span>
+<span id="cb12-23"><a href="#cb12-23"></a>            <span class="ss">f"</span><span class="sc">{</span>read<span class="sc">.</span>name<span class="sc">}</span><span class="ss">|||CR:Z:</span><span class="sc">{</span>barcode<span class="sc">}</span><span class="ss">|||CB:Z:</span><span class="sc">{</span>corr_tag<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb12-24"><a href="#cb12-24"></a>            read.sequence, read.qualities,</span>
+<span id="cb12-25"><a href="#cb12-25"></a>        )</span>
+<span id="cb12-26"><a href="#cb12-26"></a>        <span class="cf">return</span> read</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>逻辑很简单：提取前 N 个碱基作为 barcode，调用校正器，成功则替换序列。</p>
+</section>
+<section id="组装-pipeline" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="组装-pipeline"><span class="header-section-number">6.3</span> 组装 Pipeline</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1"></a><span class="im">from</span> cutadapt.files <span class="im">import</span> InputPaths, OutputFiles, FileOpener</span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="im">from</span> cutadapt.runners <span class="im">import</span> make_runner</span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="im">from</span> cutadapt.pipeline <span class="im">import</span> SingleEndPipeline</span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="im">from</span> cutadapt.steps <span class="im">import</span> SingleEndSink</span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="im">from</span> cutadapt.utils <span class="im">import</span> DummyProgress</span>
+<span id="cb13-6"><a href="#cb13-6"></a></span>
+<span id="cb13-7"><a href="#cb13-7"></a>input_paths <span class="op">=</span> InputPaths(<span class="st">"input.fastq.gz"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8"></a>file_opener <span class="op">=</span> FileOpener(compression_level<span class="op">=</span><span class="dv">1</span>, threads<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb13-9"><a href="#cb13-9"></a></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="cf">with</span> make_runner(input_paths, cores<span class="op">=</span><span class="dv">4</span>) <span class="im">as</span> runner:</span>
+<span id="cb13-11"><a href="#cb13-11"></a>    outfiles <span class="op">=</span> OutputFiles(</span>
+<span id="cb13-12"><a href="#cb13-12"></a>        proxied<span class="op">=</span>cores <span class="op">&gt;</span> <span class="dv">1</span>,</span>
+<span id="cb13-13"><a href="#cb13-13"></a>        qualities<span class="op">=</span>runner.input_file_format().has_qualities(),</span>
+<span id="cb13-14"><a href="#cb13-14"></a>        file_opener<span class="op">=</span>file_opener,</span>
+<span id="cb13-15"><a href="#cb13-15"></a>        interleaved<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb13-16"><a href="#cb13-16"></a>    )</span>
+<span id="cb13-17"><a href="#cb13-17"></a>    writer <span class="op">=</span> outfiles.open_record_writer(<span class="st">"output.fastq.gz"</span>)</span>
+<span id="cb13-18"><a href="#cb13-18"></a></span>
+<span id="cb13-19"><a href="#cb13-19"></a>    bc_modifier <span class="op">=</span> BarcodeCorrectorModifier(corrector, barcode_length)</span>
+<span id="cb13-20"><a href="#cb13-20"></a>    sink <span class="op">=</span> SingleEndSink(writer)</span>
+<span id="cb13-21"><a href="#cb13-21"></a></span>
+<span id="cb13-22"><a href="#cb13-22"></a>    pipeline <span class="op">=</span> SingleEndPipeline(</span>
+<span id="cb13-23"><a href="#cb13-23"></a>        modifiers<span class="op">=</span>[bc_modifier],</span>
+<span id="cb13-24"><a href="#cb13-24"></a>        steps<span class="op">=</span>[sink],</span>
+<span id="cb13-25"><a href="#cb13-25"></a>    )</span>
+<span id="cb13-26"><a href="#cb13-26"></a>    stats <span class="op">=</span> runner.run(pipeline, DummyProgress(), outfiles)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>整个流程就是：构建 modifier → 构建 sink → 组装 pipeline → 运行。cutadapt 负责：</p>
+<ul>
+<li>多进程的创建和通信</li>
+<li>FASTQ 的按块读取和有序写回</li>
+<li>gzip 的并行压缩</li>
+<li>进程异常处理</li>
+</ul>
+<p>你只需要关注自己的处理逻辑。</p>
+</section>
+<section id="完整脚本" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="完整脚本"><span class="header-section-number">6.4</span> 完整脚本</h3>
+<p>完整脚本封装为 typer CLI 工具：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># 安装依赖</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="ex">pip</span> install cutadapt dnaio typer</span>
+<span id="cb14-3"><a href="#cb14-3"></a></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="co"># 运行</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="ex">python</span> fastq_bc.py input.fastq.gz <span class="at">-w</span> whitelist.txt <span class="at">-o</span> output.fastq.gz <span class="at">-c</span> 4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>参数说明：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>input_files</code></td>
+<td>输入 FASTQ 文件</td>
+</tr>
+<tr class="even">
+<td><code>-w, --whitelist</code></td>
+<td>barcode 白名单文件，每行一条</td>
+</tr>
+<tr class="odd">
+<td><code>-o, --output</code></td>
+<td>输出文件路径</td>
+</tr>
+<tr class="even">
+<td><code>-c, --cores</code></td>
+<td>并行进程数，默认使用全部 CPU</td>
+</tr>
+<tr class="odd">
+<td><code>-l, --barcode-length</code></td>
+<td>barcode 长度，默认自动检测</td>
+</tr>
+<tr class="even">
+<td><code>-d, --max-dist</code></td>
+<td>最大 Hamming 距离，默认 1</td>
+</tr>
+<tr class="odd">
+<td><code>-k, --kmer-size</code></td>
+<td>k-mer 索引的 k 值，默认 5</td>
+</tr>
+<tr class="even">
+<td><code>--compression-level</code></td>
+<td>gzip 压缩等级 1-9</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="扩展思路" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="扩展思路"><span class="header-section-number">7</span> 扩展思路</h2>
+<p>理解了这个框架后，可以很方便地扩展其他处理逻辑：</p>
+<p><strong>添加质量过滤</strong>：实现一个 <code>SingleEndStep</code>，不满足质量阈值时返回 <code>None</code> 丢弃 read：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">class</span> QualityFilter(SingleEndStep):</span>
+<span id="cb15-2"><a href="#cb15-2"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, read, info):</span>
+<span id="cb15-3"><a href="#cb15-3"></a>        avg_quality <span class="op">=</span> <span class="bu">sum</span>(<span class="bu">ord</span>(c) <span class="op">-</span> <span class="dv">33</span> <span class="cf">for</span> c <span class="kw">in</span> read.qualities) <span class="op">/</span> <span class="bu">len</span>(read.qualities)</span>
+<span id="cb15-4"><a href="#cb15-4"></a>        <span class="cf">if</span> avg_quality <span class="op">&lt;</span> <span class="va">self</span>.min_quality:</span>
+<span id="cb15-5"><a href="#cb15-5"></a>            <span class="cf">return</span> <span class="va">None</span>  <span class="co"># 丢弃</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a>        <span class="cf">return</span> read</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>多个 modifier 和 step 可以自由组合到同一个 pipeline 中，cutadapt 会按顺序执行。</p>
+</section>
+<section id="参考" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="参考"><span class="header-section-number">8</span> 参考</h2>
+<ul>
+<li><a href="https://github.com/marcelm/cutadapt">cutadapt 源码</a></li>
+<li><a href="https://github.com/shienex/PISA">PISA</a> — k-mer 索引 barcode 校正</li>
+<li><a href="https://github.com/marcelm/dnaio">dnaio</a> — FASTQ/FASTA 读写库</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/liripo\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
