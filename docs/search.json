@@ -1,5 +1,75 @@
 [
   {
+    "objectID": "posts/容器资源监控/index.html",
+    "href": "posts/容器资源监控/index.html",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "",
+    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#简介",
+    "href": "posts/容器资源监控/index.html#简介",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "",
+    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#cadvisor-部署",
+    "href": "posts/容器资源监控/index.html#cadvisor-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "2 cAdvisor 部署",
+    "text": "2 cAdvisor 部署\n对需要监控的主机启动如下容器：\nsudo docker run \\\n  --volume=/:/rootfs:ro \\\n  --volume=/var/run:/var/run:ro \\\n  --volume=/sys:/sys:ro \\\n  --volume=/var/lib/docker/:/var/lib/docker:ro \\\n  --volume=/dev/disk/:/dev/disk:ro \\\n  --publish=8080:8080 \\\n  --detach=true \\\n  --name=cadvisor \\\n  --privileged \\\n  --device=/dev/kmsg \\\n  gcr.io/cadvisor/cadvisor\n\n\n\n\n\n\nTip\n\n\n\n&lt;ip&gt; 记得更换为自己的 ip 地址。\n\n\ncAdvisor 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。\nhttp://&lt;ip&gt;:8080/metrics 端口可以看到 prometheus 所需要的信息。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#prometheus-部署",
+    "href": "posts/容器资源监控/index.html#prometheus-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "3 prometheus 部署",
+    "text": "3 prometheus 部署\n当前文件夹下新建配置文件prometheus.yml：\n\n\nprometheus.yml\n\nscrape_configs:\n- job_name: cadvisor\n  scrape_interval: 5s\n  static_configs:\n  - targets:\n    - &lt;ip&gt;:8080\n\ndocker run --name prometheus -d \\\n    -p 9090:9090 \\\n    -v ./prometheus.yml:/etc/prometheus/prometheus.yml \\\n    prom/prometheus \\\n    --config.file=/etc/prometheus/prometheus.yml \\\n    --web.enable-lifecycle \\\n    --storage.tsdb.retention.time=15d\n\n# 参数解释\n--config.file，指定配置文件\n--storage.tsdb.path，指定数据存储目录\n--storage.tsdb.retention，指定数据过期时间，默认 15 天\n--query.max-concurrency，最大支持的并发查询量\n--web.enable-lifecycle，启用热加载\n打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。\n\n此时所有监控目标的状态都是 UP，表明 prometheus 可以正常获取到监控数据。"
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#grafana-部署",
+    "href": "posts/容器资源监控/index.html#grafana-部署",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "4 grafana 部署",
+    "text": "4 grafana 部署\ndocker run -d --name=grafana -p 3000:3000 grafana/grafana\n\n4.1 使用\n打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。\n\n中文设置，个人资料中设置：\n\n\n\n添加 prometheus 数据源，在下图红框位置填写 prometheus 地址即可\n\n\n\n仪表板查看容器的相关资源\n\n\n导入仪表板\n\n\n\n选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：14282 ，点击加载按钮后选择刚刚的数据源即可。\n\n\n然后就可以查看容器资源监控的仪表板，如下所示："
+  },
+  {
+    "objectID": "posts/容器资源监控/index.html#windowns-部署命令",
+    "href": "posts/容器资源监控/index.html#windowns-部署命令",
+    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "section": "5 windowns 部署命令",
+    "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
+  },
+  {
+    "objectID": "posts/spatial-compare/index.html",
+    "href": "posts/spatial-compare/index.html",
+    "title": "系统地比较 11 种空间转录组方法",
+    "section": "",
+    "text": "下载 PPTX"
+  },
+  {
+    "objectID": "posts/seeksoultools/index.html",
+    "href": "posts/seeksoultools/index.html",
+    "title": "SeekSoulTools 1.3.0 源码解读",
+    "section": "",
+    "text": "寻因（SeekGene）的 SeekSoulTools（seekgenebio/seeksoultools，本文基于 v1.3.0）是一套开源单细胞管线，从 FASTQ 一路到表达矩阵和 V(D)J 组装。它整体用 Python（click）串流程，重计算的部分交给 Rust（simpleqc、search-pattern）和成熟的外部工具（STAR、featureCounts、trust4、qualimap）。\n下面按数据流记一下我读源码时觉得值得留的点，分 scRNA 和 V(D)J 两块。"
+  },
+  {
+    "objectID": "posts/seeksoultools/index.html#scrna-流程",
+    "href": "posts/seeksoultools/index.html#scrna-流程",
+    "title": "SeekSoulTools 1.3.0 源码解读",
+    "section": "1 scRNA 流程",
+    "text": "1 scRNA 流程\nscRNA 的核心命令是 rna run，一条龙跑完 step1→step4。四个 step 分别做：\n\nstep1：barcode 提取——交给 Rust 写的 simpleqc\nstep2：比对+计数到基因——STAR、featureCounts 等\nstep3：UMI 折叠+矩阵+cell calling\nstep4：Seurat 降维聚类\n\n每个 step 也可以单独跑（rna step1/step2/step3/step4）。\n\n1.1 step1：把 barcode/UMI 提到 FASTQ 里\n这步交给 Rust 写的 simpleqc。它做两件事：质控统计 + 把 read1 里的 cell barcode、UMI 校正后写到新的 R1，把 cDNA read（R2）原样输出。后续 STAR 直接拿这个 R2 比对。\n输出到 Analysis/qc/ 目录下，文件大概是这些：\nAnalysis/qc/\n├── demo_r1.fq.gz          # 校正后的 barcode+UMI\n├── demo_r1.multi.fq.gz    # 多匹配的 barcode（默认丢弃）\n├── demo_r2.fq.gz          # cDNA read\n├── demo_r1_base_stat.csv\n├── demo_r1_qual_stat.csv\n├── demo_r2_base_stat.csv\n├── demo_r2_qual_stat.csv\n└── demo_summary.txt\nsimpleqc 的 read 结构用「Read Structure」描述（fgbio 规范），比如 17C12M+T 表示 17 个碱基的 Cell barcode（C）、12 个碱基的 UMI（M）、然后是模板（T）。上层用更可读的 bc:0:16,um:17:28，再由 readFormat2rs 函数翻译：\ndef readFormat2rs(readFormat:str):\n    # \"bc:0:15,um:16:25\" -&gt; \"17C25M+T\"\n    rs = \"\"\n    tmp = sorted(\n        [p.split(\":\") for p in readFormat.split(\",\")],\n        key=lambda x: int(x[1])\n    )\n    for (p, start, end) in tmp:\n        start = int(start); end = int(end)\n        if p == \"bc\":\n            rs += f\"{end-start+1}C\"\n        elif p == \"um\":\n            rs += f\"{end-start+1}M\"\n    rs += \"+T\"\n    return rs\n按 start 排序是为了保证 bc 永远在 um 前面——即便用户写反了。\n\n\n1.2 step2：比对与基因计数\nalign 函数串起 STAR → 排序 → qualimap → featureCounts → 按名字排序，每一步都可由 steps 参数跳过：\nif (\"steps\" not in kwargs) or (not kwargs[\"steps\"]):\n    kwargs[\"steps\"] = [\"STAR\", \"SortByPos\", \"qualimap\", \"FeatureCounts\", \"SortByName\"]\n整个 step2 的关键不是「怎么比对」，而是怎么从几个工具的输出里凑出 10x 风格的 QC 指标。mapping_summary 把 STAR 的 Log.final.out 和 qualimap 的 rnaseq_qc_results.txt 拆开读，重新算了一套：\n\n\n\n\n\n\n\n指标\n计算\n\n\n\n\nReads Mapped to Genome\n(unique + multi + too many) / Total\n\n\nReads Mapped Confidently to Genome\n(aligned to genes + no feature) / Total\n\n\nReads Mapped to Exonic Regions\nexonic / Total\n\n\nReads Mapped to Intronic Regions\nintronic / Total\n\n\nReads Mapped to Intergenic Regions\nintergenic / Total\n\n\n\n\n\n\n\n\n\nNote\n\n\n\n注意 “Mapped Confidently to Genome” 的算法：是 aligned to genes + no feature assigned。qualimap 里 “no feature” 指没落到任何注释区间，看似该排除，但这里把它算进 confident——因为落不到 feature 上不代表比对错，只是注释没覆盖到。比对的正确性由 STAR 的 unique mapping 决定，feature 是否注释上是另一回事。\n\n\nregion 参数控制计数时是否含内含子（--include-introns）。featureCounts 的链向通过 sc5p 推断：5’ 数据反向（-s 2）， otherwise 正向（-s 1）。\n最后一步 SortByName 很关键：featureCounts 出来的 bam 要按 read name 排序，因为 step3 的计数逻辑是 groupby(sam_file, key=lambda x: x.qname.split(\"_\",1)[0])——按 barcode 名分组遍历 bam。坐标排序没法高效做到这件事。\n\n\n1.3 step3：UMI 折叠与 cell calling\n这是整个 scRNA 最绕的一步。输入是按 barcode 分组好的 bam，输出是 raw matrix 和 filtered matrix。\n\n1.3.1 按 (barcode, gene) 分桶 + UMI 校正\nbam2table 外层按 barcode 分组，内层对每个 barcode 再按 read name（barcode_umi）二次分组：\nfor barcode, g in groupby(sam_file, key=lambda x: x.qname.split(\"_\", 1)[0]):\n    counts_dict, geneid_umi_dict = umi_count(g, ...)\numi_count 里每个 read 拿 featureCounts 打的 XT tag（基因 id），落到 (gene_id, umi) 桶里。这里有个多比对处理：一个 read 的 XT 可能是逗号分隔的多个基因（XT:Z:A,B），要调 multiple_alignment 用 IntervalTree 判断它到底真落哪个基因——只匹配到一个才采纳，否则丢弃。\nUMI 校正用的 UMIClusterer，看实现就是 umi_tools 那套「adjacency + 连通图」聚类：汉明距离 ≤ 1 的 UMI 连边，每个连通分量里 count 最高的留下、其余并过去。umi_correct_method 支持三种（cluster/adjacency/directional），默认 adjacency。\n校正完每个 (barcode, gene) 就是确定的 UMI 数，写到 counts.xls（cellID / geneID / UMINum / ReadsNum），这文件直接能转 raw matrix。\n\n\n1.3.2 从 counts.xls 到稀疏矩阵\nwrite_raw_matrix 按 barcode 分块读 counts.xls，攒成 COO 三元组再压成稀疏矩阵：\nmat = coo_matrix((data, (row, col)), shape=(name_df.shape[0], n))\n输出 10x 三件套：matrix.mtx.gz、features.tsv.gz、barcodes.tsv.gz。\n\n\n1.3.3 cell calling：EmptyDrops 的实现\n判定哪些 barcode 是真细胞，走的是 cell_identify.R 这个 R 脚本。它不是调 DropletUtils 的现成函数，而是把 10x cellranger 的 EmptyDrops 算法用 R 重写了一遍——分位数法找 top barcode、估背景 profile、多项式模拟算 p 值。\n流程是：\n\n找 top barcode：find_top_umi_barcode，按预期细胞数 recovered_cells 的 0.99 分位定基线，基线的 10% 作为 cutoff，bootstrap 100 次取均值。这一批是确定细胞的”种子”。\n找 ambient candidate：UMI ≥ max(500, median*0.01)、且不是 top 的 barcode。这是”可能是细胞也可能是空滴”的待判集合，限制最多 20000 个。\n估背景 profile：find_ambient_background 取 UMI 排名靠后的那批（假设是纯空滴），goodTuringProportions 做 Good-Turing 平滑得到每个基因的背景比例 ambient_prop。\n算每个 candidate 的 p 值：核心假设是——空滴的表达应该服从背景的多项式分布。compute_simulate_pvalues 模拟 10000 次多项式采样，算出每个总 UMI 数 n 对应的 log-likelihood 分布；compute_ambient_candidate_pvalues 把真实 candidate 的 likelihood 跟模拟分布比，(1 + 比它小的次数)/(1 + 模拟次数) 就是 p 值。\nBH 校正 + cutoff：p.adjust(method=\"BH\")，小于 pvalue（默认 0.01）的 candidate 也算细胞，跟 top 合起来输出。\n\n\n\n\n\n\n\nNote\n\n\n\nforceCell 模式：如果不信任自动 calling，--forceCell N 直接取 UMI 最多的前 N 个 barcode，跳过整个模拟。cell_calling 里 if kwargs[\"forceCell\"] != None 就走这条分支。\n\n\n模拟那块有个性能优化：相邻的 n（比如 n=100 和 n=101）不用各采一次样，而是在 n=100 的 curr_counts 基础上再加一个基因增量更新 likelihood（curr_loglk + log(p_j) + log(n/curr_counts[j])），省掉大量重算。\n\n\n\n1.4 step4：Seurat\ndo_seurat 调 R 脚本跑标准 Seurat 流程（NormalizeData → FindVariableFeatures → ScaleData → PCA → clustering → FindMarkers），输出降维聚类结果，没什么特别的。"
+  },
+  {
+    "objectID": "posts/seeksoultools/index.html#vdj-流程",
+    "href": "posts/seeksoultools/index.html#vdj-流程",
+    "title": "SeekSoulTools 1.3.0 源码解读",
+    "section": "2 V(D)J 流程",
+    "text": "2 V(D)J 流程\nV(D)J 入口是 run_trust4 函数。它没有从头造轮子，而是在 trust4 基础上包了一层 QC、UMI 校正、contig 重分配。整个流程：\nsimpleqc → enrichment_qc → fastq-extractor → subset_reads\n        → filter_umis → trust4 组装 → re_assign → report\n\n2.1 simpleqc：跟 scRNA 共用\n跟 step1 一样，输出 _r1.fq.gz / _r2.fq.gz。summary_simpleqc 从 _summary.txt 读 total_num / valid_num，从 qual stat csv 算 Q30。注意：后续所有比例的分母都是 Number of Valid Reads（校正后的有效 read），不是原始 read 数。\n\n\n2.2 enrichment_qc：Reads Mapped to Any V(D)J Gene\n这步回答”数据里到底有没有 V(D)J”。做法是：对 bcrtcr.fa（所有 BCR/TCR 的 V/D/J/C 序列）建 STAR 索引，把 R2 比上去，数每条链的 read 数。\ncount_chain 有个细节值得说：\nwith pysam.AlignmentFile(bam) as bamfh:\n    for r in bamfh:\n        chain = r.reference_name[:3]   # \"TRBV1\" -&gt; \"TRB\"\n        if r.get_tag(\"NH\")==1:         # 唯一比对\n            d[chain] += 1\n        else:\n            tmp[r.qname][chain] += 1   # 多比对先攒着\nNH tag = 1 表示唯一比对，直接计。多比对的 read（比如同时软比对到 TRBV 和 TRBJ）按 read name 攒到 dict，最后仲裁：只比对到一个链就计入；比对到多个链就比 count，count 相同判 unknown。这样避免一条 read 被多个链重复计。\nsummary_enrichment_qc 算链比例时按 chain 类型筛：\n\nTR 数据：只看 TRA + TRB，忽略 IG 链（IGH/IGK/IGL）。TCR 文库混入 IG 是噪声，不该计入 “Any V(D)J”。\nIG 数据：看 IGH + IGK + IGL。\n\n而且有个硬卡：Reads Mapped to Any V(D)J Gene &lt; 0.01 直接 logger.error，提示数据里没这个链，大概率是 chain 选错了或者文库搞错了。\n\n\n2.3 fastq-extractor 与 subset_reads\ntrust4 的 fastq-extractor 负责：用 bcrtcr.fa 抓 R2 里命中 V(D)J 的 read，把对应的 barcode/UMI 从 R1 抽出来，输出三件套（_preassemble_bc.fa / _preassemble_umi.fa / _preassemble.fq），同时统计每个 barcode 的 UMI 数和 read 数（_bc_count.tsv）。\n然后是 subset_reads：reads 数过高的 barcode 截断到 reads_limit（默认 80000）。原因是一些 barcode 可能是 doublet 或气泡污染，read 数异常高，直接组装会拖慢又影响克隆定量。做法是把每个 barcode 的 read 数封顶，多余的 read 砍掉。原始全量计数存到 _{samplename}_bc_count.tsv（带下划线前缀），截断后的覆盖 {samplename}_bc_count.tsv——这样后面算 “Fraction Reads in Cells” 时还能拿到原始数。\n\n\n2.4 filter_umis：VDJ 的 UMI 校正\ntrust4 原版对 VDJ UMI 校正比较粗，seeksoultools 自己加了一步 filter_umis。两阶段：\n1. 按阅读量过滤\n每个 barcode 内，先算 UMI count 的 N50：\ndef calculate_n50(umi_counts: dict):\n    counts = sorted(umi_counts.values(), reverse=True)\n    total_sum = sum(counts)\n    threshold = total_sum * 0.5\n    current_sum = 0\n    for count in counts:\n        current_sum += count\n        if current_sum &gt;= threshold:\n            return count\n    return 0\nN50 是组装/基因组学里的指标：把 UMI 按支持 read 数从高到低排，累计到总量 50% 时的那个 read 数。然后阈值定在 0.1 * N50，count 低于它的 UMI 丢掉。\n\n\n\n\n\n\nNote\n\n\n\n为什么用 N50 而不是固定阈值？不同 barcode 的测序深度差异大，固定阈值（比如丢掉 count&lt;3 的）在深测序样本里会误杀真 UMI、在浅测序样本里又滤不干净。N50 是个自适应的”该 barcode 自身规模”的度量，乘 0.1 当下限。\n\n\n2. adjacency 聚类校正\n跟 scRNA 那步一样，UMIClusterer(\"adjacency\") 把汉明距离 1 的 UMI 合并到 count 高的那个。校正过程写到 _{samplename}_filter.detail.xls，长这样：\nbarcode    original_umi  original_count  corrected_umi  corrected_count\nTGATCAGATGGATTTGA  ACCGGCGTTTTC  11   ACCGGCGTTTTA  33\nTGATCAGATGGATTTGA  ACCGGCGTTTTG   6   ACCGGCGTTTTA  39\n最后重写出新的 barcode/UMI/R2 fastq，UMI 改了之后连 read name 都同步改掉（name_parts[1] = corrected_umi）。\n\n\n2.5 trust4 组装 + re_assign\ntrust4 那几个子命令（trust4 组装、annotator 注释、trust-barcoderep/trust-simplerep/trust-airr 报告）seeksoultools 都用了，但加了自己的料。\n\n\n\n\n\n\nWarning\n\n\n\ntrust4_wrapper 里组装那步硬编码了 -t 8，跟上层传进来的 threads 脱节：\ncmd1 = (f\"trust4  -t 8 -f {fa} -o {wd}/{samplename} ...\")\n源码里也标了注释（参考笔记：“脚本代码固定了 8 个线程，应该修改下”）。如果你跑大批量样本，这里会成为瓶颈，建议改成 -t {threads}。\n\n\nannotator 加了 --readAssignment：输出 _assign.out，两列 read_name \\t contig，记录每条 read 归属的 contig。这是为了下一步的 re_assign。\n\n2.5.1 re_assign：按 UMI 重新分配 contig\n这是 seeksoultools 最有自己想法的一步（utils/reassign.py）。trust4 默认按 read 分配 contig，但 VDJ 里真正该数的是 UMI——一个 UMI 对应一个原始 mRNA 分子。re_assign 把分配单位从 read 换成 UMI。\n逻辑是：对每个 (barcode, UMI)，统计它下面的 read 落到各 contig 的次数，然后按 ratio 仲裁。process_assign_file 用多进程分块统计：\nfor barcode_umi, contig_counts in global_barcode_umi_dict.items():\n    sorted_counts = sorted(contig_counts.items(), key=lambda x: x[1], reverse=True)\n    if len(sorted_counts) == 1:\n        final_contig_barcodes[sorted_counts[0][0]].add(barcode_umi)\n    else:\n        ratio = sorted_counts[1][1] / sorted_counts[0][1]\n        if ratio &lt; 0.15:\n            final_contig_barcodes[sorted_counts[0][0]].add(barcode_umi)\n        else:\n            for contig, _ in sorted_counts:\n                final_contig_barcodes[contig].add(barcode_umi)\n举例，barcode bc1 的某个 UMI 下有：\n\n\n\ncontig\nread 数\n\n\n\n\ncontigA\n20\n\n\ncontigB\n1\n\n\n\nratio = 1/20 = 0.05 &lt; 0.15，这个 UMI 归 contigA。\n但如果：\n\n\n\ncontig\nread 数\n\n\n\n\ncontigA\n20\n\n\ncontigB\n10\n\n\n\nratio = 10/20 = 0.5 ≥ 0.15，说明 contigB 也有相当支持，UMI 同时归 contigA 和 contigB。\n分配完，update_cdr3_file 用结果改写 cdr3.out 的第 11 列（UMI count），让每个 contig 的 UMI 数反映重新分配后的结果。这一步直接影响克隆大小的定量。\n\n\n\n2.6 报告生成\n报告那块调了 dandelion：dandelion.tl.find_clones() 按 CDR3 序列相似度在 VDJ 数据里识别克隆，生成 clone_id。Estimated Number of Cells、Number of Cells with Productive V-J Spanning Pair 这些指标都是从 dandelion 出来的 airr_rearrangement.tsv 算的（get_clone_matrix 函数）。\n最后还有两个输出值得说：\n_filtered_contig_annotations.tsv：用 Rust 写的 search-pattern 生成（src/search-pattern）。它基于 LEADER 序列的匹配位置，把每条 contig 切成 FWR1/CDR1/FWR2/CDR2/FWR3/CDR3/FWR4 这些功能区。FWR1 的左边界是 LEADER 匹配终点、右边界是 CDR1 匹配起点，依此类推。10x 的 all_contig_annotations 也是这个结构。\nbarcode rank 图：读 _bc_count.tsv，按 UMI 数降序画。关键是它把曲线分成三段画——cell / 混合 / background：\n# BBBCC CCBBCBCC BBBBBBBBB\n#       |         |\n#    idx_first  idx_last\n每个逻辑分段单独处理（参考笔记：df_bg.shape[0]==0 全是细胞、df_cells.shape[0]==0 全是背景、普通情况分”第一个 cell 前的混合段” + “中间指数窗口” + “尾段” + “background”）。窗口按 idx_s + 1000*4**n 指数扩张，保证前端密集采样、后端稀疏，画出来曲线平滑。"
+  },
+  {
     "objectID": "posts/scDblfinder/index.html",
     "href": "posts/scDblfinder/index.html",
     "title": "scDblFinder 识别双胞源码解读",
@@ -7,123 +77,81 @@
     "text": "这篇源码整理成了 PPT，下载 PPTX"
   },
   {
-    "objectID": "posts/singleR/index.html",
-    "href": "posts/singleR/index.html",
-    "title": "SingleR 源码解读",
+    "objectID": "posts/pi-agent/index.html",
+    "href": "posts/pi-agent/index.html",
+    "title": "pi-agent 源码解读",
     "section": "",
-    "text": "做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。\n2019 年发在 Nature Immunology 上之后，SingleR 有过两个版本：\n\n纯 R 版（v1.0.0，dviraran/SingleR）：代码直白好读。已经停更了。\nBioconductor 版（v2.8.0+，SingleR-inc/SingleR）：Aaron Lun 重写的，核心挪到 C++（底层是 singlepp），训练和分类拆开，比老版本快几十倍。"
+    "text": "pi（styled as “π”）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现。\n这种”极简核心 + 扩展系统”的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。\n\n项目地址：https://github.com/earendil-works/pi 官方网站：https://pi.dev"
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Blog",
+    "objectID": "posts/pi-agent/index.html#引言",
+    "href": "posts/pi-agent/index.html#引言",
+    "title": "pi-agent 源码解读",
     "section": "",
-    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nSeekSoulTools 1.3.0 源码解读\n\n\n寻因单细胞分析管线的 scRNA 与 V(D)J 流程\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 16, 2026\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\nscrublet 识别双细胞源码解读\n\n\n\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 12, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nSingleR 源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 11, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nscDblFinder 识别双胞源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n系统地比较 11 种空间转录组方法\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\ntypescript\n\ndevops\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ndevops\n\ndocker\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\npython\n\nweb\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\npython\n\nweb\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
+    "text": "pi（styled as “π”）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现。\n这种”极简核心 + 扩展系统”的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。\n\n项目地址：https://github.com/earendil-works/pi 官方网站：https://pi.dev"
   },
   {
-    "objectID": "posts/umami/index.html",
-    "href": "posts/umami/index.html",
-    "title": "用 Umami 分析网站访客",
+    "objectID": "posts/pi-agent/index.html#三层架构",
+    "href": "posts/pi-agent/index.html#三层架构",
+    "title": "pi-agent 源码解读",
+    "section": "2 三层架构",
+    "text": "2 三层架构\npi 的核心设计原则是：分离不稳定的外部世界与稳定的核心循环。整个项目采用三层架构：\n\n2.1 三层职责\n\n\n\n\n\n\n\n\n层级\n包名\n职责\n\n\n\n\npi-ai\n@earendil-works/pi-ai\n统一的多提供商 LLM API，屏蔽 Provider 差异\n\n\npi-agent-core\n@earendil-works/pi-agent-core\nAgent 运行时，处理工具调用、状态管理\n\n\npi-coding-agent\n@earendil-works/pi-coding-agent\n产品运行时，TUI、会话管理、扩展系统\n\n\n\n\n\n2.2 关键边界\n理解 pi 的架构，需要识别两个关键边界：\n\nLLM 边界：什么穿过 Provider 接口（统一消息进，统一事件出）\n副作用边界：模型只能提议工具调用，实际执行在本地发生，可以被拦截\n\n\n\n\n\n\n\nTip\n\n\n\n这种分层设计使得 pi-ai 可以独立于 Agent 循环进行测试，而 pi-agent-core 可以独立于产品 UI 进行测试。每一层都有清晰的职责边界。"
+  },
+  {
+    "objectID": "posts/pi-agent/index.html#核心组件",
+    "href": "posts/pi-agent/index.html#核心组件",
+    "title": "pi-agent 源码解读",
+    "section": "3 核心组件",
+    "text": "3 核心组件\n\n3.1 AgentSession：核心抽象\nAgentSession 是 pi 的核心抽象，管理整个 Agent 的生命周期。\n// packages/coding-agent/src/core/agent-session.ts\nexport class AgentSession {\n  // 核心职责：\n  // 1. Agent 状态访问（模型、消息、流式状态）\n  // 2. 事件订阅（自动会话持久化）\n  // 3. 模型和思考级别管理\n  // 4. 压缩（手动和自动）\n  // 5. 工具注册管理\n  // 6. 系统提示构建\n}\n\n\n\n\n\n\nNote\n\n\n\nAgentSession 的设计体现了”关注点分离”：它不直接处理磁盘 I/O，而是通过 SessionManager 进行持久化。这种设计使得 Agent 循环可以独立于存储层。\n\n\n\n\n3.2 Agent 类：循环驱动\nAgent 类（来自 pi-agent-core）负责驱动整个 Agent 循环：\n// packages/agent/src/agent.ts\nexport class Agent {\n  // 职责：\n  // 1. 流式 LLM 响应\n  // 2. 工具调用执行\n  // 3. 消息队列管理（steering 和 follow-up）\n  // 4. 中止处理\n}\n\n\n3.3 工具系统\npi 内置了 7 个核心工具：\n\n\n\n工具\n文件\n用途\n\n\n\n\nread\ntools/read.ts\n读取文件内容，支持行范围\n\n\nbash\ntools/bash.ts\n执行 shell 命令\n\n\nedit\ntools/edit.ts\n编辑文件（old/new 替换）\n\n\nwrite\ntools/write.ts\n写入/创建文件\n\n\ngrep\ntools/grep.ts\n正则搜索文件内容\n\n\nfind\ntools/find.ts\n按 glob 模式查找文件\n\n\nls\ntools/ls.ts\n列出目录内容\n\n\n\n每个工具都是一个 ToolDefinition 对象：\ninterface ToolDefinition {\n  name: string\n  label: string\n  description: string\n  parameters: TSchema  // TypeBox schema\n  execute: (params: any) =&gt; Promise&lt;ToolResult&gt;\n  render?: (params: any) =&gt; string  // TUI 渲染\n}"
+  },
+  {
+    "objectID": "posts/pi-agent/index.html#agent-循环",
+    "href": "posts/pi-agent/index.html#agent-循环",
+    "title": "pi-agent 源码解读",
+    "section": "4 Agent 循环",
+    "text": "4 Agent 循环\nAgent 循环是 pi 的核心。下图展示了从用户输入到响应的完整流程：\n\n\n\n\n\nflowchart TD\n    A[用户输入] --&gt; B[prompt text]\n    B --&gt; C{扩展命令?}\n    C --&gt;|是| D[处理 /command]\n    C --&gt;|否| E{技能模板?}\n    E --&gt;|是| F[展开 /skill:name]\n    E --&gt;|否| G[调用 agent.prompt]\n    D --&gt; G\n    F --&gt; G\n    G --&gt; H[流式 LLM 响应]\n    H --&gt; I{工具调用?}\n    I --&gt;|是| J[执行工具]\n    J --&gt; K[消息持久化]\n    K --&gt; H\n    I --&gt;|否| L[后处理]\n    L --&gt; M{需要压缩?}\n    M --&gt;|是| N[执行压缩]\n    M --&gt;|否| O[返回响应]\n    N --&gt; O\n\n\n\n\n\n\n\n4.1 主循环流程\n让我们深入分析 AgentSession.prompt() 的实现：\n// packages/coding-agent/src/core/agent-session.ts\nasync prompt(text: string, options?: PromptOptions) {\n  // 1. 处理扩展命令（/command）\n  // 2. 发射 input 事件供扩展拦截\n  // 3. 展开技能命令（/skill:name）\n  // 4. 展开提示模板\n  // 5. 如果正在流式处理，排队等待\n  // 6. 验证模型和 API 密钥\n  // 7. 构建消息数组\n  // 8. 发射 before_agent_start 事件\n  // 9. 调用 _runAgentPrompt()\n}\n\n\n4.2 核心循环\n// packages/coding-agent/src/core/agent-session.ts\nprivate async _runAgentPrompt(messages: Message[]) {\n  // 核心循环\n  await this.agent.prompt(messages)\n  \n  // 后处理：重试和压缩检查\n  while (await this._handlePostAgentRun()) {\n    await this.agent.continue()\n  }\n}\n\n\n\n\n\n\nTip\n\n\n\n这个设计非常巧妙：核心循环只负责调用 LLM 和执行工具，而重试、压缩等复杂逻辑都在后处理中完成。这保持了核心循环的简洁性。\n\n\n\n\n4.3 后处理逻辑\n// packages/coding-agent/src/core/agent-session.ts\nprivate async _handlePostAgentRun(): Promise&lt;boolean&gt; {\n  // 1. 检查可重试错误（自动重试并退避）\n  // 2. 检查是否需要压缩（上下文溢出或阈值）\n  // 3. 返回 true 继续循环，false 退出\n}"
+  },
+  {
+    "objectID": "posts/pi-agent/index.html#扩展系统",
+    "href": "posts/pi-agent/index.html#扩展系统",
+    "title": "pi-agent 源码解读",
+    "section": "5 扩展系统",
+    "text": "5 扩展系统\npi 的扩展系统是其”极简核心 + 扩展系统”哲学的体现。\n\n5.1 Extension API\n扩展是 TypeScript 模块，导出一个接收 ExtensionAPI 的工厂函数：\n// packages/coding-agent/src/core/extensions/types.ts\nexport interface ExtensionAPI {\n  // 订阅 30+ 生命周期事件\n  on(event: string, handler: Function): void\n  \n  // 注册自定义工具\n  registerTool(tool: ToolDefinition): void\n  \n  // 注册命令、快捷键、CLI 标志\n  registerCommand(command: Command): void\n  registerShortcut(shortcut: Shortcut): void\n  registerCliFlag(flag: CliFlag): void\n  \n  // UI 交互原语\n  showSelector(options: SelectorOptions): Promise&lt;string&gt;\n  showConfirmation(message: string): Promise&lt;boolean&gt;\n  showNotification(message: string): void\n}\n\n\n5.2 关键生命周期事件\n\n\n\n事件\n触发时机\n用途\n\n\n\n\nsession_start\n会话开始\n初始化扩展状态\n\n\nbefore_agent_start\nAgent 循环开始前\n修改系统提示、注入上下文\n\n\nagent_end\nAgent 循环结束\n清理资源\n\n\ntool_call\n工具调用前\n拦截、修改、阻止调用\n\n\ntool_result\n工具执行后\n修改工具结果\n\n\ncontext\nLLM 调用前\n修改消息数组\n\n\ninput\n用户输入时\n拦截输入\n\n\n\n\n\n\n\n\n\nNote\n\n\n\n扩展系统的设计使得 pi 可以在不修改核心代码的情况下，通过扩展实现子代理、计划模式、MCP 等功能。这正是”极简核心 + 扩展系统”哲学的体现。"
+  },
+  {
+    "objectID": "posts/pi-agent/index.html#会话管理",
+    "href": "posts/pi-agent/index.html#会话管理",
+    "title": "pi-agent 源码解读",
+    "section": "6 会话管理",
+    "text": "6 会话管理\n\n6.1 JSONL 会话存储\npi 使用 JSONL 格式存储会话，采用树形结构：\ninterface SessionEntry {\n  id: string\n  parentId?: string  // 父节点 ID，形成树形结构\n  type: 'message' | 'thinking_level_change' | 'model_change' \n        | 'compaction' | 'branch_summary' | 'custom'\n  data: any\n}\n\n\n\n\n\ngraph TD\n    A[根节点] --&gt; B[消息 1]\n    B --&gt; C[消息 2]\n    C --&gt; D[消息 3]\n    C --&gt; E[分支消息 3a]\n    E --&gt; F[分支消息 4a]\n    D --&gt; G[消息 4]\n    \n    style A fill:#f9f,stroke:#333\n    style E fill:#bbf,stroke:#333\n    style F fill:#bbf,stroke:#333\n\n\n\n\n\n\n\n\n6.2 叶子节点与上下文\n关键概念：leafId 决定模型看到的上下文路径。\n// packages/coding-agent/src/core/session-manager.ts\n// 叶子节点是当前会话路径的终点\n// 模型只看到从根节点到叶子节点的路径上的消息\n这种设计使得会话支持分支和切换，而不需要复制整个历史记录。\n\n\n6.3 压缩机制\n当上下文窗口接近限制时，pi 会自动压缩：\n\n\n\n\n\nflowchart LR\n    A[完整历史] --&gt; B{需要压缩?}\n    B --&gt;|是| C[摘要旧消息]\n    C --&gt; D[保留最近消息]\n    D --&gt; E[压缩后上下文]\n    B --&gt;|否| F[原始上下文]\n    \n    style C fill:#fbb,stroke:#333\n    style D fill:#bfb,stroke:#333\n\n\n\n\n\n\n\n自动压缩：上下文溢出或达到阈值时触发\n手动压缩：/compact 命令\n无损压缩：完整历史保留在 JSONL 文件中，压缩只是创建摘要\n\n\n\n\n\n\n\nTip\n\n\n\n压缩是无损的，因为完整历史仍然保存在 JSONL 文件中。压缩只是创建一个摘要条目，用于替代旧消息，从而减少上下文长度。"
+  },
+  {
+    "objectID": "posts/pi-agent/index.html#配置与扩展",
+    "href": "posts/pi-agent/index.html#配置与扩展",
+    "title": "pi-agent 源码解读",
+    "section": "7 配置与扩展",
+    "text": "7 配置与扩展\n\n7.1 配置文件\npi 使用多个配置文件：\n\n\n\n文件\n位置\n用途\n\n\n\n\nsettings.json\n~/.pi/agent/ 或 .pi/\n全局/项目设置\n\n\nauth.json\n~/.pi/agent/\nAPI 密钥和 OAuth 凭证\n\n\nmodels.json\n~/.pi/agent/\n自定义提供商和模型\n\n\nkeybindings.json\n~/.pi/agent/\n快捷键自定义\n\n\n\n\n\n7.2 技能系统\n技能是按需加载的能力包，遵循 Agent Skills 标准：\n# SKILL.md 格式\n---\nname: my-skill\ndescription: 描述技能功能\n---\n\n## 使用说明\n...\n\n通过 /skill:name 调用\n或由 Agent 自动加载\n在系统提示中显示为可用能力\n\n\n\n7.3 上下文文件\npi 会自动加载 AGENTS.md（或 CLAUDE.md）：\n\n全局配置目录\n父目录\n当前目录\n\n所有匹配的文件会连接到系统提示中。"
+  },
+  {
+    "objectID": "posts/granian_dash/index.html",
+    "href": "posts/granian_dash/index.html",
+    "title": "用 Granian 部署 Dash 生产环境",
     "section": "",
-    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
+    "text": "相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md。\n\n安装 Granian\n\npip install granian\n\nDash 示例代码\n\n\nimport dash\nfrom dash import html\n\napp = dash.Dash(__name__)\n\napp.layout = html.Div([\n    html.H1(\"Dash 示例\"),\n])\n\nserver = app.server # Granian 通过这个 WSGI server 对象启动应用\n\nif __name__ == '__main__':\n    app.run_server(debug=True)\n\n\n启动程序\n\ngranian --interface wsgi --workers 4 app:server\n\n\n\n\n\n\nTip\n\n\n\n--interface 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 wsgi；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 asgi。"
   },
   {
-    "objectID": "posts/umami/index.html#umami-cloud",
-    "href": "posts/umami/index.html#umami-cloud",
-    "title": "用 Umami 分析网站访客",
+    "objectID": "posts/granian_dash/index.html#使用-granian-部署-dash",
+    "href": "posts/granian_dash/index.html#使用-granian-部署-dash",
+    "title": "用 Granian 部署 Dash 生产环境",
     "section": "",
-    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
+    "text": "相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md。\n\n安装 Granian\n\npip install granian\n\nDash 示例代码\n\n\nimport dash\nfrom dash import html\n\napp = dash.Dash(__name__)\n\napp.layout = html.Div([\n    html.H1(\"Dash 示例\"),\n])\n\nserver = app.server # Granian 通过这个 WSGI server 对象启动应用\n\nif __name__ == '__main__':\n    app.run_server(debug=True)\n\n\n启动程序\n\ngranian --interface wsgi --workers 4 app:server\n\n\n\n\n\n\nTip\n\n\n\n--interface 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 wsgi；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 asgi。"
   },
   {
-    "objectID": "posts/umami/index.html#接入步骤",
-    "href": "posts/umami/index.html#接入步骤",
-    "title": "用 Umami 分析网站访客",
-    "section": "2 接入步骤",
-    "text": "2 接入步骤\n\n注册Umami Cloud, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；\n给要分析的网站，增加追踪代码：\n\n&lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"6aca168c-471e-41f9-9977-ac136a20c1c1\"&gt;&lt;/script&gt;\n上面代码data-website-id='*'记得改为对应的追踪 id。"
-  },
-  {
-    "objectID": "posts/umami/index.html#放到-quarto-配置中",
-    "href": "posts/umami/index.html#放到-quarto-配置中",
-    "title": "用 Umami 分析网站访客",
-    "section": "3 放到 Quarto 配置中",
-    "text": "3 放到 Quarto 配置中\n对 Quarto 网站来说，可以把脚本放到 _quarto.yml 的 include-in-header 中，这样每个页面都会自动带上统计脚本：\nformat:\n  html:\n    include-in-header:\n      - text: |\n          &lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"你的站点 ID\"&gt;&lt;/script&gt;"
-  },
-  {
-    "objectID": "posts/quarto_blog/index.html",
-    "href": "posts/quarto_blog/index.html",
-    "title": "用 Quarto 创建个人博客",
-    "section": "",
-    "text": "Quarto 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。\n这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 docs/，最后交给 GitHub Pages 发布。"
-  },
-  {
-    "objectID": "posts/quarto_blog/index.html#简介",
-    "href": "posts/quarto_blog/index.html#简介",
-    "title": "用 Quarto 创建个人博客",
-    "section": "",
-    "text": "Quarto 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。\n这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 docs/，最后交给 GitHub Pages 发布。"
-  },
-  {
-    "objectID": "posts/quarto_blog/index.html#安装-quarto",
-    "href": "posts/quarto_blog/index.html#安装-quarto",
-    "title": "用 Quarto 创建个人博客",
-    "section": "2 安装 Quarto",
-    "text": "2 安装 Quarto\n这里推荐两个选择：\n\n按照官网介绍下载安装。\n使用带 quarto 的 Docker 镜像。我比较喜欢 rocker 项目的 tidyverse 镜像，它基于 RStudio 镜像，适合作为 R 相关开发的基础环境。\n\n\nps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。\n\n# pull 镜像\ndocker pull rocker/tidyverse:latest\n# 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。\ndocker run -d -ti -p 8787:8787 -e ROOT=TRUE -e PASSWORD=《你的密码》 -v 《本地路径，可以整个D盘》:《镜像目录》 rocker/tidyverse\n这样就可以打开浏览器，访问 http://localhost:8787 进入 RStudio IDE。默认用户名是 rstudio。"
-  },
-  {
-    "objectID": "posts/quarto_blog/index.html#创建博客",
-    "href": "posts/quarto_blog/index.html#创建博客",
-    "title": "用 Quarto 创建个人博客",
-    "section": "3 创建博客",
-    "text": "3 创建博客\nQuarto 官方文档已经把博客项目的初始化步骤写得很清楚，可以直接参考：\nhttps://quarto.org/docs/websites/website-blog.html"
-  },
-  {
-    "objectID": "posts/quarto_blog/index.html#发布到-github-pages",
-    "href": "posts/quarto_blog/index.html#发布到-github-pages",
-    "title": "用 Quarto 创建个人博客",
-    "section": "4 发布到 GitHub Pages",
-    "text": "4 发布到 GitHub Pages\n网址形如 https://&lt;用户名&gt;.github.io 的站点通常可以直接用 GitHub Pages 托管。\n\n在 GitHub 新建一个名为 &lt;用户名&gt;.github.io 的仓库。\n设置仓库的 Pages 选项，如下图所示：\n\n\n\n修改博客项目下的 _quarto.yml，将输出目录设置为 docs/。\n\n\n\n_quarto.yml\n\nproject:\n  type: website\n  output-dir: docs\n\n\n在仓库根目录添加 .nojekyll 文件，告诉 GitHub Pages 不要再用 Jekyll 处理已经渲染好的站点。\n\n\n\nterminal\n\ntouch .nojekyll\n\n\n渲染网站并发布。\n\n# quarto 渲染网站\nquarto render\n# 使用 git 将渲染好的网站发送到刚刚创建好的仓库中\ngit push"
-  },
-  {
-    "objectID": "posts/gunicorn_dash/index.html",
-    "href": "posts/gunicorn_dash/index.html",
-    "title": "用 Gunicorn 部署 Dash 生产环境",
-    "section": "",
-    "text": "Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。\n\n首先，Dash 的代码中需要暴露 Flask server 对象。例如 app.py 中必须包含下面代码：\n\napp = Dash(__name__)\nserver = app.server # Gunicorn 会加载这个对象\n\n设置配置文件，如 gunicorn.conf.py。\n\nbind = '127.0.0.1:8000'      #绑定ip和端口号\n# chdir = ''  #gunicorn要切换到的目的工作目录\ntimeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒\n# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式\ndaemon = False # 后台运行\nworkers = 4 #进程数\nthreads = 4 #指定每个进程开启的线程数\nloglevel = 'info' #日志级别\naccess_log_format = '%(t)s %(p)s %(h)s \"%(r)s\" %(s)s %(L)s %(b)s %(f)s\" \"%(a)s\"'    #设置gunicorn访问日志格式，错误日志无法设置\n\n\naccesslog = \"/tmp/gunicorn/gunicorn_access.log\"      #访问日志文件\nerrorlog = \"/tmp/gunicorn/gunicorn_error.log\"        #错误日志文件\nreload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }\n\n启动程序。\n\n# app表示当前目录下app.py的意思，server则是文件下的变量\ngunicorn app:server -c ./gunicorn.conf.py\n\n\n想要自己重启 gunicorn，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep gunicorn\n\n\n\npid\n\n\n例如，上图主进程 pid 为 1674\nkill -HUP 1674\n\n\n\n上面的 HUP即为gunicorn支持的信号，下面为其他信号：\n\nQUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。\nTERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。\nHUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。\nTTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。\nTTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。\nUSR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。\nUSR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。\nWINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：\n\n\n\n\n\n\n\nNote\n\n\n\n\nTERM 信号：\n\n作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。\n使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。\n\nWINCH 信号：\n\n作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。\n使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。\n\n\n总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。"
-  },
-  {
-    "objectID": "posts/gunicorn_dash/index.html#使用-gunicorn-部署-dash",
-    "href": "posts/gunicorn_dash/index.html#使用-gunicorn-部署-dash",
-    "title": "用 Gunicorn 部署 Dash 生产环境",
-    "section": "",
-    "text": "Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。\n\n首先，Dash 的代码中需要暴露 Flask server 对象。例如 app.py 中必须包含下面代码：\n\napp = Dash(__name__)\nserver = app.server # Gunicorn 会加载这个对象\n\n设置配置文件，如 gunicorn.conf.py。\n\nbind = '127.0.0.1:8000'      #绑定ip和端口号\n# chdir = ''  #gunicorn要切换到的目的工作目录\ntimeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒\n# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式\ndaemon = False # 后台运行\nworkers = 4 #进程数\nthreads = 4 #指定每个进程开启的线程数\nloglevel = 'info' #日志级别\naccess_log_format = '%(t)s %(p)s %(h)s \"%(r)s\" %(s)s %(L)s %(b)s %(f)s\" \"%(a)s\"'    #设置gunicorn访问日志格式，错误日志无法设置\n\n\naccesslog = \"/tmp/gunicorn/gunicorn_access.log\"      #访问日志文件\nerrorlog = \"/tmp/gunicorn/gunicorn_error.log\"        #错误日志文件\nreload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }\n\n启动程序。\n\n# app表示当前目录下app.py的意思，server则是文件下的变量\ngunicorn app:server -c ./gunicorn.conf.py\n\n\n想要自己重启 gunicorn，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep gunicorn\n\n\n\npid\n\n\n例如，上图主进程 pid 为 1674\nkill -HUP 1674\n\n\n\n上面的 HUP即为gunicorn支持的信号，下面为其他信号：\n\nQUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。\nTERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。\nHUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。\nTTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。\nTTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。\nUSR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。\nUSR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。\nWINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：\n\n\n\n\n\n\n\nNote\n\n\n\n\nTERM 信号：\n\n作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。\n使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。\n\nWINCH 信号：\n\n作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。\n使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。\n\n\n总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html",
-    "href": "posts/cellchat/index.html",
-    "title": "CellChat 源码解读",
-    "section": "",
-    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#引言",
-    "href": "posts/cellchat/index.html#引言",
-    "title": "CellChat 源码解读",
-    "section": "",
-    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#cellchatdb-数据库",
-    "href": "posts/cellchat/index.html#cellchatdb-数据库",
-    "title": "CellChat 源码解读",
-    "section": "2 CellChatDB 数据库",
-    "text": "2 CellChatDB 数据库\n\n2.1 四张表\nCellChatDB 是一个 list，包含四个 data.frame：\nCellChatDB\n├── interaction    ← 核心：配体-受体互作关系\n├── complex        ← 复合物：多亚基配体/受体的亚基组成\n├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成\n└── geneInfo       ← 基因注释：官方符号、定位、功能关键词\nshowDatabaseCategory() 函数显示人类数据库的分布：\n\n\n\n\n\n\n\n\n\n\n类型\n中文名称\n是否需接触\n信号范围\n功能方向\n\n\n\n\nSecreted Signaling\n分泌型信号\n否\n远程\n发育、免疫、系统调节\n\n\nECM-Receptor\n细胞外基质-受体信号\n否\n局部\n结构支持、黏附、迁移\n\n\nCell-Cell Contact\n细胞-细胞接触信号\n是\n临近\n发育、干细胞分化、边界形成\n\n\nNon-protein Signaling\n非蛋白信号\n否/是\n多变\n炎症、代谢调控、环境应答\n\n\n\n官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。\n\n\n2.2 interaction 表\n每行是一个 L-R 对。dplyr::glimpse(CellChatDB.human$interaction) 可以看到完整结构，关键字段如下：\n\n\n\n\n\n\n\n\n列名\n中文名称\n说明\n\n\n\n\ninteraction_name\n互作名称\n用 _ 连接的配体和受体组合，例如 TGFB1_TGFBR1_TGFBR2\n\n\npathway_name\n通路名称\n所属信号通路名称，如 TGFb、WNT 等\n\n\nligand\n配体名\n配体标识（可能为组合）\n\n\nreceptor\n受体名\n受体标识（可能为组合）\n\n\nagonist\n激动剂\n指出该通路中已知的激动剂\n\n\nantagonist\n拮抗剂\n指出该通路中已知的拮抗剂\n\n\nco_A_receptor\n辅助激动型受体\n协助激活信号的共同受体\n\n\nco_I_receptor\n辅助抑制型受体\n协助抑制信号的共同受体\n\n\nevidence\n支持证据\n来源数据库或文献，如 KEGG: hsa04350、PMID 等\n\n\nannotation\n互作分类\nSecreted Signaling 等四类\n\n\ninteraction_name_2\n格式化互作名称\n更清晰可读的互作表达，例如 TGFB1 - (TGFBR1+TGFBR2)，用于展示\n\n\nligand.symbol\n配体符号\n配体的 HGNC 基因符号\n\n\nreceptor.symbol\n受体符号\n多个受体基因符号（逗号分隔）\n\n\n\n\n\n2.3 complex 表\ninteraction 中配体（ligand）和受体（receptor）的组成：可能是单个基因，也可能是复合物（complex）。\n举个例子，复合物 Activin AB 查 complex 表就知道它包含亚基 INHBA 和 INHBB。计算表达时会取这些亚基的几何平均。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。\n\n\n2.4 cofactor 表\n配体/受体调节因子（cofactors）数据库。interaction 里 agonist、antagonist、co_A_receptor、co_I_receptor 四列对应的信息：\n\n\n\n\n\n\n\n\n术语\n作用类型\n说明\n\n\n\n\nagonist\n激动剂\n增强主配体-受体相互作用的分子，与主配体协同激活\n\n\nantagonist\n拮抗剂\n抑制主配体-受体作用的分子，常与受体竞争结合\n\n\nco_A_receptor\n协同激活受体\n除主受体外，另一个必需的受体亚基，缺失则信号不能传导\n\n\nco_I_receptor\n协同抑制受体\n一个受体亚基，但抑制信号传导，常与主受体共同存在以调节反应强度\n\n\n\n\n\n2.5 geneInfo 表\n\n\n\n\n\n\n\n列名\n含义\n\n\n\n\nEntryID.uniprot\nUniProt 的唯一标识符（如：P01137）\n\n\nSymbol\n基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列\n\n\nSynonym\n基因的其他常用名称或别名\n\n\nReviewed\n该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）\n\n\nEntryName\nUniProt Entry 名称\n\n\nProteinName\n蛋白的全名或描述性名称\n\n\nKeywords\n与该蛋白相关的关键词\n\n\nLocation\n蛋白在细胞中的主要定位（细胞膜、细胞外等）\n\n\nAntibodyName\n对应该蛋白的抗体名称（如果有）\n\n\n\nSymbol 用来跟 interaction$ligand / interaction$receptor 做匹配；Reviewed == TRUE 的数据质量更可靠。"
-  },
-  {
-    "objectID": "posts/cellchat/index.html#原理解读",
-    "href": "posts/cellchat/index.html#原理解读",
-    "title": "CellChat 源码解读",
-    "section": "3 原理解读",
-    "text": "3 原理解读\nCellChat 的分析管线大致分六步：\n\n过滤不在数据库里的基因\n识别每个细胞群的 marker\n识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）\n推断不同细胞群之间通过配体-受体对发生的潜在通信\n将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度\n统计交互次数（数量）以及计算总通信概率（权重）\n\n下面重点拆第 4 步的 computeCommunProb。\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵\"] --&gt; B[\"过滤非数据库基因\"]\n    B --&gt; C[\"识别每个细胞群的 marker\"]\n    C --&gt; D[\"识别过表达的 LR 对\"]\n    D --&gt; E[\"computeCommunProb&lt;br&gt;通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway&lt;br&gt;通路水平聚合\"]\n    F --&gt; G[\"aggregateNet&lt;br&gt;交互次数 & 权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality&lt;br&gt;中心性分析\"]\n    G --&gt; I[\"identifyCommunicationPatterns&lt;br&gt;NMF 模式识别\"]\n    H --&gt; J[\"可视化&lt;br&gt;弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n\n3.1 第一步：计算每个细胞群每个基因的平均表达量\n为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：\n\\[EM = \\frac{1}{2}Q_2 + \\frac{1}{4}\\left( Q_1 + Q_3 \\right)\\]\n\\(Q_1\\)、\\(Q_2\\)、\\(Q_3\\) 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n遇到复合体时，用几何平均合并亚基表达：\n\\[\\text{Expr(complex)} = \\sqrt[N]{\\prod_{i=1}^{N} \\text{Expr(subunit}_i)}\\]\n任何亚基表达为零，复合物就失活。\n\n\n3.2 第二步：共刺激/共抑制受体调节\n利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。\n\n\n3.3 第三步：计算通讯概率\n对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：\n# 1. 配体与受体表达量的外积\n# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达\ndataLR[j, k] = L[j] * R[k]\n\n# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值\n# Kh（半最大效应浓度，默认 0.5）\n#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）\n#   - dataLR = Kh → P1 = 0.5（半最大概率）\n#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）\n# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为\nP1 &lt;- dataLR^n / (Kh^n + dataLR^n)\n\n# 3. 激动剂调制：有激动剂时增强信号\n#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1\n#    当前 L-R 对没有激动剂记录时 P2 = 1\nP2 &lt;- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)\n\n# 4. 拮抗剂调制：有拮抗剂时抑制信号\n#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0\n#    当前 L-R 对没有拮抗剂记录时 P3 = 1\nP3 &lt;- Kh^n / (Kh^n + antagonist_expr^n)\n\n# 5. 空间约束：非空间数据下 P.spatial 全部为 1\nPnull = P1 * P2 * P3 * P.spatial\n\n\n3.4 置换检验\n通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？\n做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 nboot = 100 次，每次得到一个随机化的概率分布：\n# 简化示意：实际循环 100 次，每次打乱标签后重算\nfor (i in 1:100) {\n  shuffled_labels &lt;- sample(cell_labels)                     # 打乱\n  shuffled_prob   &lt;- compute_prob(data, shuffled_labels)     # 重算\n  null_dist[i]    &lt;- shuffled_prob\n}\n\n# 真实概率在零分布中的位置 → p 值\np_value &lt;- sum(null_dist &gt;= observed_prob) / nboot\n\np 值越小，说明真实概率越不太可能是随机噪音\n默认 nboot = 100，对于严格的使用可以提高到 500 或 1000\n结果存在 net$pval 里，跟 net$prob 维度相同"
+    "objectID": "posts/granian_dash/index.html#热重载应用程序",
+    "href": "posts/granian_dash/index.html#热重载应用程序",
+    "title": "用 Granian 部署 Dash 生产环境",
+    "section": "2 热重载应用程序",
+    "text": "2 热重载应用程序\n想要自己重启 granian，可以向 granian 主进程发送HUP信号，这会导致 granian 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep granian\nkill -HUP 1674\n\n2.1 granian 帮助文档\n使用方式: granian [选项] APP\n\n  APP  服务的应用目标。[必需]\n\n选项:\n  --host TEXT                     绑定的主机地址  [环境变量: GRANIAN_HOST; 默认: (127.0.0.1)]\n  --port INTEGER                  绑定的端口。[环境变量: GRANIAN_PORT; 默认: 8000]\n  --interface [asgi|asginl|rsgi|wsgi]\n                                  应用接口类型  [环境变量: GRANIAN_INTERFACE; 默认: (rsgi)]\n  --http [auto|1|2]               HTTP 版本  [环境变量: GRANIAN_HTTP; 默认: (auto)]\n  --ws / --no-ws                  启用websocket处理  [环境变量: GRANIAN_WEBSOCKETS; 默认: (启用)]\n  --workers INTEGER RANGE         工作进程数量  [环境变量: GRANIAN_WORKERS; 默认: 1; x&gt;=1]\n  --threads INTEGER RANGE         每个工作进程的线程数量  [环境变量: GRANIAN_THREADS; 默认: 1; x&gt;=1]\n  --blocking-threads INTEGER RANGE\n                                  每个工作进程的阻塞线程数量\n                                  [环境变量: GRANIAN_BLOCKING_THREADS; x&gt;=1]\n  --threading-mode [runtime|workers]\n                                  使用的线程模式  [环境变量: GRANIAN_THREADING_MODE; 默认: (workers)]\n  --loop [auto|asyncio|uvloop]    事件循环实现  [环境变量: GRANIAN_LOOP; 默认: (auto)]\n  --opt / --no-opt                启用循环优化  [环境变量: GRANIAN_LOOP_OPT; 默认: (禁用)]\n  --backlog INTEGER RANGE         全局最大连接等待数  [环境变量: GRANIAN_BACKLOG; 默认: 1024; x&gt;=128]\n  --backpressure INTEGER RANGE    每个工作进程并发处理的最大请求数  [环境变量: GRANIAN_BACKPRESSURE; 默认: (backlog/workers); x&gt;=1]\n  --http1-buffer-size INTEGER RANGE\n                                  设置HTTP/1连接的最大缓冲区大小  [环境变量: GRANIAN_HTTP1_BUFFER_SIZE; 默认: 417792; x&gt;=8192]\n  --http1-keep-alive / --no-http1-keep-alive\n                                  启用或禁用HTTP/1保持连接  [环境变量: GRANIAN_HTTP1_KEEP_ALIVE; 默认: (启用)]\n  --http1-pipeline-flush / --no-http1-pipeline-flush\n                                  聚合HTTP/1刷新以更好地支持管线化响应（实验性）  [环境变量: GRANIAN_HTTP1_PIPELINE_FLUSH; 默认: (禁用)]\n  --http2-adaptive-window / --no-http2-adaptive-window\n                                  设置是否对HTTP2使用自适应流控制  [环境变量: GRANIAN_HTTP2_ADAPTIVE_WINDOW; 默认: (禁用)]\n  --http2-initial-connection-window-size INTEGER\n                                  设置HTTP2的最大连接级流控制  [环境变量: GRANIAN_HTTP2_INITIAL_CONNECTION_WINDOW_SIZE; 默认: 1048576]\n  --http2-initial-stream-window-size INTEGER\n                                  设置HTTP2流级流控制的`SETTINGS_INITIAL_WINDOW_SIZE`选项\n                                  [环境变量: GRANIAN_HTTP2_INITIAL_STREAM_WINDOW_SIZE; 默认: 1048576]\n  --http2-keep-alive-interval INTEGER\n                                  设置应发送HTTP2 Ping帧以保持连接存活的间隔\n                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_INTERVAL]\n  --http2-keep-alive-timeout INTEGER\n                                  设置接收HTTP2保持连接ping的确认的超时时间\n                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_TIMEOUT; 默认: 20]\n  --http2-max-concurrent-streams INTEGER\n                                  设置HTTP2连接的SETTINGS_MAX_CONCURRENT_STREAMS选项  [环境变量: GRANIAN_HTTP2_MAX_CONCURRENT_STREAMS; 默认: 200]\n  --http2-max-frame-size INTEGER  设置HTTP2的最大帧大小  [环境变量: GRANIAN_HTTP2_MAX_FRAME_SIZE; 默认: 16384]\n  --http2-max-headers-size INTEGER\n                                  设置接收的头帧的最大大小\n                                  [环境变量: GRANIAN_HTTP2_MAX_HEADERS_SIZE; 默认: 16777216]\n  --http2-max-send-buffer-size INTEGER\n                                  设置每个HTTP/2流的最大写缓冲区大小  [环境变量: GRANIAN_HTTP2_MAX_SEND_BUFFER_SIZE; 默认: 409600]\n  --log / --no-log                启用日志记录  [环境变量: GRANIAN_LOG_ENABLED; 默认: (启用)]\n  --log-level [critical|error|warning|warn|info|debug]\n                                  日志级别  [环境变量: GRANIAN_LOG_LEVEL; 默认: (info)]\n  --log-config FILE               日志配置文件(json)  [环境变量: GRANIAN_LOG_CONFIG]\n  --access-log / --no-access-log  启用访问日志  [环境变量: GRANIAN_LOG_ACCESS_ENABLED; 默认: (禁用)]\n  --access-log-fmt TEXT           访问日志格式  [环境变量: GRANIAN_LOG_ACCESS_FMT]\n  --ssl-keyfile FILE              SSL密钥文件  [环境变量: GRANIAN_SSL_KEYFILE]\n  --ssl-certificate FILE          SSL证书文件  [环境变量: GRANIAN_SSL_CERTIFICATE]\n  --url-path-prefix TEXT          应用挂载的URL路径前缀  [环境变量: GRANIAN_URL_PATH_PREFIX]\n  --respawn-failed-workers / --no-respawn-failed-workers\n                                  启用意外退出的工作进程重生\n                                  [环境变量: GRANIAN_RESPAWN_FAILED_WORKERS; 默认: (禁用)]\n  --respawn-interval FLOAT        工作进程重生间隔秒数  [环境变量: GRANIAN_RESPAWN_INTERVAL; 默认: 3.5]\n  --reload / --no-reload          启用应用文件更改的自动重载（需要granian[reload]额外配置）\n                                  [环境变量: GRANIAN_RELOAD; 默认: (禁用)]\n  --process-name TEXT             设置进程的自定义名称（需要granian[pname]额外配置）  [环境变量: GRANIAN_PROCESS_NAME]\n  --version                       显示版本并退出。\n  --help                          显示这条帮助信息并退出。"
   },
   {
     "objectID": "posts/biomni/index.html",
@@ -189,130 +217,102 @@
     "text": "8 使用体验\n\n环境准备成本不低。Python 和 R 两条线都得自己处理好，第一次用非常容易报错（依赖冲突、系统库缺失、R 包编译失败都很常见）。建议直接用 Biomni 提供的 biomni_env 目录或者上游 Docker 镜像起手。\nPrompt 偏长。空载就接近 3 万 token，即使开了 use_tool_retriever 也有 5K 左右。更优雅的做法是把工具改造成按需加载的 Skills——这也是 Anthropic / Claude Code 现在在推的方向。\nLLM 模型接入可以更灵活。llm.py 目前主要对接了 Claude，用 litellm 统一接入的话会方便很多。\n数据湖首次下载耗时。BindingDB_All_202409.tsv 单文件 6.25 G，磁盘空间和网络都得提前规划好。"
   },
   {
-    "objectID": "posts/granian_dash/index.html",
-    "href": "posts/granian_dash/index.html",
-    "title": "用 Granian 部署 Dash 生产环境",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Blog",
     "section": "",
-    "text": "相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md。\n\n安装 Granian\n\npip install granian\n\nDash 示例代码\n\n\nimport dash\nfrom dash import html\n\napp = dash.Dash(__name__)\n\napp.layout = html.Div([\n    html.H1(\"Dash 示例\"),\n])\n\nserver = app.server # Granian 通过这个 WSGI server 对象启动应用\n\nif __name__ == '__main__':\n    app.run_server(debug=True)\n\n\n启动程序\n\ngranian --interface wsgi --workers 4 app:server\n\n\n\n\n\n\nTip\n\n\n\n--interface 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 wsgi；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 asgi。"
+    "text": "Order By\n      Default\n      \n        Title\n      \n      \n        Date - Oldest\n      \n      \n        Date - Newest\n      \n      \n        Author\n      \n    \n  \n    \n      \n      \n    \n\n\n\n\n\n\n\n\n\n\nSeekSoulTools 1.3.0 源码解读\n\n\n寻因单细胞分析管线的 scRNA 与 V(D)J 流程\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 16, 2026\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\nscrublet 识别双细胞源码解读\n\n\n\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 12, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nSingleR 源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 11, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nscDblFinder 识别双胞源码解读\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\n系统地比较 11 种空间转录组方法\n\n\n\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 8, 2026\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\nCellChat 源码解读\n\n\n从配体-受体数据库到细胞间通讯推断的完整管线\n\n\n\nsingle-cell\n\nR\n\nbioinformatics\n\n\n\n\n\n\nJun 4, 2026\n\n\nLiripo\n\n4 min\n\n\n\n\n\n\n\n\n\n\n\nBiomni 源码解读\n\n\n面向生物医学任务的 Agent 环境、数据湖、Benchmark 和工具选择机制\n\n\n\nsingle-cell\n\npython\n\nbioinformatics\n\n\n\n\n\n\nJun 1, 2026\n\n\nLiripo\n\n9 min\n\n\n\n\n\n\n\n\n\n\n\npi-agent 源码解读\n\n\n一个极简终端编程代理的核心循环、工具系统和扩展机制\n\n\n\ntypescript\n\ndevops\n\n\n\n\n\n\nMay 29, 2026\n\n\nLiripo\n\n5 min\n\n\n\n\n\n\n\n\n\n\n\n用 Umami 分析网站访客\n\n\n给 Quarto 博客接入一个轻量、隐私友好的访问统计\n\n\n\nweb\n\nanalytics\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\n\n\n\n\n\n\n\ncAdvisor + Prometheus + Grafana 容器资源监控\n\n\n用一套轻量监控链路观察 Docker 容器资源消耗\n\n\n\ndevops\n\ndocker\n\n\n\n\n\n\nJun 16, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Granian 部署 Dash 生产环境\n\n\n用 WSGI 接口运行 Dash，并通过 HUP 信号平滑重启\n\n\n\npython\n\nweb\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n8 min\n\n\n\n\n\n\n\n\n\n\n\n用 Gunicorn 部署 Dash 生产环境\n\n\nDash 应用的多进程启动、配置文件和常用信号\n\n\n\npython\n\nweb\n\n\n\n\n\n\nJun 15, 2024\n\n\nLiripo\n\n2 min\n\n\n\n\n\n\n\n\n\n\n\n用 Quarto 创建个人博客\n\n\n从安装、初始化到 GitHub Pages 发布的最小路径\n\n\n\nquarto\n\n\n\n\n\n\nJan 2, 2024\n\n\nLiripo\n\n1 min\n\n\n\n\nNo matching items"
   },
   {
-    "objectID": "posts/granian_dash/index.html#使用-granian-部署-dash",
-    "href": "posts/granian_dash/index.html#使用-granian-部署-dash",
-    "title": "用 Granian 部署 Dash 生产环境",
+    "objectID": "posts/cellchat/index.html",
+    "href": "posts/cellchat/index.html",
+    "title": "CellChat 源码解读",
     "section": "",
-    "text": "相比使用 Gunicorn 部署 Dash 应用，Granian 在一些场景下有更好的性能表现。性能比较可以参考项目文档：https://github.com/emmett-framework/granian/blob/master/benchmarks/vs.md。\n\n安装 Granian\n\npip install granian\n\nDash 示例代码\n\n\nimport dash\nfrom dash import html\n\napp = dash.Dash(__name__)\n\napp.layout = html.Div([\n    html.H1(\"Dash 示例\"),\n])\n\nserver = app.server # Granian 通过这个 WSGI server 对象启动应用\n\nif __name__ == '__main__':\n    app.run_server(debug=True)\n\n\n启动程序\n\ngranian --interface wsgi --workers 4 app:server\n\n\n\n\n\n\nTip\n\n\n\n--interface 参数用于指定应用程序接口类型。Dash 底层基于 Flask，通常使用 wsgi；如果是 Starlette 或 FastAPI 这类异步框架，一般使用 asgi。"
+    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
   },
   {
-    "objectID": "posts/granian_dash/index.html#热重载应用程序",
-    "href": "posts/granian_dash/index.html#热重载应用程序",
-    "title": "用 Granian 部署 Dash 生产环境",
-    "section": "2 热重载应用程序",
-    "text": "2 热重载应用程序\n想要自己重启 granian，可以向 granian 主进程发送HUP信号，这会导致 granian 平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep granian\nkill -HUP 1674\n\n2.1 granian 帮助文档\n使用方式: granian [选项] APP\n\n  APP  服务的应用目标。[必需]\n\n选项:\n  --host TEXT                     绑定的主机地址  [环境变量: GRANIAN_HOST; 默认: (127.0.0.1)]\n  --port INTEGER                  绑定的端口。[环境变量: GRANIAN_PORT; 默认: 8000]\n  --interface [asgi|asginl|rsgi|wsgi]\n                                  应用接口类型  [环境变量: GRANIAN_INTERFACE; 默认: (rsgi)]\n  --http [auto|1|2]               HTTP 版本  [环境变量: GRANIAN_HTTP; 默认: (auto)]\n  --ws / --no-ws                  启用websocket处理  [环境变量: GRANIAN_WEBSOCKETS; 默认: (启用)]\n  --workers INTEGER RANGE         工作进程数量  [环境变量: GRANIAN_WORKERS; 默认: 1; x&gt;=1]\n  --threads INTEGER RANGE         每个工作进程的线程数量  [环境变量: GRANIAN_THREADS; 默认: 1; x&gt;=1]\n  --blocking-threads INTEGER RANGE\n                                  每个工作进程的阻塞线程数量\n                                  [环境变量: GRANIAN_BLOCKING_THREADS; x&gt;=1]\n  --threading-mode [runtime|workers]\n                                  使用的线程模式  [环境变量: GRANIAN_THREADING_MODE; 默认: (workers)]\n  --loop [auto|asyncio|uvloop]    事件循环实现  [环境变量: GRANIAN_LOOP; 默认: (auto)]\n  --opt / --no-opt                启用循环优化  [环境变量: GRANIAN_LOOP_OPT; 默认: (禁用)]\n  --backlog INTEGER RANGE         全局最大连接等待数  [环境变量: GRANIAN_BACKLOG; 默认: 1024; x&gt;=128]\n  --backpressure INTEGER RANGE    每个工作进程并发处理的最大请求数  [环境变量: GRANIAN_BACKPRESSURE; 默认: (backlog/workers); x&gt;=1]\n  --http1-buffer-size INTEGER RANGE\n                                  设置HTTP/1连接的最大缓冲区大小  [环境变量: GRANIAN_HTTP1_BUFFER_SIZE; 默认: 417792; x&gt;=8192]\n  --http1-keep-alive / --no-http1-keep-alive\n                                  启用或禁用HTTP/1保持连接  [环境变量: GRANIAN_HTTP1_KEEP_ALIVE; 默认: (启用)]\n  --http1-pipeline-flush / --no-http1-pipeline-flush\n                                  聚合HTTP/1刷新以更好地支持管线化响应（实验性）  [环境变量: GRANIAN_HTTP1_PIPELINE_FLUSH; 默认: (禁用)]\n  --http2-adaptive-window / --no-http2-adaptive-window\n                                  设置是否对HTTP2使用自适应流控制  [环境变量: GRANIAN_HTTP2_ADAPTIVE_WINDOW; 默认: (禁用)]\n  --http2-initial-connection-window-size INTEGER\n                                  设置HTTP2的最大连接级流控制  [环境变量: GRANIAN_HTTP2_INITIAL_CONNECTION_WINDOW_SIZE; 默认: 1048576]\n  --http2-initial-stream-window-size INTEGER\n                                  设置HTTP2流级流控制的`SETTINGS_INITIAL_WINDOW_SIZE`选项\n                                  [环境变量: GRANIAN_HTTP2_INITIAL_STREAM_WINDOW_SIZE; 默认: 1048576]\n  --http2-keep-alive-interval INTEGER\n                                  设置应发送HTTP2 Ping帧以保持连接存活的间隔\n                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_INTERVAL]\n  --http2-keep-alive-timeout INTEGER\n                                  设置接收HTTP2保持连接ping的确认的超时时间\n                                  [环境变量: GRANIAN_HTTP2_KEEP_ALIVE_TIMEOUT; 默认: 20]\n  --http2-max-concurrent-streams INTEGER\n                                  设置HTTP2连接的SETTINGS_MAX_CONCURRENT_STREAMS选项  [环境变量: GRANIAN_HTTP2_MAX_CONCURRENT_STREAMS; 默认: 200]\n  --http2-max-frame-size INTEGER  设置HTTP2的最大帧大小  [环境变量: GRANIAN_HTTP2_MAX_FRAME_SIZE; 默认: 16384]\n  --http2-max-headers-size INTEGER\n                                  设置接收的头帧的最大大小\n                                  [环境变量: GRANIAN_HTTP2_MAX_HEADERS_SIZE; 默认: 16777216]\n  --http2-max-send-buffer-size INTEGER\n                                  设置每个HTTP/2流的最大写缓冲区大小  [环境变量: GRANIAN_HTTP2_MAX_SEND_BUFFER_SIZE; 默认: 409600]\n  --log / --no-log                启用日志记录  [环境变量: GRANIAN_LOG_ENABLED; 默认: (启用)]\n  --log-level [critical|error|warning|warn|info|debug]\n                                  日志级别  [环境变量: GRANIAN_LOG_LEVEL; 默认: (info)]\n  --log-config FILE               日志配置文件(json)  [环境变量: GRANIAN_LOG_CONFIG]\n  --access-log / --no-access-log  启用访问日志  [环境变量: GRANIAN_LOG_ACCESS_ENABLED; 默认: (禁用)]\n  --access-log-fmt TEXT           访问日志格式  [环境变量: GRANIAN_LOG_ACCESS_FMT]\n  --ssl-keyfile FILE              SSL密钥文件  [环境变量: GRANIAN_SSL_KEYFILE]\n  --ssl-certificate FILE          SSL证书文件  [环境变量: GRANIAN_SSL_CERTIFICATE]\n  --url-path-prefix TEXT          应用挂载的URL路径前缀  [环境变量: GRANIAN_URL_PATH_PREFIX]\n  --respawn-failed-workers / --no-respawn-failed-workers\n                                  启用意外退出的工作进程重生\n                                  [环境变量: GRANIAN_RESPAWN_FAILED_WORKERS; 默认: (禁用)]\n  --respawn-interval FLOAT        工作进程重生间隔秒数  [环境变量: GRANIAN_RESPAWN_INTERVAL; 默认: 3.5]\n  --reload / --no-reload          启用应用文件更改的自动重载（需要granian[reload]额外配置）\n                                  [环境变量: GRANIAN_RELOAD; 默认: (禁用)]\n  --process-name TEXT             设置进程的自定义名称（需要granian[pname]额外配置）  [环境变量: GRANIAN_PROCESS_NAME]\n  --version                       显示版本并退出。\n  --help                          显示这条帮助信息并退出。"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html",
-    "href": "posts/pi-agent/index.html",
-    "title": "pi-agent 源码解读",
+    "objectID": "posts/cellchat/index.html#引言",
+    "href": "posts/cellchat/index.html#引言",
+    "title": "CellChat 源码解读",
     "section": "",
-    "text": "pi（styled as “π”）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现。\n这种”极简核心 + 扩展系统”的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。\n\n项目地址：https://github.com/earendil-works/pi 官方网站：https://pi.dev"
+    "text": "单细胞转录组能告诉你这里有哪些细胞类型，但没法直接回答这些细胞之间是怎么对话的。\nCellChat 的做法是：拿一张单细胞表达矩阵，对照一份手工整理的配体-受体数据库，推断出不同细胞群之间谁在给谁发信号、用什么通路、强度多大。\nhttps://github.com/jinworks/CellChat"
   },
   {
-    "objectID": "posts/pi-agent/index.html#引言",
-    "href": "posts/pi-agent/index.html#引言",
-    "title": "pi-agent 源码解读",
+    "objectID": "posts/cellchat/index.html#cellchatdb-数据库",
+    "href": "posts/cellchat/index.html#cellchatdb-数据库",
+    "title": "CellChat 源码解读",
+    "section": "2 CellChatDB 数据库",
+    "text": "2 CellChatDB 数据库\n\n2.1 四张表\nCellChatDB 是一个 list，包含四个 data.frame：\nCellChatDB\n├── interaction    ← 核心：配体-受体互作关系\n├── complex        ← 复合物：多亚基配体/受体的亚基组成\n├── cofactor       ← 辅因子：激动剂、拮抗剂、共受体的组成\n└── geneInfo       ← 基因注释：官方符号、定位、功能关键词\nshowDatabaseCategory() 函数显示人类数据库的分布：\n\n\n\n\n\n\n\n\n\n\n类型\n中文名称\n是否需接触\n信号范围\n功能方向\n\n\n\n\nSecreted Signaling\n分泌型信号\n否\n远程\n发育、免疫、系统调节\n\n\nECM-Receptor\n细胞外基质-受体信号\n否\n局部\n结构支持、黏附、迁移\n\n\nCell-Cell Contact\n细胞-细胞接触信号\n是\n临近\n发育、干细胞分化、边界形成\n\n\nNon-protein Signaling\n非蛋白信号\n否/是\n多变\n炎症、代谢调控、环境应答\n\n\n\n官方建议排除 Non-protein Signaling，原因是计算模型跟蛋白信号不一样，混在一起会影响结果。\n\n\n2.2 interaction 表\n每行是一个 L-R 对。dplyr::glimpse(CellChatDB.human$interaction) 可以看到完整结构，关键字段如下：\n\n\n\n\n\n\n\n\n列名\n中文名称\n说明\n\n\n\n\ninteraction_name\n互作名称\n用 _ 连接的配体和受体组合，例如 TGFB1_TGFBR1_TGFBR2\n\n\npathway_name\n通路名称\n所属信号通路名称，如 TGFb、WNT 等\n\n\nligand\n配体名\n配体标识（可能为组合）\n\n\nreceptor\n受体名\n受体标识（可能为组合）\n\n\nagonist\n激动剂\n指出该通路中已知的激动剂\n\n\nantagonist\n拮抗剂\n指出该通路中已知的拮抗剂\n\n\nco_A_receptor\n辅助激动型受体\n协助激活信号的共同受体\n\n\nco_I_receptor\n辅助抑制型受体\n协助抑制信号的共同受体\n\n\nevidence\n支持证据\n来源数据库或文献，如 KEGG: hsa04350、PMID 等\n\n\nannotation\n互作分类\nSecreted Signaling 等四类\n\n\ninteraction_name_2\n格式化互作名称\n更清晰可读的互作表达，例如 TGFB1 - (TGFBR1+TGFBR2)，用于展示\n\n\nligand.symbol\n配体符号\n配体的 HGNC 基因符号\n\n\nreceptor.symbol\n受体符号\n多个受体基因符号（逗号分隔）\n\n\n\n\n\n2.3 complex 表\ninteraction 中配体（ligand）和受体（receptor）的组成：可能是单个基因，也可能是复合物（complex）。\n举个例子，复合物 Activin AB 查 complex 表就知道它包含亚基 INHBA 和 INHBB。计算表达时会取这些亚基的几何平均。任何一个亚基表达为零，整个复合物就失活——这个设计在生物学上是合理的。\n\n\n2.4 cofactor 表\n配体/受体调节因子（cofactors）数据库。interaction 里 agonist、antagonist、co_A_receptor、co_I_receptor 四列对应的信息：\n\n\n\n\n\n\n\n\n术语\n作用类型\n说明\n\n\n\n\nagonist\n激动剂\n增强主配体-受体相互作用的分子，与主配体协同激活\n\n\nantagonist\n拮抗剂\n抑制主配体-受体作用的分子，常与受体竞争结合\n\n\nco_A_receptor\n协同激活受体\n除主受体外，另一个必需的受体亚基，缺失则信号不能传导\n\n\nco_I_receptor\n协同抑制受体\n一个受体亚基，但抑制信号传导，常与主受体共同存在以调节反应强度\n\n\n\n\n\n2.5 geneInfo 表\n\n\n\n\n\n\n\n列名\n含义\n\n\n\n\nEntryID.uniprot\nUniProt 的唯一标识符（如：P01137）\n\n\nSymbol\n基因的标准缩写符号（如：TGFB1、EGF），CellChat 数据中配体和受体的名称主要基于此列\n\n\nSynonym\n基因的其他常用名称或别名\n\n\nReviewed\n该条目是否为 UniProt Reviewed（Swiss-Prot 人工校对数据）\n\n\nEntryName\nUniProt Entry 名称\n\n\nProteinName\n蛋白的全名或描述性名称\n\n\nKeywords\n与该蛋白相关的关键词\n\n\nLocation\n蛋白在细胞中的主要定位（细胞膜、细胞外等）\n\n\nAntibodyName\n对应该蛋白的抗体名称（如果有）\n\n\n\nSymbol 用来跟 interaction$ligand / interaction$receptor 做匹配；Reviewed == TRUE 的数据质量更可靠。"
+  },
+  {
+    "objectID": "posts/cellchat/index.html#原理解读",
+    "href": "posts/cellchat/index.html#原理解读",
+    "title": "CellChat 源码解读",
+    "section": "3 原理解读",
+    "text": "3 原理解读\nCellChat 的分析管线大致分六步：\n\n过滤不在数据库里的基因\n识别每个细胞群的 marker\n识别过表达的配体-受体（LR）相互作用对（即配受体的基因在 marker 基因中）\n推断不同细胞群之间通过配体-受体对发生的潜在通信\n将所有属于同一个信号通路的 L-R 对的通信概率加起来，得到该通路上的通信强度\n统计交互次数（数量）以及计算总通信概率（权重）\n\n下面重点拆第 4 步的 computeCommunProb。\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵\"] --&gt; B[\"过滤非数据库基因\"]\n    B --&gt; C[\"识别每个细胞群的 marker\"]\n    C --&gt; D[\"识别过表达的 LR 对\"]\n    D --&gt; E[\"computeCommunProb&lt;br&gt;通讯概率\"]\n    E --&gt; F[\"computeCommunProbPathway&lt;br&gt;通路水平聚合\"]\n    F --&gt; G[\"aggregateNet&lt;br&gt;交互次数 & 权重\"]\n    G --&gt; H[\"netAnalysis_computeCentrality&lt;br&gt;中心性分析\"]\n    G --&gt; I[\"identifyCommunicationPatterns&lt;br&gt;NMF 模式识别\"]\n    H --&gt; J[\"可视化&lt;br&gt;弦图 / 气泡图 / 热图\"]\n    I --&gt; J\n\n\n\n\n\n\n\n3.1 第一步：计算每个细胞群每个基因的平均表达量\n为了降低单细胞数据的噪音干扰，这里没有直接用算术平均，而是用了统计稳健平均：\n\\[EM = \\frac{1}{2}Q_2 + \\frac{1}{4}\\left( Q_1 + Q_3 \\right)\\]\n\\(Q_1\\)、\\(Q_2\\)、\\(Q_3\\) 分别是第一、第二、第三四分位数。这相当于在中位数和均值之间做了个折中——对离群值不敏感，但比纯中位数保留了更多分布信息。\n遇到复合体时，用几何平均合并亚基表达：\n\\[\\text{Expr(complex)} = \\sqrt[N]{\\prod_{i=1}^{N} \\text{Expr(subunit}_i)}\\]\n任何亚基表达为零，复合物就失活。\n\n\n3.2 第二步：共刺激/共抑制受体调节\n利用 cofactors 信息修正受体表达。对于有多个共刺激受体的 L-R 对，计算它们的平均表达量，用线性函数来做正向或负向调节。\n\n\n3.3 第三步：计算通讯概率\n对每一对细胞群（发送群 A → 接收群 B）和每一个 L-R 对：\n# 1. 配体与受体表达量的外积\n# L[j] × R[k]：配体在细胞群j的表达 × 受体在细胞群k的表达\ndataLR[j, k] = L[j] * R[k]\n\n# 2. Hill 函数将 dataLR 映射到 [0, 1] 的概率值\n# Kh（半最大效应浓度，默认 0.5）\n#   - dataLR &lt;&lt; Kh → P1 ≈ 0（几乎无信号）\n#   - dataLR = Kh → P1 = 0.5（半最大概率）\n#   - dataLR &gt;&gt; Kh → P1 ≈ 1（信号饱和）\n# n（Hill系数，默认 1）：n 越大曲线越陡，接近开关行为\nP1 &lt;- dataLR^n / (Kh^n + dataLR^n)\n\n# 3. 激动剂调制：有激动剂时增强信号\n#    用 Hill 函数把激动剂表达量映射到 [0, 1]，再加 1 避免小于 1\n#    当前 L-R 对没有激动剂记录时 P2 = 1\nP2 &lt;- 1 + agonist_expr^n / (Kh^n + agonist_expr^n)\n\n# 4. 拮抗剂调制：有拮抗剂时抑制信号\n#    用 Hill 函数的互补形式：表达量越高 → 值越接近 0\n#    当前 L-R 对没有拮抗剂记录时 P3 = 1\nP3 &lt;- Kh^n / (Kh^n + antagonist_expr^n)\n\n# 5. 空间约束：非空间数据下 P.spatial 全部为 1\nPnull = P1 * P2 * P3 * P.spatial\n\n\n3.4 置换检验\n通讯概率算出来之后还需要回答一个问题：这个概率是真实的信号，还是随机噪音？\n做法是打乱细胞类型标签，破坏真实的细胞群结构，重新跑一遍通讯概率计算。重复 nboot = 100 次，每次得到一个随机化的概率分布：\n# 简化示意：实际循环 100 次，每次打乱标签后重算\nfor (i in 1:100) {\n  shuffled_labels &lt;- sample(cell_labels)                     # 打乱\n  shuffled_prob   &lt;- compute_prob(data, shuffled_labels)     # 重算\n  null_dist[i]    &lt;- shuffled_prob\n}\n\n# 真实概率在零分布中的位置 → p 值\np_value &lt;- sum(null_dist &gt;= observed_prob) / nboot\n\np 值越小，说明真实概率越不太可能是随机噪音\n默认 nboot = 100，对于严格的使用可以提高到 500 或 1000\n结果存在 net$pval 里，跟 net$prob 维度相同"
+  },
+  {
+    "objectID": "posts/gunicorn_dash/index.html",
+    "href": "posts/gunicorn_dash/index.html",
+    "title": "用 Gunicorn 部署 Dash 生产环境",
     "section": "",
-    "text": "pi（styled as “π”）是一个极简、可扩展的终端编程代理。它的设计哲学非常有意思：不内置子代理、计划模式、MCP、权限弹窗等功能，而是通过扩展系统让用户自己实现。\n这种”极简核心 + 扩展系统”的设计，使得 pi 既保持了核心的简洁，又具备了强大的可扩展性。本文将从源码角度，深入分析 pi-agent 的架构设计和实现细节。\n\n项目地址：https://github.com/earendil-works/pi 官方网站：https://pi.dev"
+    "text": "Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。\n\n首先，Dash 的代码中需要暴露 Flask server 对象。例如 app.py 中必须包含下面代码：\n\napp = Dash(__name__)\nserver = app.server # Gunicorn 会加载这个对象\n\n设置配置文件，如 gunicorn.conf.py。\n\nbind = '127.0.0.1:8000'      #绑定ip和端口号\n# chdir = ''  #gunicorn要切换到的目的工作目录\ntimeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒\n# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式\ndaemon = False # 后台运行\nworkers = 4 #进程数\nthreads = 4 #指定每个进程开启的线程数\nloglevel = 'info' #日志级别\naccess_log_format = '%(t)s %(p)s %(h)s \"%(r)s\" %(s)s %(L)s %(b)s %(f)s\" \"%(a)s\"'    #设置gunicorn访问日志格式，错误日志无法设置\n\n\naccesslog = \"/tmp/gunicorn/gunicorn_access.log\"      #访问日志文件\nerrorlog = \"/tmp/gunicorn/gunicorn_error.log\"        #错误日志文件\nreload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }\n\n启动程序。\n\n# app表示当前目录下app.py的意思，server则是文件下的变量\ngunicorn app:server -c ./gunicorn.conf.py\n\n\n想要自己重启 gunicorn，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep gunicorn\n\n\n\npid\n\n\n例如，上图主进程 pid 为 1674\nkill -HUP 1674\n\n\n\n上面的 HUP即为gunicorn支持的信号，下面为其他信号：\n\nQUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。\nTERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。\nHUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。\nTTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。\nTTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。\nUSR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。\nUSR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。\nWINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：\n\n\n\n\n\n\n\nNote\n\n\n\n\nTERM 信号：\n\n作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。\n使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。\n\nWINCH 信号：\n\n作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。\n使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。\n\n\n总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。"
   },
   {
-    "objectID": "posts/pi-agent/index.html#三层架构",
-    "href": "posts/pi-agent/index.html#三层架构",
-    "title": "pi-agent 源码解读",
-    "section": "2 三层架构",
-    "text": "2 三层架构\npi 的核心设计原则是：分离不稳定的外部世界与稳定的核心循环。整个项目采用三层架构：\n\n2.1 三层职责\n\n\n\n\n\n\n\n\n层级\n包名\n职责\n\n\n\n\npi-ai\n@earendil-works/pi-ai\n统一的多提供商 LLM API，屏蔽 Provider 差异\n\n\npi-agent-core\n@earendil-works/pi-agent-core\nAgent 运行时，处理工具调用、状态管理\n\n\npi-coding-agent\n@earendil-works/pi-coding-agent\n产品运行时，TUI、会话管理、扩展系统\n\n\n\n\n\n2.2 关键边界\n理解 pi 的架构，需要识别两个关键边界：\n\nLLM 边界：什么穿过 Provider 接口（统一消息进，统一事件出）\n副作用边界：模型只能提议工具调用，实际执行在本地发生，可以被拦截\n\n\n\n\n\n\n\nTip\n\n\n\n这种分层设计使得 pi-ai 可以独立于 Agent 循环进行测试，而 pi-agent-core 可以独立于产品 UI 进行测试。每一层都有清晰的职责边界。"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html#核心组件",
-    "href": "posts/pi-agent/index.html#核心组件",
-    "title": "pi-agent 源码解读",
-    "section": "3 核心组件",
-    "text": "3 核心组件\n\n3.1 AgentSession：核心抽象\nAgentSession 是 pi 的核心抽象，管理整个 Agent 的生命周期。\n// packages/coding-agent/src/core/agent-session.ts\nexport class AgentSession {\n  // 核心职责：\n  // 1. Agent 状态访问（模型、消息、流式状态）\n  // 2. 事件订阅（自动会话持久化）\n  // 3. 模型和思考级别管理\n  // 4. 压缩（手动和自动）\n  // 5. 工具注册管理\n  // 6. 系统提示构建\n}\n\n\n\n\n\n\nNote\n\n\n\nAgentSession 的设计体现了”关注点分离”：它不直接处理磁盘 I/O，而是通过 SessionManager 进行持久化。这种设计使得 Agent 循环可以独立于存储层。\n\n\n\n\n3.2 Agent 类：循环驱动\nAgent 类（来自 pi-agent-core）负责驱动整个 Agent 循环：\n// packages/agent/src/agent.ts\nexport class Agent {\n  // 职责：\n  // 1. 流式 LLM 响应\n  // 2. 工具调用执行\n  // 3. 消息队列管理（steering 和 follow-up）\n  // 4. 中止处理\n}\n\n\n3.3 工具系统\npi 内置了 7 个核心工具：\n\n\n\n工具\n文件\n用途\n\n\n\n\nread\ntools/read.ts\n读取文件内容，支持行范围\n\n\nbash\ntools/bash.ts\n执行 shell 命令\n\n\nedit\ntools/edit.ts\n编辑文件（old/new 替换）\n\n\nwrite\ntools/write.ts\n写入/创建文件\n\n\ngrep\ntools/grep.ts\n正则搜索文件内容\n\n\nfind\ntools/find.ts\n按 glob 模式查找文件\n\n\nls\ntools/ls.ts\n列出目录内容\n\n\n\n每个工具都是一个 ToolDefinition 对象：\ninterface ToolDefinition {\n  name: string\n  label: string\n  description: string\n  parameters: TSchema  // TypeBox schema\n  execute: (params: any) =&gt; Promise&lt;ToolResult&gt;\n  render?: (params: any) =&gt; string  // TUI 渲染\n}"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html#agent-循环",
-    "href": "posts/pi-agent/index.html#agent-循环",
-    "title": "pi-agent 源码解读",
-    "section": "4 Agent 循环",
-    "text": "4 Agent 循环\nAgent 循环是 pi 的核心。下图展示了从用户输入到响应的完整流程：\n\n\n\n\n\nflowchart TD\n    A[用户输入] --&gt; B[prompt text]\n    B --&gt; C{扩展命令?}\n    C --&gt;|是| D[处理 /command]\n    C --&gt;|否| E{技能模板?}\n    E --&gt;|是| F[展开 /skill:name]\n    E --&gt;|否| G[调用 agent.prompt]\n    D --&gt; G\n    F --&gt; G\n    G --&gt; H[流式 LLM 响应]\n    H --&gt; I{工具调用?}\n    I --&gt;|是| J[执行工具]\n    J --&gt; K[消息持久化]\n    K --&gt; H\n    I --&gt;|否| L[后处理]\n    L --&gt; M{需要压缩?}\n    M --&gt;|是| N[执行压缩]\n    M --&gt;|否| O[返回响应]\n    N --&gt; O\n\n\n\n\n\n\n\n4.1 主循环流程\n让我们深入分析 AgentSession.prompt() 的实现：\n// packages/coding-agent/src/core/agent-session.ts\nasync prompt(text: string, options?: PromptOptions) {\n  // 1. 处理扩展命令（/command）\n  // 2. 发射 input 事件供扩展拦截\n  // 3. 展开技能命令（/skill:name）\n  // 4. 展开提示模板\n  // 5. 如果正在流式处理，排队等待\n  // 6. 验证模型和 API 密钥\n  // 7. 构建消息数组\n  // 8. 发射 before_agent_start 事件\n  // 9. 调用 _runAgentPrompt()\n}\n\n\n4.2 核心循环\n// packages/coding-agent/src/core/agent-session.ts\nprivate async _runAgentPrompt(messages: Message[]) {\n  // 核心循环\n  await this.agent.prompt(messages)\n  \n  // 后处理：重试和压缩检查\n  while (await this._handlePostAgentRun()) {\n    await this.agent.continue()\n  }\n}\n\n\n\n\n\n\nTip\n\n\n\n这个设计非常巧妙：核心循环只负责调用 LLM 和执行工具，而重试、压缩等复杂逻辑都在后处理中完成。这保持了核心循环的简洁性。\n\n\n\n\n4.3 后处理逻辑\n// packages/coding-agent/src/core/agent-session.ts\nprivate async _handlePostAgentRun(): Promise&lt;boolean&gt; {\n  // 1. 检查可重试错误（自动重试并退避）\n  // 2. 检查是否需要压缩（上下文溢出或阈值）\n  // 3. 返回 true 继续循环，false 退出\n}"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html#扩展系统",
-    "href": "posts/pi-agent/index.html#扩展系统",
-    "title": "pi-agent 源码解读",
-    "section": "5 扩展系统",
-    "text": "5 扩展系统\npi 的扩展系统是其”极简核心 + 扩展系统”哲学的体现。\n\n5.1 Extension API\n扩展是 TypeScript 模块，导出一个接收 ExtensionAPI 的工厂函数：\n// packages/coding-agent/src/core/extensions/types.ts\nexport interface ExtensionAPI {\n  // 订阅 30+ 生命周期事件\n  on(event: string, handler: Function): void\n  \n  // 注册自定义工具\n  registerTool(tool: ToolDefinition): void\n  \n  // 注册命令、快捷键、CLI 标志\n  registerCommand(command: Command): void\n  registerShortcut(shortcut: Shortcut): void\n  registerCliFlag(flag: CliFlag): void\n  \n  // UI 交互原语\n  showSelector(options: SelectorOptions): Promise&lt;string&gt;\n  showConfirmation(message: string): Promise&lt;boolean&gt;\n  showNotification(message: string): void\n}\n\n\n5.2 关键生命周期事件\n\n\n\n事件\n触发时机\n用途\n\n\n\n\nsession_start\n会话开始\n初始化扩展状态\n\n\nbefore_agent_start\nAgent 循环开始前\n修改系统提示、注入上下文\n\n\nagent_end\nAgent 循环结束\n清理资源\n\n\ntool_call\n工具调用前\n拦截、修改、阻止调用\n\n\ntool_result\n工具执行后\n修改工具结果\n\n\ncontext\nLLM 调用前\n修改消息数组\n\n\ninput\n用户输入时\n拦截输入\n\n\n\n\n\n\n\n\n\nNote\n\n\n\n扩展系统的设计使得 pi 可以在不修改核心代码的情况下，通过扩展实现子代理、计划模式、MCP 等功能。这正是”极简核心 + 扩展系统”哲学的体现。"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html#会话管理",
-    "href": "posts/pi-agent/index.html#会话管理",
-    "title": "pi-agent 源码解读",
-    "section": "6 会话管理",
-    "text": "6 会话管理\n\n6.1 JSONL 会话存储\npi 使用 JSONL 格式存储会话，采用树形结构：\ninterface SessionEntry {\n  id: string\n  parentId?: string  // 父节点 ID，形成树形结构\n  type: 'message' | 'thinking_level_change' | 'model_change' \n        | 'compaction' | 'branch_summary' | 'custom'\n  data: any\n}\n\n\n\n\n\ngraph TD\n    A[根节点] --&gt; B[消息 1]\n    B --&gt; C[消息 2]\n    C --&gt; D[消息 3]\n    C --&gt; E[分支消息 3a]\n    E --&gt; F[分支消息 4a]\n    D --&gt; G[消息 4]\n    \n    style A fill:#f9f,stroke:#333\n    style E fill:#bbf,stroke:#333\n    style F fill:#bbf,stroke:#333\n\n\n\n\n\n\n\n\n6.2 叶子节点与上下文\n关键概念：leafId 决定模型看到的上下文路径。\n// packages/coding-agent/src/core/session-manager.ts\n// 叶子节点是当前会话路径的终点\n// 模型只看到从根节点到叶子节点的路径上的消息\n这种设计使得会话支持分支和切换，而不需要复制整个历史记录。\n\n\n6.3 压缩机制\n当上下文窗口接近限制时，pi 会自动压缩：\n\n\n\n\n\nflowchart LR\n    A[完整历史] --&gt; B{需要压缩?}\n    B --&gt;|是| C[摘要旧消息]\n    C --&gt; D[保留最近消息]\n    D --&gt; E[压缩后上下文]\n    B --&gt;|否| F[原始上下文]\n    \n    style C fill:#fbb,stroke:#333\n    style D fill:#bfb,stroke:#333\n\n\n\n\n\n\n\n自动压缩：上下文溢出或达到阈值时触发\n手动压缩：/compact 命令\n无损压缩：完整历史保留在 JSONL 文件中，压缩只是创建摘要\n\n\n\n\n\n\n\nTip\n\n\n\n压缩是无损的，因为完整历史仍然保存在 JSONL 文件中。压缩只是创建一个摘要条目，用于替代旧消息，从而减少上下文长度。"
-  },
-  {
-    "objectID": "posts/pi-agent/index.html#配置与扩展",
-    "href": "posts/pi-agent/index.html#配置与扩展",
-    "title": "pi-agent 源码解读",
-    "section": "7 配置与扩展",
-    "text": "7 配置与扩展\n\n7.1 配置文件\npi 使用多个配置文件：\n\n\n\n文件\n位置\n用途\n\n\n\n\nsettings.json\n~/.pi/agent/ 或 .pi/\n全局/项目设置\n\n\nauth.json\n~/.pi/agent/\nAPI 密钥和 OAuth 凭证\n\n\nmodels.json\n~/.pi/agent/\n自定义提供商和模型\n\n\nkeybindings.json\n~/.pi/agent/\n快捷键自定义\n\n\n\n\n\n7.2 技能系统\n技能是按需加载的能力包，遵循 Agent Skills 标准：\n# SKILL.md 格式\n---\nname: my-skill\ndescription: 描述技能功能\n---\n\n## 使用说明\n...\n\n通过 /skill:name 调用\n或由 Agent 自动加载\n在系统提示中显示为可用能力\n\n\n\n7.3 上下文文件\npi 会自动加载 AGENTS.md（或 CLAUDE.md）：\n\n全局配置目录\n父目录\n当前目录\n\n所有匹配的文件会连接到系统提示中。"
-  },
-  {
-    "objectID": "posts/spatial-compare/index.html",
-    "href": "posts/spatial-compare/index.html",
-    "title": "系统地比较 11 种空间转录组方法",
+    "objectID": "posts/gunicorn_dash/index.html#使用-gunicorn-部署-dash",
+    "href": "posts/gunicorn_dash/index.html#使用-gunicorn-部署-dash",
+    "title": "用 Gunicorn 部署 Dash 生产环境",
     "section": "",
-    "text": "下载 PPTX"
+    "text": "Gunicorn 的好处是配置简单，支持多进程，并且可以通过信号完成平滑重启。\n\n首先，Dash 的代码中需要暴露 Flask server 对象。例如 app.py 中必须包含下面代码：\n\napp = Dash(__name__)\nserver = app.server # Gunicorn 会加载这个对象\n\n设置配置文件，如 gunicorn.conf.py。\n\nbind = '127.0.0.1:8000'      #绑定ip和端口号\n# chdir = ''  #gunicorn要切换到的目的工作目录\ntimeout = 30 #  指定工作进程在超过此时间未活动时被终止和重启，默认为 30 秒\n# worker_class = 'sync' #使用gevent模式，还可以使用sync 模式，默认的是sync模式\ndaemon = False # 后台运行\nworkers = 4 #进程数\nthreads = 4 #指定每个进程开启的线程数\nloglevel = 'info' #日志级别\naccess_log_format = '%(t)s %(p)s %(h)s \"%(r)s\" %(s)s %(L)s %(b)s %(f)s\" \"%(a)s\"'    #设置gunicorn访问日志格式，错误日志无法设置\n\n\naccesslog = \"/tmp/gunicorn/gunicorn_access.log\"      #访问日志文件\nerrorlog = \"/tmp/gunicorn/gunicorn_error.log\"        #错误日志文件\nreload = False # 如果需要在代码更改时自动重启，则改为True（主要用于开发）。如果要自己控制，则使用 kill -HUP {gunicorn 主进程id }\n\n启动程序。\n\n# app表示当前目录下app.py的意思，server则是文件下的变量\ngunicorn app:server -c ./gunicorn.conf.py\n\n\n想要自己重启 gunicorn，可以向Gunicorn主进程发送HUP信号，这会导致Gunicorn平滑地重启所有工作进程，但不会关闭主进程。（适合在使用频率低的情况下，重启应用程序，而不影响其他人）\n\n查找主进程 pid\n\nps axjf | grep gunicorn\n\n\n\npid\n\n\n例如，上图主进程 pid 为 1674\nkill -HUP 1674\n\n\n\n上面的 HUP即为gunicorn支持的信号，下面为其他信号：\n\nQUIT, INT (Ctrl+C): 快速关闭。发送这个信号将立即关闭 Gunicorn 主进程和所有工作进程，不管它们当前是否在处理请求。这相当于一个强制退出操作。\nTERM: 优雅关闭。这个信号会告诉 Gunicorn 主进程开始优雅地关闭，它会等待当前正在处理的请求完成，直到达到 graceful_timeout（优雅超时）设置的时间。一旦所有请求处理完毕，Gunicorn 将关闭主进程和所有工作进程。\nHUP: 重新加载配置。当收到 HUP 信号时，Gunicorn 主进程会重新加载配置文件，并以新的配置启动新的工作进程。如果应用程序没有预加载（使用 preload_app 选项），Gunicorn 还会加载应用程序的新版本。老的工作进程将会优雅地关闭。\nTTIN: 增加进程数。当收到 TTIN 信号时，Gunicorn 主进程将增加工作进程的数量。\nTTOU: 减少进程数。当收到 TTOU 信号时，Gunicorn 主进程将减少工作进程的数量。\nUSR1: 重新打开日志文件。发送这个信号将告诉 Gunicorn 主进程重新打开所有日志文件。\nUSR2: 在运行时升级 Gunicorn。发送这个信号将告诉 Gunicorn 主进程使用新的二进制文件进行升级。一个额外的 TERM 信号应该用来杀死旧的主进程。这个信号也可以用来在运行时使用预加载应用程序的新版本。\nWINCH: 守护进程的优雅关闭。当 Gunicorn 以守护进程运行时，收到 WINCH 信号将优雅地关闭工作进程。 注：TERM 和 WINCH 信号都可以用于关闭 Gunicorn 服务器，但它们在关闭方式上有一些区别：\n\n\n\n\n\n\n\nNote\n\n\n\n\nTERM 信号：\n\n作用：TERM 信号告诉 Gunicorn 主进程开始优雅地关闭工作进程。它会等待当前正在处理的请求完成后再关闭工作进程，从而确保不会丢失客户端请求。\n使用场景：TERM 信号通常在需要优雅地关闭 Gunicorn 服务器时使用，以确保不会中断正在处理的请求。\n\nWINCH 信号：\n\n作用：WINCH 信号通常在 Gunicorn 以守护进程模式运行时使用，用于实现优雅地关闭工作进程。它会等待当前正在处理的请求完成，然后再关闭工作进程。\n使用场景：WINCH 信号通常在希望停止 Gunicorn 服务器并且希望等待当前正在处理的请求完成后再关闭工作进程时使用，特别是在守护进程模式下运行时。\n\n\n总的来说，TERM 信号更适合在普通情况下优雅地关闭 Gunicorn 服务器，而 WINCH 信号则更适合在守护进程模式下使用，以实现更加平滑的关闭过程。"
   },
   {
-    "objectID": "posts/容器资源监控/index.html",
-    "href": "posts/容器资源监控/index.html",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "objectID": "posts/quarto_blog/index.html",
+    "href": "posts/quarto_blog/index.html",
+    "title": "用 Quarto 创建个人博客",
     "section": "",
-    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+    "text": "Quarto 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。\n这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 docs/，最后交给 GitHub Pages 发布。"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#简介",
-    "href": "posts/容器资源监控/index.html#简介",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
+    "objectID": "posts/quarto_blog/index.html#简介",
+    "href": "posts/quarto_blog/index.html#简介",
+    "title": "用 Quarto 创建个人博客",
     "section": "",
-    "text": "为了准确测量软件运行所需资源，可以在 docker 容器中运行软件，并监控它的资源消耗。\n\n\n\n资源消耗图\n\n\n为了获取上图结果，我们需要下面三个程序：\n\ncAdvisor：用于收集正在运行的容器资源使用和性能信息。\nPrometheus：由于 cAdvisor 只展示两分钟的资源消耗结果，需要部署这个软件进行存储 cAdvisor 的结果。\nGrafana：开源可视化系统，可以对 Prometheus 存储的资源进行可视化。"
+    "text": "Quarto 是建立在 Pandoc 之上的开源科学与技术出版系统。它既可以写普通博客，也可以把 Python、R、Julia 或 Bash 代码放进文档里，生成可复现的报告、网站、幻灯片和书籍。\n这篇文章记录一条最小可行路径：安装 Quarto，创建博客项目，把输出目录设置为 docs/，最后交给 GitHub Pages 发布。"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#cadvisor-部署",
-    "href": "posts/容器资源监控/index.html#cadvisor-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "2 cAdvisor 部署",
-    "text": "2 cAdvisor 部署\n对需要监控的主机启动如下容器：\nsudo docker run \\\n  --volume=/:/rootfs:ro \\\n  --volume=/var/run:/var/run:ro \\\n  --volume=/sys:/sys:ro \\\n  --volume=/var/lib/docker/:/var/lib/docker:ro \\\n  --volume=/dev/disk/:/dev/disk:ro \\\n  --publish=8080:8080 \\\n  --detach=true \\\n  --name=cadvisor \\\n  --privileged \\\n  --device=/dev/kmsg \\\n  gcr.io/cadvisor/cadvisor\n\n\n\n\n\n\nTip\n\n\n\n&lt;ip&gt; 记得更换为自己的 ip 地址。\n\n\ncAdvisor 默认在 8080 端口运行，主页面：http://&lt;ip&gt;:8080 。\nhttp://&lt;ip&gt;:8080/metrics 端口可以看到 prometheus 所需要的信息。"
+    "objectID": "posts/quarto_blog/index.html#安装-quarto",
+    "href": "posts/quarto_blog/index.html#安装-quarto",
+    "title": "用 Quarto 创建个人博客",
+    "section": "2 安装 Quarto",
+    "text": "2 安装 Quarto\n这里推荐两个选择：\n\n按照官网介绍下载安装。\n使用带 quarto 的 Docker 镜像。我比较喜欢 rocker 项目的 tidyverse 镜像，它基于 RStudio 镜像，适合作为 R 相关开发的基础环境。\n\n\nps: 我选择此镜像是顺便作为 R 方面开发的基础镜像。\n\n# pull 镜像\ndocker pull rocker/tidyverse:latest\n# 运行, 挂载自己本地的路径，我习惯将整个D盘挂载到镜像中。\ndocker run -d -ti -p 8787:8787 -e ROOT=TRUE -e PASSWORD=《你的密码》 -v 《本地路径，可以整个D盘》:《镜像目录》 rocker/tidyverse\n这样就可以打开浏览器，访问 http://localhost:8787 进入 RStudio IDE。默认用户名是 rstudio。"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#prometheus-部署",
-    "href": "posts/容器资源监控/index.html#prometheus-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "3 prometheus 部署",
-    "text": "3 prometheus 部署\n当前文件夹下新建配置文件prometheus.yml：\n\n\nprometheus.yml\n\nscrape_configs:\n- job_name: cadvisor\n  scrape_interval: 5s\n  static_configs:\n  - targets:\n    - &lt;ip&gt;:8080\n\ndocker run --name prometheus -d \\\n    -p 9090:9090 \\\n    -v ./prometheus.yml:/etc/prometheus/prometheus.yml \\\n    prom/prometheus \\\n    --config.file=/etc/prometheus/prometheus.yml \\\n    --web.enable-lifecycle \\\n    --storage.tsdb.retention.time=15d\n\n# 参数解释\n--config.file，指定配置文件\n--storage.tsdb.path，指定数据存储目录\n--storage.tsdb.retention，指定数据过期时间，默认 15 天\n--query.max-concurrency，最大支持的并发查询量\n--web.enable-lifecycle，启用热加载\n打开网址：http://&lt;ip&gt;:9090/targets 看看是否采集正常。\n\n此时所有监控目标的状态都是 UP，表明 prometheus 可以正常获取到监控数据。"
+    "objectID": "posts/quarto_blog/index.html#创建博客",
+    "href": "posts/quarto_blog/index.html#创建博客",
+    "title": "用 Quarto 创建个人博客",
+    "section": "3 创建博客",
+    "text": "3 创建博客\nQuarto 官方文档已经把博客项目的初始化步骤写得很清楚，可以直接参考：\nhttps://quarto.org/docs/websites/website-blog.html"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#grafana-部署",
-    "href": "posts/容器资源监控/index.html#grafana-部署",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "4 grafana 部署",
-    "text": "4 grafana 部署\ndocker run -d --name=grafana -p 3000:3000 grafana/grafana\n\n4.1 使用\n打开网址：http://&lt;ip&gt;:3000，首次进入账号密码均为admin , 会提示修改密码。\n\n中文设置，个人资料中设置：\n\n\n\n添加 prometheus 数据源，在下图红框位置填写 prometheus 地址即可\n\n\n\n仪表板查看容器的相关资源\n\n\n导入仪表板\n\n\n\n选择 cAdvisor监控Pod的CPU、网络、IO以及内存等指标的一个模板ID：14282 ，点击加载按钮后选择刚刚的数据源即可。\n\n\n然后就可以查看容器资源监控的仪表板，如下所示："
+    "objectID": "posts/quarto_blog/index.html#发布到-github-pages",
+    "href": "posts/quarto_blog/index.html#发布到-github-pages",
+    "title": "用 Quarto 创建个人博客",
+    "section": "4 发布到 GitHub Pages",
+    "text": "4 发布到 GitHub Pages\n网址形如 https://&lt;用户名&gt;.github.io 的站点通常可以直接用 GitHub Pages 托管。\n\n在 GitHub 新建一个名为 &lt;用户名&gt;.github.io 的仓库。\n设置仓库的 Pages 选项，如下图所示：\n\n\n\n修改博客项目下的 _quarto.yml，将输出目录设置为 docs/。\n\n\n\n_quarto.yml\n\nproject:\n  type: website\n  output-dir: docs\n\n\n在仓库根目录添加 .nojekyll 文件，告诉 GitHub Pages 不要再用 Jekyll 处理已经渲染好的站点。\n\n\n\nterminal\n\ntouch .nojekyll\n\n\n渲染网站并发布。\n\n# quarto 渲染网站\nquarto render\n# 使用 git 将渲染好的网站发送到刚刚创建好的仓库中\ngit push"
   },
   {
-    "objectID": "posts/容器资源监控/index.html#windowns-部署命令",
-    "href": "posts/容器资源监控/index.html#windowns-部署命令",
-    "title": "cAdvisor + Prometheus + Grafana 容器资源监控",
-    "section": "5 windowns 部署命令",
-    "text": "5 windowns 部署命令\n\n构建 docker 网络, 使得容器之间互相访问\n\ndocker network create cadvisor\n\n部署程序\n\ndocker run --network cadvisor --volume=/:/rootfs:ro --volume=/var/run:/var/run:ro --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --volume=/dev/disk/:/dev/disk:ro --publish=8080:8080 --detach=true --name=cadvisor --privileged --device=/dev/kmsg gcr.io/cadvisor/cadvisor\n\n\n# 查看容器的ip，prometheus.yml 填写对应的容器 ip 地址\ndocker inspect &lt;容器id&gt;\n\n# 按照上文，生成 prometheus.yml 配置文件\ndocker run --network cadvisor --name prometheus -d -p 9090:9090 -v $PWD\\prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle --storage.tsdb.retention.time=15d\n\ndocker run --network cadvisor -d --name=grafana -p 3000:3000 grafana/grafana"
+    "objectID": "posts/scrublet/index.html",
+    "href": "posts/scrublet/index.html",
+    "title": "scrublet 识别双细胞源码解读",
+    "section": "",
+    "text": "这篇源码整理成了 PPT，下载 PPTX"
+  },
+  {
+    "objectID": "posts/singleR/index.html",
+    "href": "posts/singleR/index.html",
+    "title": "SingleR 源码解读",
+    "section": "",
+    "text": "做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。\n2019 年发在 Nature Immunology 上之后，SingleR 有过两个版本：\n\n纯 R 版（v1.0.0，dviraran/SingleR）：代码直白好读。已经停更了。\nBioconductor 版（v2.8.0+，SingleR-inc/SingleR）：Aaron Lun 重写的，核心挪到 C++（底层是 singlepp），训练和分类拆开，比老版本快几十倍。"
   },
   {
     "objectID": "posts/singleR/index.html#引言",
@@ -322,39 +322,11 @@
     "text": "做单细胞注释，SingleR 是绕不开的工具。把测试细胞往参考数据上一扔，算个 Spearman 相关，看跟哪种已知细胞类型最像，就完成了注释。思路非常直接。\n2019 年发在 Nature Immunology 上之后，SingleR 有过两个版本：\n\n纯 R 版（v1.0.0，dviraran/SingleR）：代码直白好读。已经停更了。\nBioconductor 版（v2.8.0+，SingleR-inc/SingleR）：Aaron Lun 重写的，核心挪到 C++（底层是 singlepp），训练和分类拆开，比老版本快几十倍。"
   },
   {
-    "objectID": "posts/singleR/index.html#legacy-版本纯-r-实现的原始管线",
-    "href": "posts/singleR/index.html#legacy-版本纯-r-实现的原始管线",
+    "objectID": "posts/singleR/index.html#纯-r-版本",
+    "href": "posts/singleR/index.html#纯-r-版本",
     "title": "SingleR 源码解读",
-    "section": "2 Legacy 版本：纯 R 实现的原始管线",
-    "text": "2 Legacy 版本：纯 R 实现的原始管线\n\n2.1 整体流程\n\n\n\n\n\nflowchart TD\n    A[\"表达矩阵 + 已知标签\"] --&gt; B[\"medianMatrix&lt;br/&gt;计算每个细胞类型的中位表达\"]\n    B --&gt; C[\"DE 基因选择&lt;br/&gt;n = 500 × (2/3)^log2(N)\"]\n    C --&gt; D[\"cor.stable&lt;br/&gt;Spearman 相关计算\"]\n    D --&gt; E[\"0.8 分位数聚合得分\"]\n    E --&gt; F[\"chisq.out.test&lt;br/&gt;置信度检验\"]\n    F --&gt; G[\"Fine-tuning&lt;br/&gt;迭代微调\"]\n    G --&gt; H[\"最终注释\"]\n\n\n\n\n\n\n\n\n2.2 第一步：计算参考数据集每个细胞类型的中位值\nmat = medianMatrix(ref_data, types)\nmedianMatrix 对参考数据按 types 分组，每组计算基因的中位表达值。输出一个矩阵，每列对应一个细胞类型，每行对应一个基因。这一步将原本可能有很多个参考样本的矩阵，压缩为每个细胞类型一个中位表达向量的紧凑形式。\n\n\n2.3 第二步：差异表达基因选择\n这是 SingleR 最巧妙的设计之一。基因数量 \\(n\\) 的选择依赖参考细胞类型数量 \\(N\\)：\n\\[n = 500 \\times \\left( \\frac{2}{3} \\right)^{\\log_2(N)}\\]\n这个公式的含义是：细胞类型越少，需要的 marker 基因越多。当只有 2 个类型时，\\(n = 500\\)；当有 16 个类型时，\\(n \\approx 125\\)。背后的直觉是：类型越少，需要更细致的基因特征来区分；类型越多，本身就更容易通过不同基因的组合来区分，不需要太多基因。\n源码实现（SingleR.R:fineTuningRound）：\nn = round(500*(2/3)^(log2(c(ncol(mat)))))\ngenes.filtered = unique(unlist(unlist(\n  lapply(1:ncol(mat), function(j) {\n    lapply(1:ncol(mat), function(i) {\n      s=sort(mat[,j]-mat[,i],decreasing=T);\n      s=s[s&gt;0];names(s)[1:min(n,length(s))]\n    })\n  }))))\n解释： 1. 双层循环 (j, i) 遍历每一对细胞类型 2. mat[,j] - mat[,i] 计算类型 j 相对于类型 i 的表达差异 3. s = s[s &gt; 0] 只保留在类型 j 中上调的基因 4. 取差异最大的前 n 个基因 5. 所有配对的基因取 并集（unique(unlist(...))）\n这意味着选出的基因集覆盖了所有细胞类型的区分信息，每个类型都有其标志性的高表达基因被纳入。\n\n\n2.4 第三步：Spearman 相关计算\nr = cor.stable(sc_data, ref_data, method='spearman')\ncor.stable 是对 R 内置 cor() 的稳健封装，计算测试数据每个细胞与参考数据每个样本之间的 Spearman 秩相关系数。输出一个矩阵 \\(r_{M \\times K}\\)，\\(M\\) 为测试细胞数，\\(K\\) 为参考样本数。\n\n\n2.5 第四步：分位数聚合得分\nagg_scores = quantileMatrix(r, types, quantile.use)\n默认 quantile.use = 0.8。这步将每个测试细胞与每个参考细胞类型的所有参考样本的相关性，取 0.8 分位数作为该类型的最终得分。\n为什么用 0.8 分位数而不是均值？这里的设计选择值得注意：一个细胞类型在参考数据中可能有多个样本，其中一些样本可能与测试细胞高度相关，而另一些可能由于批次效应等原因相关较低。使用 0.8 分位数，相当于取”前 20% 最相似的参考样本”的水平，既对离群值鲁棒，又比中位数更能捕捉最强的匹配信号——这个思路类似于 CellTypist 中使用的”投票”策略。\n\n\n2.6 第五步：初版注释与置信度检验\nlabels = colnames(agg_scores)[max.col(agg_scores)]\noutput$pval = SingleR.ConfidenceTest(output$scores)\n初版标签直接取每行得分最高的细胞类型。\n置信度检验使用卡方异常值检验（chisq.out.test）：\nSingleR.ConfidenceTest = function(scores) {\n  apply(scores, 1, function(x) chisq.out.test(x)$p.value)\n}\n对每个细胞，将各细胞类型的得分作为一个分布，检验最高得分是否显著偏离其他得分。如果 p 值很大（如 &gt; 0.05），说明各类型得分差异不大，这个注释是不可靠的。\n\n\n2.7 第六步：Fine-tuning 迭代微调\n这是 SingleR 区分相似细胞类型的关键机制。\nSingleR.FineTune &lt;- function(sc_data, ref_data, types, scores, \n                              quantile.use, fine.tune.thres, ...) {\n  labels = pbmclapply(1:N, FUN=function(i){\n    max_score = max(scores[i,])\n    topLabels = names(scores[i, scores[i,] &gt;= max_score - fine.tune.thres])\n    # ...\n    while(length(topLabels) &gt; 1) {\n      topLabels = fineTuningRound(topLabels, types, ref_data, ...)\n    }\n    return (topLabels)\n  }, mc.cores=numCores)\n}\n流程如下：\n\n阈值筛选：fine.tune.thres = 0.05，找出得分在最高分 0.05 范围内的所有细胞类型作为候选\n基因重新选择：只从这些候选类型中提取差异基因\n重新计算相关性：仅使用新基因集做 Spearman 相关\n迭代：重复直到只剩一个候选类型\n\n举例说明：\n\n\n\ncell type\nscore\n\n\n\n\nT-cell\n0.85\n\n\nNK-cell\n0.82\n\n\nB-cell\n0.62\n\n\n\nT-cell 和 NK-cell 都在 0.05 阈值内，B-cell 被排除。第二轮只从 T 和 NK 中找差异基因，重新计算。这种”聚焦再聚焦”的策略，在 CD4+ / CD8+ T 细胞等姊妹亚群之间的区分上至关重要。\nfineTuningRound 的源码中有一行值得注意：\nagg_scores = agg_scores[-length(agg_scores)]\n去掉了排序后的最后一个（最低得分），相当于每轮淘汰一个候选。如果基因数不足 20（length(genes.filtered) &lt; 20），则直接返回第一个候选，防止过度迭代。"
-  },
-  {
-    "objectID": "posts/singleR/index.html#bioconductor-版本训练-分类解耦的-c-加速管线",
-    "href": "posts/singleR/index.html#bioconductor-版本训练-分类解耦的-c-加速管线",
-    "title": "SingleR 源码解读",
-    "section": "3 Bioconductor 版本：训练-分类解耦的 C++ 加速管线",
-    "text": "3 Bioconductor 版本：训练-分类解耦的 C++ 加速管线\n\n3.1 架构变化\n新版本最大的架构变化是将管线拆分为两个独立步骤：\n\n\n\n\n\nflowchart LR\n    subgraph trainSingleR\n        A[\"参考数据 + 标签\"] --&gt; B[\"DE 基因选择&lt;br/&gt;(classic / wilcox / t)\"]\n        B --&gt; C[\"构建 C++ 索引\"]\n        C --&gt; D[\"trained 对象\"]\n    end\n    subgraph classifySingleR\n        E[\"测试数据\"] --&gt; F[\"KNN 秩相关近似\"]\n        D --&gt; F\n        F --&gt; G[\"Fine-tuning + Pruning\"]\n        G --&gt; H[\"最终注释\"]\n    end\n\n\n\n\n\n\n这样设计的好处：训练一次，多次分类。参考数据只需构建一次索引，之后可以反复对不同测试集做注释。相比 legacy 版本每次都要重新跑整个管线，效率大幅提升。\n\n\n3.2 trainSingleR：训练阶段\n\n3.2.1 DE 基因选择的三种方法\n新版本支持三种 DE 基因选择策略：\n1. classic 方法（默认，与 legacy 一致）\ngetClassicMarkers(ref, labels, de.n, ...)\n计算每个细胞类型的中位表达，对每对细胞类型比较表达差异，取差异最大的前 de.n 个基因。源码中默认 de.n = 500 * (2/3) ^ log2(N)，与 legacy 版本完全一致。\n2. wilcox 方法（推荐用于单细胞参考）\nscrapper::scoreMarkers(ref, groups=labels, all.pairwise=de.n, compute.auc=TRUE, ...)\n使用 AUC（Area Under the Curve）作为效应量排名。对于单细胞数据中常见的稀疏表达（&gt;50% 零值），中位数往往为零，此时 classic 方法失效。Wilcoxon 基于秩的 AUC 不受零膨胀影响。\n3. t 方法\nscrapper::scoreMarkers(ref, groups=labels, compute.cohens.d=TRUE, ...)\n使用 Cohen’s d 作为效应量。比 AUC 计算更快，适合大数据集。\n默认 de.n = 10（Wilcoxon/t 方法下），因为基于统计检验的效应量通常更精确，不需要那么多基因。\n\n\n3.2.2 C++ 索引构建\ntrainSingleR 的核心是将参考数据编译为 C++ 中的高效索引结构：\nbuilt &lt;- .build_index(ref=curref, labels=curlabels, ulabels=ulabels, \n                       test.genes=test.genes, markers=markers, \n                       num.threads=num.threads)\n底层调用 initializeCpp(ref)（来自 beachmat 包）将 R 矩阵转换为 C++ 可访问的数据结构，然后调用 singlepp 库的 train_single 函数。这个索引对象（built）是一个 external pointer，存储在 R 的内存中但指向 C++ 堆内存，不能被序列化保存——这就是为什么不能直接 saveRDS 一个训练好的模型。\n\n\n3.2.3 参考聚合优化\nif (aggr.ref) {\n  aggr &lt;- aggregateReference(ref=curref, label=curlabels, ...)\n  curref &lt;- assay(aggr)\n}\n对于单细胞级别的参考数据（可能有成千上万个参考细胞），默认会先进行向量量化聚合，将同类细胞压缩为有限数量的伪-bulk 样本。这在不损失太多信息的情况下显著减小参考数据规模，加快后续 KNN 搜索。\n\n\n\n3.3 classifySingleR：分类阶段\n\n3.3.1 秩相关与 KNN 近似\n传统方法需要计算测试细胞与每个参考样本的 Spearman 相关，复杂度为 \\(O(T \\times R \\times G)\\)（\\(T\\) 个测试细胞，\\(R\\) 个参考样本，\\(G\\) 个基因）。新版本用了一个巧妙近似：\n\n表达值转秩：将测试细胞和参考样本的表达值转换为秩值（rank）\nKNN 搜索：在秩空间中，用 ANN（近似最近邻）找到每个测试细胞的 K 个最近参考邻居\n距离转相关：利用平方欧氏距离 \\(d^2\\) 近似 Spearman 相关：\n\n\\[r \\approx 1 - \\frac{6d^2}{n(n^2 - 1)}\\]\n在秩空间中，上述表达式简化为 Spearman 秩相关系数的一个等价形式。由于 ANN 搜索的复杂度远低于遍历所有样本对，这在不牺牲精度的情况下大幅加速了计算。\n具体实现在 singlepp C++ 库中（classify_single 函数），R 端的调用：\nout &lt;- classify_single(\n  test = parsed, \n  prebuilt = trained$built, \n  quantile = quantile, \n  use_fine_tune = fine.tune, \n  fine_tune_threshold = tune.thresh, \n  nthreads = num.threads\n)\n\n\n3.3.2 Fine-tuning 的 C++ 实现\n新版本的 fine-tuning 逻辑与 legacy 基本一致，但全部在 C++ 中完成。每轮迭代： 1. 筛选得分接近的候选标签 2. 使用候选标签的特异基因重新计算 3. 循环直到只剩一个候选\n关键参数 tune.thresh = 0.05 控制候选筛选的严格程度。\n\n\n3.3.3 Pruning：质量过滤\npruneScores &lt;- function(results, nmads=3, min.diff.med=-Inf, min.diff.next=0) {\n  delta &lt;- getDeltaFromMedian(results)\n  # ...\n  thresholds[[l]] &lt;- curthresh &lt;- med - nmads * MAD\n  keep[idx] &lt;- keep[idx] & current &gt;= curthresh\n  # ...\n}\n即使不加 prunning，SingleR 也会给每个细胞分配一个标签——哪怕该细胞的真实类型压根不在参考数据里。Pruning 通过两个指标过滤低质量注释：\n1. delta 值（getDeltaFromMedian）\n\\[delta_i = score_{best} - median(score_{all\\ labels})\\]\n如果 delta 很小，说明某个细胞与所有标签的得分差不多，分配特定标签可能没有意义。\n2. 标签级异常值检测\n对每个标签，收集所有被分配为该标签的细胞的 delta 分布，计算： \\[threshold = median(delta) - nmads \\times MAD(delta)\\]\n低于此阈值的细胞标签被标记为低质量。默认 nmads = 3，相当于在正态分布中去掉 3-sigma 外的尾部。\n3. fine-tuning 间差异（delta.next）\n如果 fine-tuning 后最佳得分和第二得分的差距小于 min.diff.next（默认 0），说明 fine-tuning 无法区分两个最可能的标签，该注释也标记为不可靠。"
-  },
-  {
-    "objectID": "posts/singleR/index.html#两版核心差异对比",
-    "href": "posts/singleR/index.html#两版核心差异对比",
-    "title": "SingleR 源码解读",
-    "section": "4 两版核心差异对比",
-    "text": "4 两版核心差异对比\n\n\n\n\n\n\n\n\n维度\nLegacy (v1.0.0)\nBioconductor (v2.8.0+)\n\n\n\n\n实现语言\n纯 R\nR + C++（singlepp + beachmat）\n\n\n训练/分类\n耦合，每次重新计算\n解耦，train 一次 classify 多次\n\n\nDE 基因方法\n中位差值排序（classic）\nclassic / wilcox AUC / Cohen’s d\n\n\n参考聚合\n无\n可选向量量化聚合\n\n\n相关性计算\n遍历所有样本对\nKNN 秩空间近似\n\n\n多线程\nparallel::mclapply\nC++ 原生多线程\n\n\n参考数据集\n单个\n多个，自动合并结果\n\n\n质量过滤\n卡方异常值检验\n标签级 delta 中位数 + MAD 异常值检测\n\n\n序列化\n可 saveRDS\nC++ 指针无法序列化"
-  },
-  {
-    "objectID": "posts/singleR/index.html#关键设计思想总结",
-    "href": "posts/singleR/index.html#关键设计思想总结",
-    "title": "SingleR 源码解读",
-    "section": "5 关键设计思想总结",
-    "text": "5 关键设计思想总结\n\n参考驱动：SingleR 不依赖先验 marker 基因列表，而是从参考数据中自动学习细胞类型特征基因。这使得它可以适应任意参考数据集和任意分类体系。\nSpearman 秩相关：选择秩相关而非 Pearson 线性相关，因为秩相关对表达值的绝对尺度不敏感——只要相对排序一致，就能正确匹配。这让不同实验平台、不同批次的数据也能归一化后对比。\n分位数聚合：使用 0.8 分位数而非均值聚合参考样本的相关性，巧妙平衡了鲁棒性和灵敏度。\n迭代微调：Fine-tuning 的设计体现了”由粗到细”的分层分类思想——先全局筛选基因做粗分，再局部筛选基因做细分。\n单细胞适配：新版本增加了 wilcox/t 方法 DE 基因选择和参考聚合，使得原本为 bulk 参考设计的算法也能很好地处理单细胞参考数据集中的稀疏性和异质性。\n\n\n下载 PPTX"
-  },
-  {
-    "objectID": "posts/singleR/index.html#legacy-版纯-r-管线",
-    "href": "posts/singleR/index.html#legacy-版纯-r-管线",
-    "title": "SingleR 源码解读",
-    "section": "2 Legacy 版：纯 R 管线",
-    "text": "2 Legacy 版：纯 R 管线\n整体管线分六步：\n\nmedianMatrix → 算每个细胞类型的中位表达\nDE 基因选择 → \\(n = 500 \\times (2/3)^{\\log_2(N)}\\)\ncor.stable → Spearman 相关计算\nquantileMatrix → 0.8 分位数聚合得分\nchisq.out.test → 置信度检验\nfineTuningRound → 迭代微调\n\n\n2.1 第一步：算中位表达矩阵\nmat = medianMatrix(ref_data, types)\nmedianMatrix 按 types 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。\n\n\n2.2 第二步：挑差异基因\n选多少基因？\\(n\\) 跟参考细胞类型数 \\(N\\) 的关系是：\n\\[n = 500 \\times \\left( \\frac{2}{3} \\right)^{\\log_2(N)}\\]\n2 个类型时 \\(n = 500\\)，16 个类型时 \\(n \\approx 125\\)。类型少，需要更多基因来区分；类型多，不同基因的组合本身就够了，不需要那么多。\n对应的源码（SingleR.R:fineTuningRound）：\nn = round(500*(2/3)^(log2(c(ncol(mat)))))\ngenes.filtered = unique(unlist(unlist(\n  lapply(1:ncol(mat), function(j) {\n    lapply(1:ncol(mat), function(i) {\n      s=sort(mat[,j]-mat[,i],decreasing=T);\n      s=s[s&gt;0];names(s)[1:min(n,length(s))]\n    })\n  }))))\n拆开来看： 1. 两层循环 (j, i) 遍历所有细胞类型对 2. mat[,j] - mat[,i] 就是类型 j 相对类型 i 的表达差 3. s = s[s &gt; 0] 只留 j 里上调的 4. 差值从大到小取前 n 个 5. 所有配对的基因取并集（unique(unlist(...))）\n出来的基因集会覆盖到每种细胞类型的高表达标志基因。\n\n\n2.3 第三步：Spearman 相关\nr = cor.stable(sc_data, ref_data, method='spearman')\ncor.stable 是 cor() 的稳健封装。输出一个 \\(M \\times K\\) 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。\n\n\n2.4 第四步：分位数聚合\nagg_scores = quantileMatrix(r, types, quantile.use)\nquantile.use 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。\n为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。跟 CellTypist 里的”投票”思路有点像。\n\n\n2.5 第五步：初版注释 + 置信度\nlabels = colnames(agg_scores)[max.col(agg_scores)]\noutput$pval = SingleR.ConfidenceTest(output$scores)\n初版就是挑每行得分最高的那个类型。\n置信度用卡方异常值检验：\nSingleR.ConfidenceTest = function(scores) {\n  apply(scores, 1, function(x) chisq.out.test(x)$p.value)\n}\n逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。\n\n\n2.6 第六步：Fine-tuning 迭代\n区分相似细胞类型的核心就靠这一步。\nSingleR.FineTune &lt;- function(sc_data, ref_data, types, scores, \n                              quantile.use, fine.tune.thres, ...) {\n  labels = pbmclapply(1:N, FUN=function(i){\n    max_score = max(scores[i,])\n    topLabels = names(scores[i, scores[i,] &gt;= max_score - fine.tune.thres])\n    while(length(topLabels) &gt; 1) {\n      topLabels = fineTuningRound(topLabels, types, ref_data, ...)\n    }\n    return (topLabels)\n  }, mc.cores=numCores)\n}\n流程：\n\nfine.tune.thres = 0.05，得分在最高分 0.05 范围内的都进入候选\n只从候选类型里重新挑差异基因\n新基因集重新算相关性\n迭代，直到只剩一个候选\n\n举个实际例子：\n\n\n\ncell type\nscore\n\n\n\n\nT-cell\n0.85\n\n\nNK-cell\n0.82\n\n\nB-cell\n0.62\n\n\n\nT-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种姐妹亚群区分上效果很好。\nfineTuningRound 里有行代码：\nagg_scores = agg_scores[-length(agg_scores)]\n每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。"
+    "section": "2 纯 R 版本",
+    "text": "2 纯 R 版本\n整体管线分六步：\n\nmedianMatrix → 算每个细胞类型的中位表达\nDE 基因选择 → \\(n = 500 \\times (2/3)^{\\log_2(N)}\\)\ncor.stable → Spearman 相关计算\nquantileMatrix → 0.8 分位数聚合得分\nchisq.out.test → 置信度检验\nfineTuningRound → 迭代微调\n\n\n2.1 第一步：算中位表达矩阵\nmat = medianMatrix(ref_data, types)\nmedianMatrix 按 types 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。\n\n\n2.2 第二步：挑差异基因\n选多少基因？\\(n\\) 跟参考细胞类型数 \\(N\\) 的关系是：\n\\[n = 500 \\times \\left( \\frac{2}{3} \\right)^{\\log_2(N)}\\]\n2 个类型时 \\(n = 333\\)，16 个类型时 \\(n \\approx 99\\)。类型越多，配对比较的次数按 \\(N^2\\) 增长，每个配对挑的基因数就得相应减少，不然总基因集会太多。\n对应的源码（SingleR.R:fineTuningRound）：\nn = round(500*(2/3)^(log2(c(ncol(mat)))))\ngenes.filtered = unique(unlist(unlist(\n  lapply(1:ncol(mat), function(j) {\n    lapply(1:ncol(mat), function(i) {\n      s=sort(mat[,j]-mat[,i],decreasing=T);\n      s=s[s&gt;0];names(s)[1:min(n,length(s))]\n    })\n  }))))\n拆开来看：\n\n两层循环 (j, i) 遍历所有细胞类型对\nmat[,j] - mat[,i] 就是类型 j 相对类型 i 的表达差\ns = s[s &gt; 0] 只留 j 里上调的\n差值从大到小取前 n 个\n所有配对的基因取并集（unique(unlist(...))）\n\n出来的基因集会覆盖到每种细胞类型的高表达标志基因。\n\n\n2.3 第三步：Spearman 相关\nr = cor.stable(sc_data, ref_data, method='spearman')\ncor.stable 是 cor() 的稳健封装，处理了某些列标准差为零的情况（来源：HelperFunctions.R）：\ncor.stable &lt;- function (x, y, method=\"pearson\", ...) {\n  omit1 &lt;- which(apply(x, 2, sd) == 0)\n  omit2 &lt;- which(apply(y, 2, sd) == 0)\n  if (length(omit1) &gt; 0 && length(omit2) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[-omit1,-omit2] = cor(x[,-omit1], y[,-omit2], method=method, ...)\n  } else if (length(omit1) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[-omit1,] = cor(x[,-omit1], y, method=method, ...)\n  } else if (length(omit2) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[,-omit2] = cor(x, y[,-omit2], method=method, ...)\n  } else {\n    r = cor(x, y, method=method, ...)\n  }\n  return(r)\n}\n输出一个 \\(M \\times K\\) 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。\n\n\n2.4 第四步：分位数聚合\nagg_scores = quantileMatrix(r, types, quantile.use)\nquantile.use 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。\n\n\n\n\n\n\nNote\n\n\n\n为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。\n\n\n\n\n2.5 第五步：初版注释 + 置信度\nlabels = colnames(agg_scores)[max.col(agg_scores)]\noutput$pval = SingleR.ConfidenceTest(output$scores)\n初版就是挑每行得分最高的那个类型。\n置信度用卡方异常值检验：\nSingleR.ConfidenceTest = function(scores) {\n  apply(scores, 1, function(x) chisq.out.test(x)$p.value)\n}\n逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。\n\n\n2.6 第六步：Fine-tuning 迭代\n区分相似细胞类型的核心就靠这一步。\nSingleR.FineTune &lt;- function(sc_data, ref_data, types, scores, \n                              quantile.use, fine.tune.thres, ...) {\n  labels = pbmclapply(1:N, FUN=function(i){\n    max_score = max(scores[i,])\n    topLabels = names(scores[i, scores[i,] &gt;= max_score - fine.tune.thres])\n    while(length(topLabels) &gt; 1) {\n      topLabels = fineTuningRound(topLabels, types, ref_data, ...)\n    }\n    return (topLabels)\n  }, mc.cores=numCores)\n}\n流程：\n\nfine.tune.thres = 0.05，得分在最高分 0.05 范围内的都进入候选\n只从候选类型里重新挑差异基因\n新基因集重新算相关性\n迭代，直到只剩一个候选\n\n举个实际例子：\n\n\n\ncell type\nscore\n\n\n\n\nT-cell\n0.85\n\n\nNK-cell\n0.82\n\n\nB-cell\n0.62\n\n\n\nT-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种亚群区分上效果很好。\nfineTuningRound 里有行代码：\nagg_scores = agg_scores[-length(agg_scores)]\n每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。"
   },
   {
     "objectID": "posts/singleR/index.html#bioconductor-版训练和分类拆开c-加速",
@@ -371,66 +343,31 @@
     "text": "4 两版对比\n\n\n\n维度\nLegacy\nBioconductor\n\n\n\n\n实现\n纯 R\nR + C++\n\n\n速度\n遍历所有配对\nKNN 索引加速\n\n\nDE 选法\nclassic 一种\nclassic / wilcox / t\n\n\n训练复用\n不支持\n训练一次分类多次\n\n\n质量过滤\n卡方检验\ndelta + MAD"
   },
   {
-    "objectID": "posts/singleR/index.html#几个有意思的设计",
-    "href": "posts/singleR/index.html#几个有意思的设计",
-    "title": "SingleR 源码解读",
-    "section": "5 几个有意思的设计",
-    "text": "5 几个有意思的设计\n参考驱动。SingleR 不需要事先知道 markers，全从参考数据里自动学。换个参考数据，自动适配新的分类体系。\nSpearman 而非 Pearson。秩相关的好处是只看排序不看绝对数值。不同平台、不同批次的数据，只要相对表达的高低顺序一致，就能匹配上。Pearson 对尺度敏感，不同实验平台的值域差太多就跪了。\n分位数聚合。0.8 分位在鲁棒性和灵敏度之间找了个舒服的位置。比均值更抗噪，比中位数更能抓到强信号。\n由粗到细的分层分类。先全局选基因做粗分，再局部选基因做细分。老版本和小版本都保留了这个设计。\n零膨胀的应对。单细胞数据 50%+ 零值是常事。新版的 wilcox/t 方法专门解决这个问题——中位数全是零的时候 classic 就无效了。参考聚合同样是为了处理单细胞数据的稀疏性。\n\n下载 PPTX"
-  },
-  {
-    "objectID": "posts/singleR/index.html#纯-r-版本",
-    "href": "posts/singleR/index.html#纯-r-版本",
-    "title": "SingleR 源码解读",
-    "section": "2 纯 R 版本",
-    "text": "2 纯 R 版本\n整体管线分六步：\n\nmedianMatrix → 算每个细胞类型的中位表达\nDE 基因选择 → \\(n = 500 \\times (2/3)^{\\log_2(N)}\\)\ncor.stable → Spearman 相关计算\nquantileMatrix → 0.8 分位数聚合得分\nchisq.out.test → 置信度检验\nfineTuningRound → 迭代微调\n\n\n2.1 第一步：算中位表达矩阵\nmat = medianMatrix(ref_data, types)\nmedianMatrix 按 types 分组，每组基因取中位数。输出是每个细胞类型一列、每个基因一行的矩阵。这一步把可能有成百上千列的参考数据压成了每个类型一个向量，后面计算起来就很轻量。\n\n\n2.2 第二步：挑差异基因\n选多少基因？\\(n\\) 跟参考细胞类型数 \\(N\\) 的关系是：\n\\[n = 500 \\times \\left( \\frac{2}{3} \\right)^{\\log_2(N)}\\]\n2 个类型时 \\(n = 333\\)，16 个类型时 \\(n \\approx 99\\)。类型越多，配对比较的次数按 \\(N^2\\) 增长，每个配对挑的基因数就得相应减少，不然总基因集会太多。\n对应的源码（SingleR.R:fineTuningRound）：\nn = round(500*(2/3)^(log2(c(ncol(mat)))))\ngenes.filtered = unique(unlist(unlist(\n  lapply(1:ncol(mat), function(j) {\n    lapply(1:ncol(mat), function(i) {\n      s=sort(mat[,j]-mat[,i],decreasing=T);\n      s=s[s&gt;0];names(s)[1:min(n,length(s))]\n    })\n  }))))\n拆开来看：\n\n两层循环 (j, i) 遍历所有细胞类型对\nmat[,j] - mat[,i] 就是类型 j 相对类型 i 的表达差\ns = s[s &gt; 0] 只留 j 里上调的\n差值从大到小取前 n 个\n所有配对的基因取并集（unique(unlist(...))）\n\n出来的基因集会覆盖到每种细胞类型的高表达标志基因。\n\n\n2.3 第三步：Spearman 相关\nr = cor.stable(sc_data, ref_data, method='spearman')\ncor.stable 是 cor() 的稳健封装，处理了某些列标准差为零的情况（来源：HelperFunctions.R）：\ncor.stable &lt;- function (x, y, method=\"pearson\", ...) {\n  omit1 &lt;- which(apply(x, 2, sd) == 0)\n  omit2 &lt;- which(apply(y, 2, sd) == 0)\n  if (length(omit1) &gt; 0 && length(omit2) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[-omit1,-omit2] = cor(x[,-omit1], y[,-omit2], method=method, ...)\n  } else if (length(omit1) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[-omit1,] = cor(x[,-omit1], y, method=method, ...)\n  } else if (length(omit2) &gt; 0) {\n    r &lt;- matrix(0, ncol(x), ncol(y))\n    r[,-omit2] = cor(x, y[,-omit2], method=method, ...)\n  } else {\n    r = cor(x, y, method=method, ...)\n  }\n  return(r)\n}\n输出一个 \\(M \\times K\\) 矩阵，一行一个测试细胞，一列一个参考样本，里面是 Spearman 秩相关系数。\n\n\n2.4 第四步：分位数聚合\nagg_scores = quantileMatrix(r, types, quantile.use)\nquantile.use 默认 0.8。意思是：对每个测试细胞，把某个细胞类型下所有参考样本的相关值取 0.8 分位数，作为这个类型的得分。\n\n\n\n\n\n\nNote\n\n\n\n为什么不用均值？参考数据里一个类型可能有多个样本，有些高分有些低分（批次效应之类的）。取 0.8 分位，相当于定位在”最相似的那 20% 参考样本”的水平——对离群值不敏感，但比中位数更靠近高相关的那端。\n\n\n\n\n2.5 第五步：初版注释 + 置信度\nlabels = colnames(agg_scores)[max.col(agg_scores)]\noutput$pval = SingleR.ConfidenceTest(output$scores)\n初版就是挑每行得分最高的那个类型。\n置信度用卡方异常值检验：\nSingleR.ConfidenceTest = function(scores) {\n  apply(scores, 1, function(x) chisq.out.test(x)$p.value)\n}\n逻辑是：把每个细胞各类型得分当一个分布，检验最高分是不是显著高过其他。p 值大（比如 &gt; 0.05），说明各个类型得分差距不大，这个注释不太靠谱。\n\n\n2.6 第六步：Fine-tuning 迭代\n区分相似细胞类型的核心就靠这一步。\nSingleR.FineTune &lt;- function(sc_data, ref_data, types, scores, \n                              quantile.use, fine.tune.thres, ...) {\n  labels = pbmclapply(1:N, FUN=function(i){\n    max_score = max(scores[i,])\n    topLabels = names(scores[i, scores[i,] &gt;= max_score - fine.tune.thres])\n    while(length(topLabels) &gt; 1) {\n      topLabels = fineTuningRound(topLabels, types, ref_data, ...)\n    }\n    return (topLabels)\n  }, mc.cores=numCores)\n}\n流程：\n\nfine.tune.thres = 0.05，得分在最高分 0.05 范围内的都进入候选\n只从候选类型里重新挑差异基因\n新基因集重新算相关性\n迭代，直到只剩一个候选\n\n举个实际例子：\n\n\n\ncell type\nscore\n\n\n\n\nT-cell\n0.85\n\n\nNK-cell\n0.82\n\n\nB-cell\n0.62\n\n\n\nT-cell 和 NK-cell 都在 0.05 差额内，B-cell 出局。第二轮只在 T 和 NK 之间找差异基因重新跑。这种”聚焦再聚焦”的打法，在 CD4+/CD8+ T 这种亚群区分上效果很好。\nfineTuningRound 里有行代码：\nagg_scores = agg_scores[-length(agg_scores)]\n每轮把得分最低的那个候选踢掉。如果基因数不到 20，直接返回第一个候选，不再迭代——防止在信息太少的情况下死循环。"
-  },
-  {
-    "objectID": "posts/scrublet/index.html",
-    "href": "posts/scrublet/index.html",
-    "title": "scrublet 识别双细胞源码解读",
+    "objectID": "posts/umami/index.html",
+    "href": "posts/umami/index.html",
+    "title": "用 Umami 分析网站访客",
     "section": "",
-    "text": "这篇源码整理成了 PPT，下载 PPTX"
+    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
   },
   {
-    "objectID": "docs/posts/scrublet/index.html",
-    "href": "docs/posts/scrublet/index.html",
-    "title": "scrublet 识别双细胞源码解读",
+    "objectID": "posts/umami/index.html#umami-cloud",
+    "href": "posts/umami/index.html#umami-cloud",
+    "title": "用 Umami 分析网站访客",
     "section": "",
-    "text": "这篇源码整理成了 PPT，下载 PPTX"
+    "text": "如果只是给个人博客看访问趋势，Umami Cloud 的免费额度通常就够用了。它的接入方式也比较轻：注册站点、复制追踪脚本，然后把脚本加入网页即可。\n\n\n\n\n\n\nNote\n\n\n\n如果访问量超过免费额度，或者希望完全自托管，也可以改用 Umami 的本地部署版本。"
   },
   {
-    "objectID": "posts/seeksoultools/index.html",
-    "href": "posts/seeksoultools/index.html",
-    "title": "SeekSoulTools 1.3.0 源码解读",
-    "section": "",
-    "text": "寻因（SeekGene）的 SeekSoulTools（seekgenebio/seeksoultools，本文基于 v1.3.0）是一套开源单细胞管线，从 FASTQ 一路到表达矩阵和 V(D)J 组装。它整体用 Python（click）串流程，重计算的部分交给 Rust（simpleqc、search-pattern）和成熟的外部工具（STAR、featureCounts、trust4、qualimap）。\n下面按数据流记一下我读源码时觉得值得留的点，分 scRNA 和 V(D)J 两块。"
+    "objectID": "posts/umami/index.html#接入步骤",
+    "href": "posts/umami/index.html#接入步骤",
+    "title": "用 Umami 分析网站访客",
+    "section": "2 接入步骤",
+    "text": "2 接入步骤\n\n注册Umami Cloud, 之后填写要分析的网站，填写完成后会给出对应的追踪代码；\n给要分析的网站，增加追踪代码：\n\n&lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"6aca168c-471e-41f9-9977-ac136a20c1c1\"&gt;&lt;/script&gt;\n上面代码data-website-id='*'记得改为对应的追踪 id。"
   },
   {
-    "objectID": "posts/seeksoultools/index.html#入口与整体结构",
-    "href": "posts/seeksoultools/index.html#入口与整体结构",
-    "title": "SeekSoulTools 1.3.0 源码解读",
-    "section": "1 入口与整体结构",
-    "text": "1 入口与整体结构\n入口在 src/seeksoultools/__init__.py，用 click 的 @click.group 组装出顶层命令 cli：\n@click.group(context_settings=dict(help_option_names=[\"-h\", \"--help\"]))\n@click.version_option(version=__version__, message=\"%(version)s\")\n@click.option(\"--debug\", is_flag=True, default=False, help=\"debug flag.\")\n@click.pass_context\ndef cli(ctx, debug):\n    ctx.ensure_object(dict)\n    ctx.obj[\"version\"] = __version__\n    if debug:\n        os.environ[\"seeksoultools_debug\"] = \"True\"\n    current_dir = Path.cwd()\n    check_disk_space(current_dir)\n\ncli.add_command(rna)\ncli.add_command(fast)\ncli.add_command(vdj)\ncli.add_command(multivdj)\ncli.add_command(utils)\n几个值得注意的点：\n\n--debug 走环境变量：debug 标志不放进 ctx.obj，而是写到 os.environ[\"seeksoultools_debug\"]。这样子进程（比如 fork 出去的 STAR、trust4）也能读到，不用层层透传。\n启动先查磁盘：check_disk_space 在跑任何东西之前用 psutil 看当前目录剩余空间，少于 0.1T 就 warning。单细胞中间文件动辄几十上百 G，提前卡掉比跑到一半崩好。\n顶层五个子命令：rna（scRNA 表达）、fast（快速版 RNA）、vdj（V(D)J）、multivdj（多样本 VDJ）、utils（建索引等工具）。\n\n调试时不用走命令行，直接调 Python：\nfrom seeksoultools import cli\ncli()"
-  },
-  {
-    "objectID": "posts/seeksoultools/index.html#scrna-流程",
-    "href": "posts/seeksoultools/index.html#scrna-流程",
-    "title": "SeekSoulTools 1.3.0 源码解读",
-    "section": "1 scRNA 流程",
-    "text": "1 scRNA 流程\nscRNA 的核心命令是 rna run，一条龙跑完 step1→step4。四个 step 分别做：\n\nstep1：barcode 提取——交给 Rust 写的 simpleqc\nstep2：比对+计数到基因——STAR、featureCounts 等\nstep3：UMI 折叠+矩阵+cell calling\nstep4：Seurat 降维聚类\n\n每个 step 也可以单独跑（rna step1/step2/step3/step4）。\n\n1.1 step1：把 barcode/UMI 提到 FASTQ 里\n这步交给 Rust 写的 simpleqc。它做两件事：质控统计 + 把 read1 里的 cell barcode、UMI 校正后写到新的 R1，把 cDNA read（R2）原样输出。后续 STAR 直接拿这个 R2 比对。\n输出到 Analysis/qc/ 目录下，文件大概是这些：\nAnalysis/qc/\n├── demo_r1.fq.gz          # 校正后的 barcode+UMI\n├── demo_r1.multi.fq.gz    # 多匹配的 barcode（默认丢弃）\n├── demo_r2.fq.gz          # cDNA read\n├── demo_r1_base_stat.csv\n├── demo_r1_qual_stat.csv\n├── demo_r2_base_stat.csv\n├── demo_r2_qual_stat.csv\n└── demo_summary.txt\nsimpleqc 的 read 结构用「Read Structure」描述（fgbio 规范），比如 17C12M+T 表示 17 个碱基的 Cell barcode（C）、12 个碱基的 UMI（M）、然后是模板（T）。上层用更可读的 bc:0:16,um:17:28，再由 readFormat2rs 函数翻译：\ndef readFormat2rs(readFormat:str):\n    # \"bc:0:15,um:16:25\" -&gt; \"17C25M+T\"\n    rs = \"\"\n    tmp = sorted(\n        [p.split(\":\") for p in readFormat.split(\",\")],\n        key=lambda x: int(x[1])\n    )\n    for (p, start, end) in tmp:\n        start = int(start); end = int(end)\n        if p == \"bc\":\n            rs += f\"{end-start+1}C\"\n        elif p == \"um\":\n            rs += f\"{end-start+1}M\"\n    rs += \"+T\"\n    return rs\n按 start 排序是为了保证 bc 永远在 um 前面——即便用户写反了。\n\n\n1.2 step2：比对与基因计数\nalign 函数串起 STAR → 排序 → qualimap → featureCounts → 按名字排序，每一步都可由 steps 参数跳过：\nif (\"steps\" not in kwargs) or (not kwargs[\"steps\"]):\n    kwargs[\"steps\"] = [\"STAR\", \"SortByPos\", \"qualimap\", \"FeatureCounts\", \"SortByName\"]\n整个 step2 的关键不是「怎么比对」，而是怎么从几个工具的输出里凑出 10x 风格的 QC 指标。mapping_summary 把 STAR 的 Log.final.out 和 qualimap 的 rnaseq_qc_results.txt 拆开读，重新算了一套：\n\n\n\n\n\n\n\n指标\n计算\n\n\n\n\nReads Mapped to Genome\n(unique + multi + too many) / Total\n\n\nReads Mapped Confidently to Genome\n(aligned to genes + no feature) / Total\n\n\nReads Mapped to Exonic Regions\nexonic / Total\n\n\nReads Mapped to Intronic Regions\nintronic / Total\n\n\nReads Mapped to Intergenic Regions\nintergenic / Total\n\n\n\n\n\n\n\n\n\nNote\n\n\n\n注意 “Mapped Confidently to Genome” 的算法：是 aligned to genes + no feature assigned。qualimap 里 “no feature” 指没落到任何注释区间，看似该排除，但这里把它算进 confident——因为落不到 feature 上不代表比对错，只是注释没覆盖到。比对的正确性由 STAR 的 unique mapping 决定，feature 是否注释上是另一回事。\n\n\nregion 参数控制计数时是否含内含子（--include-introns）。featureCounts 的链向通过 sc5p 推断：5’ 数据反向（-s 2）， otherwise 正向（-s 1）。\n最后一步 SortByName 很关键：featureCounts 出来的 bam 要按 read name 排序，因为 step3 的计数逻辑是 groupby(sam_file, key=lambda x: x.qname.split(\"_\",1)[0])——按 barcode 名分组遍历 bam。坐标排序没法高效做到这件事。\n\n\n1.3 step3：UMI 折叠与 cell calling\n这是整个 scRNA 最绕的一步。输入是按 barcode 分组好的 bam，输出是 raw matrix 和 filtered matrix。\n\n1.3.1 按 (barcode, gene) 分桶 + UMI 校正\nbam2table 外层按 barcode 分组，内层对每个 barcode 再按 read name（barcode_umi）二次分组：\nfor barcode, g in groupby(sam_file, key=lambda x: x.qname.split(\"_\", 1)[0]):\n    counts_dict, geneid_umi_dict = umi_count(g, ...)\numi_count 里每个 read 拿 featureCounts 打的 XT tag（基因 id），落到 (gene_id, umi) 桶里。这里有个多比对处理：一个 read 的 XT 可能是逗号分隔的多个基因（XT:Z:A,B），要调 multiple_alignment 用 IntervalTree 判断它到底真落哪个基因——只匹配到一个才采纳，否则丢弃。\nUMI 校正用的 UMIClusterer，看实现就是 umi_tools 那套「adjacency + 连通图」聚类：汉明距离 ≤ 1 的 UMI 连边，每个连通分量里 count 最高的留下、其余并过去。umi_correct_method 支持三种（cluster/adjacency/directional），默认 adjacency。\n校正完每个 (barcode, gene) 就是确定的 UMI 数，写到 counts.xls（cellID / geneID / UMINum / ReadsNum），这文件直接能转 raw matrix。\n\n\n1.3.2 从 counts.xls 到稀疏矩阵\nwrite_raw_matrix 按 barcode 分块读 counts.xls，攒成 COO 三元组再压成稀疏矩阵：\nmat = coo_matrix((data, (row, col)), shape=(name_df.shape[0], n))\n输出 10x 三件套：matrix.mtx.gz、features.tsv.gz、barcodes.tsv.gz。\n\n\n1.3.3 cell calling：EmptyDrops 的实现\n判定哪些 barcode 是真细胞，走的是 cell_identify.R 这个 R 脚本。它不是调 DropletUtils 的现成函数，而是把 10x cellranger 的 EmptyDrops 算法用 R 重写了一遍——分位数法找 top barcode、估背景 profile、多项式模拟算 p 值。\n流程是：\n\n找 top barcode：find_top_umi_barcode，按预期细胞数 recovered_cells 的 0.99 分位定基线，基线的 10% 作为 cutoff，bootstrap 100 次取均值。这一批是确定细胞的”种子”。\n找 ambient candidate：UMI ≥ max(500, median*0.01)、且不是 top 的 barcode。这是”可能是细胞也可能是空滴”的待判集合，限制最多 20000 个。\n估背景 profile：find_ambient_background 取 UMI 排名靠后的那批（假设是纯空滴），goodTuringProportions 做 Good-Turing 平滑得到每个基因的背景比例 ambient_prop。\n算每个 candidate 的 p 值：核心假设是——空滴的表达应该服从背景的多项式分布。compute_simulate_pvalues 模拟 10000 次多项式采样，算出每个总 UMI 数 n 对应的 log-likelihood 分布；compute_ambient_candidate_pvalues 把真实 candidate 的 likelihood 跟模拟分布比，(1 + 比它小的次数)/(1 + 模拟次数) 就是 p 值。\nBH 校正 + cutoff：p.adjust(method=\"BH\")，小于 pvalue（默认 0.01）的 candidate 也算细胞，跟 top 合起来输出。\n\n\n\n\n\n\n\nNote\n\n\n\nforceCell 模式：如果不信任自动 calling，--forceCell N 直接取 UMI 最多的前 N 个 barcode，跳过整个模拟。cell_calling 里 if kwargs[\"forceCell\"] != None 就走这条分支。\n\n\n模拟那块有个性能优化：相邻的 n（比如 n=100 和 n=101）不用各采一次样，而是在 n=100 的 curr_counts 基础上再加一个基因增量更新 likelihood（curr_loglk + log(p_j) + log(n/curr_counts[j])），省掉大量重算。\n\n\n\n1.4 step4：Seurat\ndo_seurat 调 R 脚本跑标准 Seurat 流程（NormalizeData → FindVariableFeatures → ScaleData → PCA → clustering → FindMarkers），输出降维聚类结果，没什么特别的。"
-  },
-  {
-    "objectID": "posts/seeksoultools/index.html#vdj-流程",
-    "href": "posts/seeksoultools/index.html#vdj-流程",
-    "title": "SeekSoulTools 1.3.0 源码解读",
-    "section": "2 V(D)J 流程",
-    "text": "2 V(D)J 流程\nV(D)J 入口是 run_trust4 函数。它没有从头造轮子，而是在 trust4 基础上包了一层 QC、UMI 校正、contig 重分配。整个流程：\nsimpleqc → enrichment_qc → fastq-extractor → subset_reads\n        → filter_umis → trust4 组装 → re_assign → report\n\n2.1 simpleqc：跟 scRNA 共用\n跟 step1 一样，输出 _r1.fq.gz / _r2.fq.gz。summary_simpleqc 从 _summary.txt 读 total_num / valid_num，从 qual stat csv 算 Q30。注意：后续所有比例的分母都是 Number of Valid Reads（校正后的有效 read），不是原始 read 数。\n\n\n2.2 enrichment_qc：Reads Mapped to Any V(D)J Gene\n这步回答”数据里到底有没有 V(D)J”。做法是：对 bcrtcr.fa（所有 BCR/TCR 的 V/D/J/C 序列）建 STAR 索引，把 R2 比上去，数每条链的 read 数。\ncount_chain 有个细节值得说：\nwith pysam.AlignmentFile(bam) as bamfh:\n    for r in bamfh:\n        chain = r.reference_name[:3]   # \"TRBV1\" -&gt; \"TRB\"\n        if r.get_tag(\"NH\")==1:         # 唯一比对\n            d[chain] += 1\n        else:\n            tmp[r.qname][chain] += 1   # 多比对先攒着\nNH tag = 1 表示唯一比对，直接计。多比对的 read（比如同时软比对到 TRBV 和 TRBJ）按 read name 攒到 dict，最后仲裁：只比对到一个链就计入；比对到多个链就比 count，count 相同判 unknown。这样避免一条 read 被多个链重复计。\nsummary_enrichment_qc 算链比例时按 chain 类型筛：\n\nTR 数据：只看 TRA + TRB，忽略 IG 链（IGH/IGK/IGL）。TCR 文库混入 IG 是噪声，不该计入 “Any V(D)J”。\nIG 数据：看 IGH + IGK + IGL。\n\n而且有个硬卡：Reads Mapped to Any V(D)J Gene &lt; 0.01 直接 logger.error，提示数据里没这个链，大概率是 chain 选错了或者文库搞错了。\n\n\n2.3 fastq-extractor 与 subset_reads\ntrust4 的 fastq-extractor 负责：用 bcrtcr.fa 抓 R2 里命中 V(D)J 的 read，把对应的 barcode/UMI 从 R1 抽出来，输出三件套（_preassemble_bc.fa / _preassemble_umi.fa / _preassemble.fq），同时统计每个 barcode 的 UMI 数和 read 数（_bc_count.tsv）。\n然后是 subset_reads：reads 数过高的 barcode 截断到 reads_limit（默认 80000）。原因是一些 barcode 可能是 doublet 或气泡污染，read 数异常高，直接组装会拖慢又影响克隆定量。做法是把每个 barcode 的 read 数封顶，多余的 read 砍掉。原始全量计数存到 _{samplename}_bc_count.tsv（带下划线前缀），截断后的覆盖 {samplename}_bc_count.tsv——这样后面算 “Fraction Reads in Cells” 时还能拿到原始数。\n\n\n2.4 filter_umis：VDJ 的 UMI 校正\ntrust4 原版对 VDJ UMI 校正比较粗，seeksoultools 自己加了一步 filter_umis。两阶段：\n1. 按阅读量过滤\n每个 barcode 内，先算 UMI count 的 N50：\ndef calculate_n50(umi_counts: dict):\n    counts = sorted(umi_counts.values(), reverse=True)\n    total_sum = sum(counts)\n    threshold = total_sum * 0.5\n    current_sum = 0\n    for count in counts:\n        current_sum += count\n        if current_sum &gt;= threshold:\n            return count\n    return 0\nN50 是组装/基因组学里的指标：把 UMI 按支持 read 数从高到低排，累计到总量 50% 时的那个 read 数。然后阈值定在 0.1 * N50，count 低于它的 UMI 丢掉。\n\n\n\n\n\n\nNote\n\n\n\n为什么用 N50 而不是固定阈值？不同 barcode 的测序深度差异大，固定阈值（比如丢掉 count&lt;3 的）在深测序样本里会误杀真 UMI、在浅测序样本里又滤不干净。N50 是个自适应的”该 barcode 自身规模”的度量，乘 0.1 当下限。\n\n\n2. adjacency 聚类校正\n跟 scRNA 那步一样，UMIClusterer(\"adjacency\") 把汉明距离 1 的 UMI 合并到 count 高的那个。校正过程写到 _{samplename}_filter.detail.xls，长这样：\nbarcode    original_umi  original_count  corrected_umi  corrected_count\nTGATCAGATGGATTTGA  ACCGGCGTTTTC  11   ACCGGCGTTTTA  33\nTGATCAGATGGATTTGA  ACCGGCGTTTTG   6   ACCGGCGTTTTA  39\n最后重写出新的 barcode/UMI/R2 fastq，UMI 改了之后连 read name 都同步改掉（name_parts[1] = corrected_umi）。\n\n\n2.5 trust4 组装 + re_assign\ntrust4 那几个子命令（trust4 组装、annotator 注释、trust-barcoderep/trust-simplerep/trust-airr 报告）seeksoultools 都用了，但加了自己的料。\n\n\n\n\n\n\nWarning\n\n\n\ntrust4_wrapper 里组装那步硬编码了 -t 8，跟上层传进来的 threads 脱节：\ncmd1 = (f\"trust4  -t 8 -f {fa} -o {wd}/{samplename} ...\")\n源码里也标了注释（参考笔记：“脚本代码固定了 8 个线程，应该修改下”）。如果你跑大批量样本，这里会成为瓶颈，建议改成 -t {threads}。\n\n\nannotator 加了 --readAssignment：输出 _assign.out，两列 read_name \\t contig，记录每条 read 归属的 contig。这是为了下一步的 re_assign。\n\n2.5.1 re_assign：按 UMI 重新分配 contig\n这是 seeksoultools 最有自己想法的一步（utils/reassign.py）。trust4 默认按 read 分配 contig，但 VDJ 里真正该数的是 UMI——一个 UMI 对应一个原始 mRNA 分子。re_assign 把分配单位从 read 换成 UMI。\n逻辑是：对每个 (barcode, UMI)，统计它下面的 read 落到各 contig 的次数，然后按 ratio 仲裁。process_assign_file 用多进程分块统计：\nfor barcode_umi, contig_counts in global_barcode_umi_dict.items():\n    sorted_counts = sorted(contig_counts.items(), key=lambda x: x[1], reverse=True)\n    if len(sorted_counts) == 1:\n        final_contig_barcodes[sorted_counts[0][0]].add(barcode_umi)\n    else:\n        ratio = sorted_counts[1][1] / sorted_counts[0][1]\n        if ratio &lt; 0.15:\n            final_contig_barcodes[sorted_counts[0][0]].add(barcode_umi)\n        else:\n            for contig, _ in sorted_counts:\n                final_contig_barcodes[contig].add(barcode_umi)\n举例，barcode bc1 的某个 UMI 下有：\n\n\n\ncontig\nread 数\n\n\n\n\ncontigA\n20\n\n\ncontigB\n1\n\n\n\nratio = 1/20 = 0.05 &lt; 0.15，这个 UMI 归 contigA。\n但如果：\n\n\n\ncontig\nread 数\n\n\n\n\ncontigA\n20\n\n\ncontigB\n10\n\n\n\nratio = 10/20 = 0.5 ≥ 0.15，说明 contigB 也有相当支持，UMI 同时归 contigA 和 contigB。\n分配完，update_cdr3_file 用结果改写 cdr3.out 的第 11 列（UMI count），让每个 contig 的 UMI 数反映重新分配后的结果。这一步直接影响克隆大小的定量。\n\n\n\n2.6 报告生成\n报告那块调了 dandelion：dandelion.tl.find_clones() 按 CDR3 序列相似度在 VDJ 数据里识别克隆，生成 clone_id。Estimated Number of Cells、Number of Cells with Productive V-J Spanning Pair 这些指标都是从 dandelion 出来的 airr_rearrangement.tsv 算的（get_clone_matrix 函数）。\n最后还有两个输出值得说：\n_filtered_contig_annotations.tsv：用 Rust 写的 search-pattern 生成（src/search-pattern）。它基于 LEADER 序列的匹配位置，把每条 contig 切成 FWR1/CDR1/FWR2/CDR2/FWR3/CDR3/FWR4 这些功能区。FWR1 的左边界是 LEADER 匹配终点、右边界是 CDR1 匹配起点，依此类推。10x 的 all_contig_annotations 也是这个结构。\nbarcode rank 图：读 _bc_count.tsv，按 UMI 数降序画。关键是它把曲线分成三段画——cell / 混合 / background：\n# BBBCC CCBBCBCC BBBBBBBBB\n#       |         |\n#    idx_first  idx_last\n每个逻辑分段单独处理（参考笔记：df_bg.shape[0]==0 全是细胞、df_cells.shape[0]==0 全是背景、普通情况分”第一个 cell 前的混合段” + “中间指数窗口” + “尾段” + “background”）。窗口按 idx_s + 1000*4**n 指数扩张，保证前端密集采样、后端稀疏，画出来曲线平滑。"
-  },
-  {
-    "objectID": "posts/seeksoultools/index.html#小结",
-    "href": "posts/seeksoultools/index.html#小结",
-    "title": "SeekSoulTools 1.3.0 源码解读",
-    "section": "3 小结",
-    "text": "3 小结\n把 seeksoultools 跟 10x cellranger 比一下，能看清它的定位：\n\n\n\n维度\ncellranger\nseeksoultools\n\n\n\n\n语言\n闭源 C++\nPython 串接 + Rust/外部工具\n\n\n比对\nSTAR（内置）\nSTAR（外部）\n\n\ncell calling\nEmptyDrops（内置）\nEmptyDrops 重写（R 脚本）\n\n\nVDJ\n专用 assembler\ntrust4 + 自己的 re_assign\n\n\nUMI 校正\n内置\nadjacency 聚类（类 umi_tools）\n\n\n可定制性\n低\n高（每步可单独跑、参数开放）\n\n\n\n它的价值不在”更快”，而在透明可改：每一步用什么工具、按什么阈值、输出什么文件都看得见。比如 re_assign 把 VDJ 的 contig 归属从 read 粒度换成 UMI 粒度，filter_umis 用 N50 自适应过滤，这些都是看了源码才能学到、用了闭源管线根本接触不到的设计选择。\n读完源码，几个可以马上拿来用的点：\n\n调试用 from seeksoultools import cli; cli()，比命令行方便断点\nVDJ 的 _filter.detail.xls 能看到 UMI 校正全过程，排查克隆数异常时直接看它\nreads_limit（默认 80000）和 re_assign 的 0.15 ratio 是两个可调旋钮，克隆定量不满意时优先试这俩"
+    "objectID": "posts/umami/index.html#放到-quarto-配置中",
+    "href": "posts/umami/index.html#放到-quarto-配置中",
+    "title": "用 Umami 分析网站访客",
+    "section": "3 放到 Quarto 配置中",
+    "text": "3 放到 Quarto 配置中\n对 Quarto 网站来说，可以把脚本放到 _quarto.yml 的 include-in-header 中，这样每个页面都会自动带上统计脚本：\nformat:\n  html:\n    include-in-header:\n      - text: |\n          &lt;script defer src=\"https://cloud.umami.is/script.js\" data-website-id=\"你的站点 ID\"&gt;&lt;/script&gt;"
   }
 ]
