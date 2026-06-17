@@ -2,6 +2,9 @@
 title: "用 cutadapt 框架并行处理 FASTQ"
 subtitle: "复用 cutadapt 实现自定义多进程 FASTQ 处理，以 barcode 校正为例"
 description: "解读 cutadapt 的并行架构，演示如何通过 SingleEndModifier 和 SingleEndSink 扩展 pipeline，实现自定义的 FASTQ 处理逻辑。"
+format:
+  html:
+    reference-location: margin
 author: "Liripo"
 date: "2026-06-16"
 categories: [python, bioinformatics]
@@ -19,7 +22,7 @@ image: "fastq-parallel.png"
 - 输出的有序写回
 - gzip 压缩的线程安全
 
-[cutadapt](https://github.com/marcelm/cutadapt) 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：**Modifier**、**Step** 和 **Pipeline**。
+cutadapt[^cutadapt] 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：**Modifier**、**Step** 和 **Pipeline**。
 
 本文解读 cutadapt 的并行架构，并演示如何编写一个 `SingleEndModifier` 来做 barcode 校正。
 
@@ -37,7 +40,7 @@ ReaderProcess ──pipe──> Worker 1 ──pipe──> ┐
                       Worker 3 ──pipe──> ┘
 ```
 
-- **ReaderProcess**：独立进程，用 `dnaio.read_chunks()` 按块读取 FASTQ，通过 `Connection` pipe 发送给空闲 worker
+- **ReaderProcess**：独立进程，用 dnaio[^dnaio] 的 `read_chunks()` 按块读取 FASTQ，通过 `Connection` pipe 发送给空闲 worker
 - **WorkerProcess**：接收数据块，调用 `Pipeline.process_reads()` 处理，结果通过 pipe 发回主进程
 - **OrderedChunkWriter**：在主进程中缓冲乱序到达的结果块，按原始顺序写入文件
 
@@ -214,7 +217,7 @@ with make_runner(input_paths, cores=4) as runner:
 
 ### 校正算法
 
-采用 [PISA](https://github.com/shienex/PISA) 的 k-mer 索引方法：
+采用 PISA[^PISA] 的 k-mer 索引方法：
 
 1. **构建索引**：对白名单中每条 barcode 提取 k-mer（k=5），建立 k-mer → barcode 集合的反向索引
 2. **查询校正**：从 query barcode 提取 k-mer，通过索引召回候选 barcode，逐一计算 Hamming 距离
@@ -321,7 +324,7 @@ with make_runner(input_paths, cores=4) as runner:
 
 ```bash
 # 安装依赖
-pip install cutadapt dnaio typer
+pip install cutadapt dnaio typer levenshtein
 
 # 运行
 python fastq_bc.py input.fastq.gz -w whitelist.txt -o output.fastq.gz -c 4
@@ -357,8 +360,6 @@ class QualityFilter(SingleEndStep):
 
 多个 modifier 和 step 可以自由组合到同一个 pipeline 中，cutadapt 会按顺序执行。
 
-## 参考
-
-- [cutadapt 源码](https://github.com/marcelm/cutadapt)
-- [PISA](https://github.com/shienex/PISA) — k-mer 索引 barcode 校正
-- [dnaio](https://github.com/marcelm/dnaio) — FASTQ/FASTA 读写库
+[^cutadapt]: [cutadapt](https://github.com/marcelm/cutadapt) — adapter 修剪与并行 FASTQ 处理框架
+[^PISA]: [PISA](https://github.com/shienex/PISA) — k-mer 索引 barcode 校正
+[^dnaio]: [dnaio](https://github.com/marcelm/dnaio) — FASTQ/FASTA 读写库

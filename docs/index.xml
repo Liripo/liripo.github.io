@@ -22,7 +22,7 @@
 
 
 
-<section id="为什么用-cutadapt-框架" class="level2" data-number="1">
+<section id="为什么用-cutadapt-框架" class="level2 page-columns page-full" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="为什么用-cutadapt-框架"><span class="header-section-number">1</span> 为什么用 cutadapt 框架</h2>
 <p>处理 FASTQ 文件时，最常见的需求就是对每条 read 做一些变换（截取、修剪、校正等）。数据量动辄几十 GB，单进程太慢，所以需要并行。</p>
 <p>自己用 <code>multiprocessing.Pool</code> 实现并行 FASTQ 处理看似简单，但细节很多：</p>
@@ -32,26 +32,26 @@
 <li>输出的有序写回</li>
 <li>gzip 压缩的线程安全</li>
 </ul>
-<p><a href="https://github.com/marcelm/cutadapt">cutadapt</a> 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：<strong>Modifier</strong>、<strong>Step</strong> 和 <strong>Pipeline</strong>。</p>
-<p>本文解读 cutadapt 的并行架构，并演示如何编写一个 <code>SingleEndModifier</code> 来做 barcode 校正。</p>
+<p>cutadapt<sup>1</sup> 已经把这些都实现好了。它的并行框架设计得很干净，核心只需理解三个概念：<strong>Modifier</strong>、<strong>Step</strong> 和 <strong>Pipeline</strong>。</p>
+<div class="no-row-height column-margin column-container"><div id="fn1"><p><sup>1</sup>&nbsp;<a href="https://github.com/marcelm/cutadapt">cutadapt</a> — adapter 修剪与并行 FASTQ 处理框架</p></div></div><p>本文解读 cutadapt 的并行架构，并演示如何编写一个 <code>SingleEndModifier</code> 来做 barcode 校正。</p>
 <blockquote class="blockquote">
 <p>完整脚本：<a href="fastq_bc.py">fastq_bc.py</a></p>
 </blockquote>
 </section>
-<section id="架构概览" class="level2" data-number="2">
+<section id="架构概览" class="level2 page-columns page-full" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="架构概览"><span class="header-section-number">2</span> 架构概览</h2>
-<section id="数据流" class="level3" data-number="2.1">
+<section id="数据流" class="level3 page-columns page-full" data-number="2.1">
 <h3 data-number="2.1" class="anchored" data-anchor-id="数据流"><span class="header-section-number">2.1</span> 数据流</h3>
 <p>cutadapt 的并行处理数据流如下：</p>
 <pre><code>ReaderProcess ──pipe──&gt; Worker 1 ──pipe──&gt; ┐
                       Worker 2 ──pipe──&gt; OrderedChunkWriter ──&gt; 文件
                       Worker 3 ──pipe──&gt; ┘</code></pre>
 <ul>
-<li><strong>ReaderProcess</strong>：独立进程，用 <code>dnaio.read_chunks()</code> 按块读取 FASTQ，通过 <code>Connection</code> pipe 发送给空闲 worker</li>
+<li><strong>ReaderProcess</strong>：独立进程，用 dnaio<sup>2</sup> 的 <code>read_chunks()</code> 按块读取 FASTQ，通过 <code>Connection</code> pipe 发送给空闲 worker</li>
 <li><strong>WorkerProcess</strong>：接收数据块，调用 <code>Pipeline.process_reads()</code> 处理，结果通过 pipe 发回主进程</li>
 <li><strong>OrderedChunkWriter</strong>：在主进程中缓冲乱序到达的结果块，按原始顺序写入文件</li>
 </ul>
-<p>这不是 <code>multiprocessing.Pool</code>，而是自定义的进程 + 管道模型，避免了 Pool 的序列化开销。</p>
+<div class="no-row-height column-margin column-container"><div id="fn2"><p><sup>2</sup>&nbsp;<a href="https://github.com/marcelm/dnaio">dnaio</a> — FASTQ/FASTA 读写库</p></div></div><p>这不是 <code>multiprocessing.Pool</code>，而是自定义的进程 + 管道模型，避免了 Pool 的序列化开销。</p>
 </section>
 <section id="核心类关系" class="level3" data-number="2.2">
 <h3 data-number="2.2" class="anchored" data-anchor-id="核心类关系"><span class="header-section-number">2.2</span> 核心类关系</h3>
@@ -452,13 +452,13 @@ font-style: inherit;">=</span> runner.run(pipeline, DummyProgress(), outfiles)</
 <p><code>PairedEndPipeline</code> 的 <code>modifiers</code> 列表支持混合使用：元组形式的 <code>(mod1, mod2)</code> 会被自动包装为 <code>PairedEndModifierWrapper</code>，<code>PairedEndModifier</code> 子类直接使用。元组中的元素可以设为 <code>None</code> 表示只处理其中一端。</p>
 </section>
 </section>
-<section id="实战barcode-校正" class="level2" data-number="6">
+<section id="实战barcode-校正" class="level2 page-columns page-full" data-number="6">
 <h2 data-number="6" class="anchored" data-anchor-id="实战barcode-校正"><span class="header-section-number">6</span> 实战：Barcode 校正</h2>
 <p>以 barcode 校正为例，完整展示如何复用 cutadapt 框架。</p>
-<section id="校正算法" class="level3" data-number="6.1">
+<section id="校正算法" class="level3 page-columns page-full" data-number="6.1">
 <h3 data-number="6.1" class="anchored" data-anchor-id="校正算法"><span class="header-section-number">6.1</span> 校正算法</h3>
-<p>采用 <a href="https://github.com/shienex/PISA">PISA</a> 的 k-mer 索引方法：</p>
-<ol type="1">
+<p>采用 PISA<sup>3</sup> 的 k-mer 索引方法：</p>
+<div class="no-row-height column-margin column-container"><div id="fn3"><p><sup>3</sup>&nbsp;<a href="https://github.com/shienex/PISA">PISA</a> — k-mer 索引 barcode 校正</p></div></div><ol type="1">
 <li><strong>构建索引</strong>：对白名单中每条 barcode 提取 k-mer（k=5），建立 k-mer → barcode 集合的反向索引</li>
 <li><strong>查询校正</strong>：从 query barcode 提取 k-mer，通过索引召回候选 barcode，逐一计算 Hamming 距离</li>
 <li><strong>唯一命中</strong>：仅接受唯一命中且距离 ≤ max_dist 的结果。多个候选距离相同则返回 None（避免歧义校正）</li>
@@ -768,7 +768,7 @@ background-color: null;
 font-style: inherit;"># 安装依赖</span></span>
 <span id="cb14-2"><span class="ex" style="color: null;
 background-color: null;
-font-style: inherit;">pip</span> install cutadapt dnaio typer</span>
+font-style: inherit;">pip</span> install cutadapt dnaio typer levenshtein</span>
 <span id="cb14-3"></span>
 <span id="cb14-4"><span class="co" style="color: #5E5E5E;
 background-color: null;
@@ -885,17 +885,10 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">return</span> read</span></code></pre></div></div>
 <p>多个 modifier 和 step 可以自由组合到同一个 pipeline 中，cutadapt 会按顺序执行。</p>
-</section>
-<section id="参考" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="参考"><span class="header-section-number">8</span> 参考</h2>
-<ul>
-<li><a href="https://github.com/marcelm/cutadapt">cutadapt 源码</a></li>
-<li><a href="https://github.com/shienex/PISA">PISA</a> — k-mer 索引 barcode 校正</li>
-<li><a href="https://github.com/marcelm/dnaio">dnaio</a> — FASTQ/FASTA 读写库</li>
-</ul>
 
 
 </section>
+
 
  ]]></description>
   <category>python</category>

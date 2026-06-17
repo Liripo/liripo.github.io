@@ -10,7 +10,7 @@ fastq_bc.py —— 基于 cutadapt 并行框架的 FASTQ Barcode 校正工具
     python fastq_bc.py input.fastq.gz -w whitelist.txt -o output.fastq.gz -c 4
 
 需要安装:
-    pip install cutadapt dnaio typer
+    pip install cutadapt dnaio typer levenshtein
 """
 
 from __future__ import annotations
@@ -34,6 +34,8 @@ from cutadapt.runners import make_runner
 from cutadapt.files import InputPaths, OutputFiles, FileOpener
 from cutadapt.utils import available_cpu_count, DummyProgress
 from cutadapt.info import ModificationInfo
+
+import Levenshtein
 
 app = typer.Typer(
     name="fastq-bc",
@@ -73,10 +75,6 @@ class BarcodeCorrector:
                 kmer = barcode[j : j + self.k]
                 self.index[kmer].add(i)
 
-    @staticmethod
-    def _hamming_distance(s1: str, s2: str) -> int:
-        return sum(c1 != c2 for c1, c2 in zip(s1, s2))
-
     def correct(self, query: str) -> Optional[str]:
         """
         校正 query barcode。返回校正后的 barcode 或 None（歧义/无命中）。
@@ -104,7 +102,7 @@ class BarcodeCorrector:
         best_barcode: Optional[str] = None
         for idx in candidates:
             barcode = whitelist_list[idx]
-            dist = self._hamming_distance(query, barcode)
+            dist = Levenshtein.hamming(query, barcode)
             if dist < best_dist:
                 best_dist = dist
                 best_barcode = barcode
