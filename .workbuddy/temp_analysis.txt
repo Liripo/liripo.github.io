@@ -1,0 +1,310 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+*.egg
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Node
+node_modules/
+dist/
+.wrangler/
+
+# Data (hosted on HuggingFace)
+datasets/**/*.rds
+datasets/**/*.h5ad
+datasets/**/*.h5
+datasets/**/*.mtx
+datasets/**/*.gz
+datasets/_raw/
+
+# Task runtime (gitignored per-task, but also here for safety)
+*.rds
+*.h5ad
+reference_outputs/
+artifacts/
+.zyme/
+memory/
+results.tsv
+verify.tsv
+profile_history/
+Rprof.out
+
+# Internal QA harness + test-run logs (never published; committed by the
+# fresh_user_check / smoke flow, not by the release sync)
+test_mac/
+test_windows/
+validation/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
+
+cff-version: 1.2.0
+message: "If you use AutoZyme, please cite it as below."
+title: "AutoZyme: Autonomous CPU-side acceleration of scientific computing software"
+type: software
+version: 0.3.0
+authors:
+  - given-names: Elliot
+    family-names: Xie
+    affiliation: "University of Wisconsin-Madison"
+  - given-names: Lingxin
+    family-names: Cheng
+    affiliation: "University of Wisconsin-Madison"
+  - given-names: Yujia
+    family-names: Cai
+    affiliation: "University of Wisconsin-Madison"
+  - given-names: Jack
+    family-names: Shireman
+    affiliation: "University of Wisconsin-Madison"
+  - given-names: Christina
+    family-names: Kendziorski
+    affiliation: "University of Wisconsin-Madison"
+repository-code: "https://github.com/ElliotXie/autozyme"
+url: "https://www.autozyme.com"
+license: MIT
+preferred-citation:
+  type: article
+  title: "AutoZyme: An Autonomous Agentic Framework to Optimize Bioinformatics Software"
+  authors:
+    - given-names: Elliot
+      family-names: Xie
+      affiliation: "University of Wisconsin-Madison"
+    - given-names: Lingxin
+      family-names: Cheng
+      affiliation: "University of Wisconsin-Madison"
+    - given-names: Yujia
+      family-names: Cai
+      affiliation: "University of Wisconsin-Madison"
+    - given-names: Jack
+      family-names: Shireman
+      affiliation: "University of Wisconsin-Madison"
+    - given-names: Christina
+      family-names: Kendziorski
+      affiliation: "University of Wisconsin-Madison"
+  journal: bioRxiv
+  year: 2026
+  doi: "10.64898/2026.06.12.731250"
+  url: "https://www.biorxiv.org/content/10.64898/2026.06.12.731250v1"
+keywords:
+  - bioinformatics
+  - single-cell
+  - scientific-computing
+  - performance-optimization
+  - llm-agents
+
+# autozyme
+
+Autonomous CPU-side speed optimization of scientific computing functions. One target function per task; iterate via the `zyme` CLI.
+
+## Layout
+
+- `autozyme_cli/` — the CLI framework. Install with `pip install -e autozyme_cli/`.
+- `autozyme_py/` — Python accelerator package (ships optimized patches).
+- `autozyme_r/` — R accelerator package (ships optimized patches).
+- `datasets/` — README + setup scripts. Actual data on HuggingFace: `elliotxie/autozyme-datasets`.
+
+## How to use
+
+1. `pip install -e autozyme_cli/`
+2. `zyme --version` to verify
+3. Follow `autozyme_cli/zyme/prompts/Bio/0_bootstrap.md` to start a new optimization task
+
+## Environment
+
+- R tasks (Seurat, Bioconductor): need R + relevant packages installed.
+- Python tasks (Scanpy, etc.): need conda env with the target package.
+- Data: downloaded from HuggingFace by the init agent when needed.
+
+## CLI quick reference
+
+```
+zyme init <repo> [<function>]    # scaffold a task
+zyme run "<hypothesis>"          # run an optimization attempt
+zyme accept / reject             # keep or discard
+zyme status                      # task state summary
+zyme verify                      # thread x tier validation matrix
+```
+
+MIT License
+
+Copyright (c) 2025 Elliot Xie
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+# AutoZyme
+
+**AutoZyme** is an autonomous multi-agent framework that speeds up scientific software on CPUs while preserving the original results. Install **AutoZyme-Library** for drop-in accelerators of Seurat, Scanpy, and 30+ packages, or run the framework to optimize a function it doesn't ship yet.
+
+<!-- TODO: point docs badge -> docs site once a stable docs URL is chosen (currently placeholder #) -->
+[![Preprint](https://img.shields.io/badge/preprint-bioRxiv-brightgreen)](https://www.biorxiv.org/content/10.64898/2026.06.12.731250v1)
+[![Docs](https://img.shields.io/badge/docs-available-brightgreen)](#)
+[![Website](https://img.shields.io/badge/website-autozyme.com-1f6feb)](https://www.autozyme.com)
+[![Datasets](https://img.shields.io/badge/datasets-HuggingFace-ffce1c?logo=huggingface&logoColor=white)](https://huggingface.co/datasets/elliotxie/autozyme-datasets)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+## Using pre-built patches
+
+Three steps in either language: **install**, **activate** a package, then call its functions exactly as before.
+
+### R
+
+```r
+# install
+remotes::install_github("ElliotXie/autozyme", subdir = "autozyme_r")
+
+# activate  (Seurat, InferCNV, cellchat, and more)
+library(autozyme)
+autozyme::activate("seurat")
+
+# run your existing code, now faster
+markers <- FindAllMarkers(obj)
+```
+
+> The R package compiles C++ kernels at install. This only really trips up **Windows** (no built-in compiler): install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) matching your R version first, or the build fails. macOS (Xcode Command Line Tools) and Linux (gcc) normally already have a compiler.
+
+### Python
+
+```python
+# install
+pip install autozyme
+
+# activate  (Scanpy, Squidpy, CellPhoneDB, and more)
+import autozyme
+autozyme.activate("scanpy")
+
+# run your existing code, now faster
+sc.tl.rank_genes_groups(adata, "leiden")
+```
+
+Activate as many packages as you need. Run `autozyme::dashboard()` (R) or `python -m autozyme` (Py
+# New session - 2026-06-23T13:44:28.984Z
+
+**Session ID:** ses_10b4655c7ffesZ2YJRARDslUMa
+**Created:** 2026/6/23 21:44:28
+**Updated:** 2026/6/23 22:23:00
+
+---
+
+## User
+
+@scripts 每个脚本是干嘛的
+
+---
+
+## Assistant (Build · MiMo V2.5 Free · 16.2s)
+
+_Thinking:_
+
+The user is asking about what each script in the @scripts folder does. Let me explore that directory.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "C:\\data\\work\\git\\autozyme\\scripts"
+}
+```
+
+**Output:**
+```
+<path>C:\data\work\git\autozyme\scripts</path>
+<type>directory</type>
+<entries>
+check_versions.py
+fresh_user_check.sh
+hooks/
+local_r_testthat_files.ps1
+local_release_smoke.ps1
+
+(5 entries)
+</entries>
+```
+
+---
+
+## Assistant (Build · MiMo V2.5 Free · 21.6s)
+
+_Thinking:_
+
+Let me read the scripts to understand what each one does.
+
+**Tool: read**
+
+**Input:**
+```json
+{
+  "filePath": "C:\\data\\work\\git\\autozyme\\scripts\\check_versions.py"
+}
+```
+
+**Output:**
+```
+<path>C:\data\work\git\autozyme\scripts\check_versions.py</path>
+<type>file</type>
+<content>
+1: #!/usr/bin/env python3
+2: """Verify autozyme_py and autozyme_r declare the same version.
+3: 
+4: Three places hold the version literal:
+5:   - autozyme_py/pyproject.toml          [project.version]
+6:   - autozyme_py/src/autozyme/__init__.py  __version__
+7:   - autozyme_r/DESCRIPTION              Version:
+8: 
+9: Run from CI on every push, and locally before tagging a release.
+10: Exits 0 on match, 1 on mismatch with a diff-style report.
+11: """
+12: from __future__ import annotations
+13: 
+14: import re
+15: import sys
+16: from pathlib import Path
+17: 
+18: try:
+19:     import tomllib
+20: except ModuleNotFoundError:
+21:     import tomli as tomllib
+22: 
+23: ROOT = Path(__file__).resolve().parent.parent
+24: 
+25: 
+26: def read_pyproject() -> str:
+27:     data = tomllib.loads((ROOT / "autozyme_py/pyproject.toml").read_text())
+28:     return data["project"]["version"]
+29: 
+30: 
+31: def read_init() -> str:
+32:     text = (ROOT / "autozyme_py/src/autozyme/__init__.py").

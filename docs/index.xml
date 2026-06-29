@@ -9,8 +9,2214 @@
 <link>https://liripo.github.io/</link>
 <atom:link href="https://liripo.github.io/index.xml" rel="self" type="application/rss+xml"/>
 <description>Blog</description>
-<generator>quarto-1.9.37</generator>
-<lastBuildDate>Mon, 15 Jun 2026 16:00:00 GMT</lastBuildDate>
+<generator>quarto-1.9.38</generator>
+<lastBuildDate>Sat, 27 Jun 2026 16:00:00 GMT</lastBuildDate>
+<item>
+  <title>autozyme-cli——AI agent代码加速</title>
+  <dc:creator>Liripo </dc:creator>
+  <link>https://liripo.github.io/posts/autozyme-cli/</link>
+  <description><![CDATA[ 
+
+
+
+
+
+
+<section id="引言" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="引言"><span class="header-section-number">1</span> 引言</h2>
+<p><a href="https://github.com/ElliotXie/autozyme">AutoZyme</a> 是一个自动加速科学计算函数的框架，保证优化后的结果和原版一模一样。它由两部分组成：<code>autozyme_r</code> / <code>autozyme_py</code> 负责生成加速补丁，<code>autozyme-cli</code>（命令行工具叫 <code>zyme</code>）负责驱动整个优化流程——初始化任务、测量基准、迭代加速、验证正确性。</p>
+<p>本文聚焦 <code>autozyme-cli</code>，以一次真实的 Seurat <code>NormalizeData</code> 加速任务为线索，边讲实战边拆源码。</p>
+<blockquote class="blockquote">
+<p>项目地址：<a href="https://github.com/ElliotXie/autozyme" class="uri">https://github.com/ElliotXie/autozyme</a></p>
+<p>预印本：<a href="https://www.biorxiv.org/content/10.64898/2026.06.12.731250v1" class="uri">https://www.biorxiv.org/content/10.64898/2026.06.12.731250v1</a></p>
+</blockquote>
+</section>
+<section id="快速上手" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="快速上手"><span class="header-section-number">2</span> 快速上手</h2>
+<section id="安装" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="安装"><span class="header-section-number">2.1</span> 安装</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">git</span> clone https://github.com/ElliotXie/autozyme.git</span>
+<span id="cb1-2"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> autozyme <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&amp;&amp;</span> <span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-e</span> autozyme_cli/</span></code></pre></div></div>
+<p>安装后获得 <code>zyme</code> 命令：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">zyme</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">--version</span>   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># zyme 0.3.1</span></span></code></pre></div></div>
+</section>
+<section id="两种使用方式" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="两种使用方式"><span class="header-section-number">2.2</span> 两种使用方式</h3>
+<p>AutoZyme 的优化流程由编程代理（Claude Code、Codex、Cursor 等）驱动，CLI 负责执行和测量。有两种跑法：</p>
+<p><strong>自主模式</strong>：把一段提示词粘贴给代理，它自己跑完全流程：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Clone</span> https://github.com/ElliotXie/autozyme.git,</span>
+<span id="cb3-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">install</span> the CLI <span class="er" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">(</span><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">pip</span> install <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">-e</span> autozyme/autozyme_cli/<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">)</span><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">.</span></span>
+<span id="cb3-3"></span>
+<span id="cb3-4"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">I</span> want to optimize FindAllMarkers from Seurat.</span>
+<span id="cb3-5"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Repo:</span> https://github.com/satijalab/seurat</span>
+<span id="cb3-6"></span>
+<span id="cb3-7"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">Read</span> and follow autozyme/autozyme_cli/zyme/prompts/manager/0_pipeline.md</span></code></pre></div></div>
+<p>管理器代理自动跑完脚手架 → 初始化 → 迭代 → 验证 → 打包，典型耗时 4–10 小时。</p>
+<p><strong>手动模式</strong>：自己建目录、跑 <code>zyme init</code>，然后逐阶段把提示词粘贴给代理：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">mkdir</span> test_normalizedata <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&amp;&amp;</span> <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">cd</span> test_normalizedata</span>
+<span id="cb4-2"><span class="ex" style="color: null;
+background-color: null;
+font-style: inherit;">zyme</span> init https://github.com/satijalab/seurat NormalizeData</span></code></pre></div></div>
+<p>我这次跑的是自主模式，目标就是 <code>Seurat::NormalizeData</code>。</p>
+</section>
+</section>
+<section id="实战加速-seuratnormalizedata" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="实战加速-seuratnormalizedata"><span class="header-section-number">3</span> 实战：加速 Seurat::NormalizeData</h2>
+<section id="任务长什么样" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="任务长什么样"><span class="header-section-number">3.1</span> 任务长什么样</h3>
+<p><code>zyme init</code> 会在当前目录生成一组模板文件。init 代理填完内容后，核心的 <code>task.yaml</code> 长这样：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode numberSource yaml number-lines code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># task.yaml</span></span>
+<span id="cb5-2"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">task</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> seurat_NormalizeData</span></span>
+<span id="cb5-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">target_repo</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> https://github.com/satijalab/seurat</span></span>
+<span id="cb5-4"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">target_function</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> Seurat::NormalizeData</span></span>
+<span id="cb5-5"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">signature</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> NormalizeData(object = seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)</span></span>
+<span id="cb5-6"></span>
+<span id="cb5-7"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">datasets</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb5-8"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tier</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> small</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> pbmc3k</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ./data/pbmc3k.rds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span></span>
+<span id="cb5-9"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tier</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> medium</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> pbmc8k</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ./data/pbmc8k.rds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span></span>
+<span id="cb5-10"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tier</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> large</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> pbmc10k</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ./data/pbmc10k.rds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span></span>
+<span id="cb5-11"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tier</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ood_large</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> neuron10k</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">           </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ./data/neuron10k.rds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span></span>
+<span id="cb5-12"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">tier</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ood_xlarge</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> tabula_muris_merged</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">path</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> ./data/tabula_muris_merged.rds</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span></span>
+<span id="cb5-13"></span>
+<span id="cb5-14"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">metrics</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span></span>
+<span id="cb5-15"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> pearson_data</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">threshold</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.999</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">comparator</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> gte</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">      # 归一化后的数据 Pearson 相关必须 &gt;= 0.999</span></span>
+<span id="cb5-16"><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">  </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">{</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">name</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> max_abs_diff_data</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">threshold</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.001</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">comparator</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> lte</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">}</span><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">  # 逐元素最大差异 &lt;= 0.001</span></span>
+<span id="cb5-17"></span>
+<span id="cb5-18"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">baseline_threads</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">:</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">,</span><span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;"> </span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">8</span><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">]</span></span></code></pre></div></div>
+<p>几个关键信息：</p>
+<ul>
+<li><strong>三个开发数据集</strong>（small/medium/large）用来做迭代优化，还有两个 OOD（out-of-distribution）数据集用来做最终验证。</li>
+<li><strong>两个正确性指标</strong>：Pearson 相关系数和逐元素最大差异。LogNormalize 是确定性算术，理论上加速后的结果应该和原版完全一致。</li>
+<li><strong>三个线程点</strong>（1/4/8）：验证在不同并行度下加速是否稳定。</li>
+</ul>
+<p>任务目录的完整结构：</p>
+<pre><code>seurat_NormalizeData/
+├── task.yaml              # 上面这个
+├── reference.R            # 基准脚本：用原版 Seurat 跑，产出参考输出
+├── evaluate.R             # 评估脚本：对比 pipeline 输出和参考输出
+├── pipeline/run.R         # 优化脚本：每一轮编辑的目标
+├── results.tsv            # 结果日志：每一轮的速度和指标
+├── reference_output_&lt;tier&gt;/ # 各数据层的参考输出（如 reference_output_small/）
+├── data/                   # 数据集
+├── memory/                 # 代理的"记忆"（发现、死胡同）
+└── .zyme/                  # 框架内部状态
+    ├── best.ref             # 当前最佳提交的 SHA
+    └── round.counter        # 轮次计数器</code></pre>
+</section>
+<section id="基准与剖析" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="基准与剖析"><span class="header-section-number">3.2</span> 基准与剖析</h3>
+<p>优化前先得知道基准是多少、时间花在哪。<code>zyme baseline reference</code> 负责前者，<code>zyme profile</code> 负责后者。</p>
+<p><strong>基准行</strong>（round 0）由 <code>zyme baseline reference</code> 跑原版代码测得。它会运行 <code>reference.R</code>，用 <code>Sys.time()</code> 计时原版 <code>Seurat::NormalizeData</code>，同时把结果矩阵存到 <code>reference_output_&lt;tier&gt;/</code>（如 <code>reference_output_small/</code>）供后续对比：</p>
+<pre><code>round  commit    dataset  speed_sec  speedup_pct  status
+0      upstream  pbmc3k   1.046      0.0          baseline
+0      upstream  pbmc8k   1.832      0.0          baseline
+0      upstream  pbmc10k  2.841      0.0          baseline</code></pre>
+<p>pbmc3k（2700 个细胞）跑一次 1.046 秒，看起来不慢。但 1 秒里到底在算什么？代理接着跑了 <code>zyme profile --backend full</code>，这会启用 Rprof（R 内置采样式剖析器）记录整个调用栈，然后把结果归一化成 <code>profile_history/&lt;run-id&gt;/profile.json</code>。profile 实际耗时 1.7s，比基准的 1.046s 略高，这是 profiling 自身的采样开销。</p>
+<p>profile.json 里最有用的是 <code>layer_breakdown</code>——按可编辑层次汇总时间分布：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>层次</th>
+<th>自耗时</th>
+<th>占比</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>library</td>
+<td>0.63s</td>
+<td>47%</td>
+<td>Matrix 下标操作 + paste 命令日志</td>
+</tr>
+<tr class="even">
+<td>base-r</td>
+<td>0.35s</td>
+<td>26%</td>
+<td>gc（中间拷贝触发的垃圾回收）</td>
+</tr>
+<tr class="odd">
+<td>primitive</td>
+<td>0.35s</td>
+<td>26%</td>
+<td><code>.Call</code>——真正的 C++ LogNorm 计算</td>
+</tr>
+</tbody>
+</table>
+<p>library + base-r 加起来 74%，全是 R 层面的开销。再往下看 <code>per_layer_top</code>（每层的头号函数），能定位到具体是什么在吃时间：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 22%">
+<col style="width: 16%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>函数</th>
+<th>层次</th>
+<th>自耗时</th>
+<th>占比</th>
+<th>在干什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.Call</code></td>
+<td>primitive</td>
+<td>0.35s</td>
+<td>26%</td>
+<td>C++ LogNorm，真正的数学计算</td>
+</tr>
+<tr class="even">
+<td><code>..subscript.2ary</code></td>
+<td>library:Matrix</td>
+<td>0.33s</td>
+<td>25%</td>
+<td><code>SetAssayData</code>/<code>LayerData</code> 的矩阵下标拷贝</td>
+</tr>
+<tr class="odd">
+<td><code>paste</code></td>
+<td>library:backports</td>
+<td>0.29s</td>
+<td>22%</td>
+<td><code>LogSeuratCommand</code> 格式化命令日志</td>
+</tr>
+<tr class="even">
+<td><code>gc</code></td>
+<td>base-r</td>
+<td>0.27s</td>
+<td>20%</td>
+<td>中间拷贝产生的垃圾回收</td>
+</tr>
+</tbody>
+</table>
+<p>这就是那张 74% 表的由来。问题很清楚了：Seurat v5 的 <code>NormalizeData</code> 调用链是 <code>NormalizeData</code>（泛型）→ <code>NormalizeData.Seurat</code> → <code>NormalizeData.Assay</code> → <code>NormalizeData.V3Matrix</code> → <code>LogNormalize.V3Matrix</code> → <code>LogNorm</code>（C++），每一跳都触发 S3 方法分派、Matrix 下标操作和校验。真正的计算只占 26%。</p>
+</section>
+<section id="优化迭代" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="优化迭代"><span class="header-section-number">3.3</span> 优化迭代</h3>
+<p>知道时间花在哪之后，整个优化的核心就是一个循环：编辑 <code>pipeline/run.R</code> → <code>zyme run</code> 提交并测量 → 根据结果 <code>zyme accept</code>（保留）或 <code>zyme reject</code>（丢弃）。让我用这次实际的 <code>results.tsv</code> 来讲这个过程。</p>
+<p>以下是 <code>results.tsv</code> 完整记录的每次提交与测量结果：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 13%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Round</th>
+<th>Commit</th>
+<th>Dataset</th>
+<th>sec</th>
+<th>∆%</th>
+<th>Peak</th>
+<th>Status</th>
+<th>Hypothesis</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>upstream</td>
+<td>pbmc3k</td>
+<td>1.046</td>
+<td>—</td>
+<td>522M</td>
+<td>baseline</td>
+<td>upstream reference</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>upstream</td>
+<td>pbmc8k</td>
+<td>1.832</td>
+<td>—</td>
+<td>1066M</td>
+<td>baseline</td>
+<td>upstream reference</td>
+</tr>
+<tr class="odd">
+<td>0</td>
+<td>upstream</td>
+<td>pbmc10k</td>
+<td>2.841</td>
+<td>—</td>
+<td>1812M</td>
+<td>baseline</td>
+<td>upstream reference</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>2dc6ca5</td>
+<td>pbmc3k</td>
+<td>crash</td>
+<td>—</td>
+<td>—</td>
+<td>crash</td>
+<td>direct LogNorm C++ (<code>patch_namespace</code> 参数错)</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>a0af459</td>
+<td>pbmc3k</td>
+<td>crash</td>
+<td>—</td>
+<td>—</td>
+<td>crash</td>
+<td>direct LogNorm C++ (<code>LogNorm</code> 参数不匹配)</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>c5079d9</td>
+<td>pbmc3k</td>
+<td>crash</td>
+<td>—</td>
+<td>—</td>
+<td>crash</td>
+<td>direct LogNorm C++ (<code>match.arg</code> 校验没绕过)</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>99cc40f</td>
+<td>pbmc3k</td>
+<td>0.632</td>
+<td>40.4%</td>
+<td>538M</td>
+<td>keep</td>
+<td>bypass S3 dispatch + direct LogNorm</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td>91a8c08</td>
+<td>pbmc3k</td>
+<td>0.325</td>
+<td>69.4%</td>
+<td>512M</td>
+<td>keep</td>
+<td>direct slot read, bypass LayerData</td>
+</tr>
+<tr class="odd">
+<td>6</td>
+<td>426fc62</td>
+<td>pbmc3k</td>
+<td>1.465</td>
+<td>−38.1%</td>
+<td>562M</td>
+<td>discard</td>
+<td>future_lapply 并行 (fork 开销 &gt; 收益)</td>
+</tr>
+<tr class="even">
+<td>7</td>
+<td>1ad2399</td>
+<td>pbmc3k</td>
+<td>0.328</td>
+<td>69.1%</td>
+<td>514M</td>
+<td>discard</td>
+<td>fused LogNormFast (噪声内)</td>
+</tr>
+<tr class="odd">
+<td>7.1</td>
+<td>91a8c08</td>
+<td>pbmc8k</td>
+<td>0.595</td>
+<td>68.5%</td>
+<td>947M</td>
+<td>—</td>
+<td>第 5 轮候选在 medium 验证</td>
+</tr>
+<tr class="even">
+<td>7.2</td>
+<td>91a8c08</td>
+<td>pbmc10k</td>
+<td>1.318</td>
+<td>59.5%</td>
+<td>1544M</td>
+<td>—</td>
+<td>第 5 轮候选在 large 验证</td>
+</tr>
+<tr class="odd">
+<td>8</td>
+<td>f4769b1</td>
+<td>pbmc3k</td>
+<td>crash</td>
+<td>—</td>
+<td>—</td>
+<td>crash</td>
+<td>OpenMP-parallel (<code>nbrOfWorkers</code> 找不到)</td>
+</tr>
+<tr class="even">
+<td>9</td>
+<td>ec471cf</td>
+<td>pbmc3k</td>
+<td>0.327</td>
+<td>69.2%</td>
+<td>516M</td>
+<td>keep</td>
+<td>OpenMP-parallel (修好)</td>
+</tr>
+<tr class="odd">
+<td>9.1</td>
+<td>ec471cf</td>
+<td>pbmc8k</td>
+<td>0.543</td>
+<td>71.3%</td>
+<td>951M</td>
+<td>—</td>
+<td>OpenMP 在 medium +3%</td>
+</tr>
+<tr class="even">
+<td>9.2</td>
+<td>ec471cf</td>
+<td>pbmc10k</td>
+<td>1.263</td>
+<td>61.2%</td>
+<td>1548M</td>
+<td>—</td>
+<td>OpenMP 在 large +2%</td>
+</tr>
+<tr class="odd">
+<td>10</td>
+<td>92a5a42</td>
+<td>pbmc3k</td>
+<td>0.339</td>
+<td>68.0%</td>
+<td>516M</td>
+<td>discard</td>
+<td><code>-march=native -O3</code> (噪声内)</td>
+</tr>
+<tr class="even">
+<td>11</td>
+<td>c3ca3f5</td>
+<td>pbmc3k</td>
+<td>0.336</td>
+<td>68.3%</td>
+<td>515M</td>
+<td>keep</td>
+<td>float-precision LogNormOMP</td>
+</tr>
+<tr class="odd">
+<td>11.1</td>
+<td>c3ca3f5</td>
+<td>pbmc8k</td>
+<td>0.527</td>
+<td>72.1%</td>
+<td>951M</td>
+<td>—</td>
+<td>float 在 medium −2.9%</td>
+</tr>
+<tr class="even">
+<td>11.2</td>
+<td>c3ca3f5</td>
+<td>pbmc10k</td>
+<td>1.040</td>
+<td>68.0%</td>
+<td>1548M</td>
+<td>—</td>
+<td>float 在 large −17.7%</td>
+</tr>
+<tr class="odd">
+<td>12</td>
+<td>044b09b</td>
+<td>pbmc3k</td>
+<td>0.338</td>
+<td>68.1%</td>
+<td>516M</td>
+<td>discard</td>
+<td>fused-pass (large 退步 +3.7%)</td>
+</tr>
+<tr class="even">
+<td>13</td>
+<td>52fd7e3</td>
+<td>pbmc3k</td>
+<td>0.348</td>
+<td>67.2%</td>
+<td>516M</td>
+<td>discard</td>
+<td>raw CSC pointer (Eigen 已内联)</td>
+</tr>
+<tr class="odd">
+<td>14</td>
+<td>6a95be4</td>
+<td>pbmc3k</td>
+<td>0.340</td>
+<td>68.0%</td>
+<td>513M</td>
+<td>keep</td>
+<td>wire ZYME_THREADS via get_threads()</td>
+</tr>
+<tr class="even">
+<td>—</td>
+<td>—</td>
+<td>neuron10k</td>
+<td>1.435</td>
+<td>58.3%</td>
+<td>—</td>
+<td>OOD</td>
+<td>OOD validate</td>
+</tr>
+<tr class="odd">
+<td>—</td>
+<td>—</td>
+<td>tabula_muris</td>
+<td>3.636</td>
+<td>52.2%</td>
+<td>—</td>
+<td>OOD</td>
+<td>OOD validate</td>
+</tr>
+</tbody>
+</table>
+<p>对比 baseline，最终整体加速比如下：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>数据集</th>
+<th>基准</th>
+<th>优化后</th>
+<th>加速比</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pbmc3k</td>
+<td>1.046s</td>
+<td>0.340s</td>
+<td>3.16×</td>
+</tr>
+<tr class="even">
+<td>pbmc8k</td>
+<td>1.832s</td>
+<td>0.527s</td>
+<td>3.59×</td>
+</tr>
+<tr class="odd">
+<td>pbmc10k</td>
+<td>2.841s</td>
+<td>1.040s</td>
+<td>3.13×</td>
+</tr>
+<tr class="even">
+<td>neuron10k (OOD)</td>
+<td>3.444s</td>
+<td>1.435s</td>
+<td>2.40×</td>
+</tr>
+<tr class="odd">
+<td>tabula_muris_merged (OOD)</td>
+<td>7.606s</td>
+<td>3.636s</td>
+<td>2.09×</td>
+</tr>
+</tbody>
+</table>
+<p>关键解读：</p>
+<ul>
+<li><strong>3 crash → 1 keep</strong>：前 3 轮同一个 hypothesis 试了三次才跑通——LLM 写代码就是反复试错的过程。第 4 轮（99cc40f）首次成功绕过 S3 分派，加速 40.4%。</li>
+<li><strong>峰值在第 5 轮</strong>：91a8c08 直接读 <code>a@layers[["counts"]]</code> 绕过 <code>LayerData.Assay5</code> 分派，0.632s → 0.325s（69.4%），之后所有轮次都在此基础上微调。</li>
+<li><strong>跨层验证的价值</strong>：7.1/7.2 等行显示，在 small 上效果不明显的优化（如 OpenMP 在第 9 轮的 small 上 0.327s 没变化），在 medium/large 上可能有收益（+2~3%）。反之，small 上看似有益的优化，在 large 上可能退步（第 12 轮 fused-pass +3.7%）。</li>
+<li><strong>float 精度赢得 large</strong>：第 11 轮 c3ca3f5 在 small 上只是噪声水平，但在 large 上额外 −17.7%（1.263s → 1.040s），AVX2 的 2× SIMD 宽度在大数据量时才显优势。</li>
+<li><strong>OOD 泛化</strong>：neuron10k 58.3%、tabula_muris 52.2%，加速比从 development 的 ~70% 下降到 ~55%。bit-exact 全部通过。</li>
+</ul>
+</section>
+<section id="验证可视化" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="验证可视化"><span class="header-section-number">3.4</span> 验证可视化</h3>
+<p><code>zyme verify</code> 在优化完成后生成验证报告，汇总速度、加速比、内存和正确性指标：</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="verify.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="验证结果汇总"><img src="https://liripo.github.io/posts/autozyme-cli/verify.png" class="img-fluid figure-img" alt="验证结果汇总"></a></p>
+<figcaption>验证结果汇总</figcaption>
+</figure>
+</div>
+<p>四面板解读（全部基于 small/pbmc3k 数据集，线程 1/4/8）：</p>
+<ul>
+<li><strong>A. Wall time</strong>（左上）：优化后（蓝色）从 1.1s 降到 0.34s，三个线程点一致的 ~3.2× 加速。注意 gray 条高度完全相同——基准测量在不同线程数下一致，说明 <code>NormalizeData</code> 原版本身就是单线程的，OpenMP/MKL 线程预算不影响原版时间。</li>
+<li><strong>B. Speedup factor</strong>（右上）：三个线程点稳定在 3.2× 加速。虚线 1× 是”无加速”参考线。一致性说明优化没有引入线程竞争——<code>LogNormOMPf</code> 的 OpenMP 并行在 2700 列上可预测。</li>
+<li><strong>C. Peak memory</strong>（左下）：优化后内存 514–515 MB 相比基准 522 MB 还低 ~1–2%，因为跳过了 <code>LogSeuratCommand</code> 的中间字符串拷贝和 <code>LayerData</code> 的临时矩阵分配。没有内存回退。</li>
+<li><strong>D. Correctness</strong>（右下）：<code>pearson_data = 1.000</code>（阈值 ≥ 0.999），<code>max_abs_diff_data = 0.00e+00</code>（阈值 ≤ 0.001）。所有指标全绿，bit-exact 正确。</li>
+</ul>
+<p>验证确认：加速是真实的（非作弊）、正确的（bit-exact）、在不同并行度下稳定的（线程无关）、且没有引入内存回归。</p>
+</section>
+</section>
+<section id="源码解读" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="源码解读"><span class="header-section-number">4</span> 源码解读</h2>
+<section id="cli-入口与命令分发" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="cli-入口与命令分发"><span class="header-section-number">4.1</span> CLI 入口与命令分发</h3>
+<p>入口定义在 <code>pyproject.toml</code>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode numberSource toml number-lines code-with-copy"><code class="sourceCode toml"><span id="cb8-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">[project.scripts]</span></span>
+<span id="cb8-2"><span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">zyme</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"zyme.cli:main"</span></span></code></pre></div></div>
+<p><code>cli.py</code> 用 <code>argparse</code> 构建了一个子命令树。命令很多（40+），但按生命周期分成了清晰的五组：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># cli.py</span></span>
+<span id="cb9-2">_TOP_LEVEL_GROUPS <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> [</span>
+<span id="cb9-3">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Core loop"</span>,   [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"init"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"run"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"dryrun"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"accept"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reject"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rollback"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"iterate"</span>]),</span>
+<span id="cb9-4">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Measurement"</span>, [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"baseline"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"verify"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"attest"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"attest-sweep"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"backfill"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"validate"</span>]),</span>
+<span id="cb9-5">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Analysis"</span>,    [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"status"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"plot"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"scan"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"registry"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"audit"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"cost"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"cost-capture"</span>]),</span>
+<span id="cb9-6">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Workflow"</span>,    [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"dispatch"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"bench"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"prompt"</span>]),</span>
+<span id="cb9-7">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Packaging"</span>,   [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"package"</span>]),</span>
+<span id="cb9-8">    (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Utility"</span>,     [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"inspect-parallelism"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"datasets"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"publish-speedups"</span>]),</span>
+<span id="cb9-9">]</span></code></pre></div></div>
+<p>每个子命令通过 <code>set_defaults(func=cmd_xxx)</code> 绑定到处理函数。<code>main()</code> 只需要读 <code>args.func</code> 就能分发。<code>commands/__init__.py</code> 把所有实现重新导出，<code>cli.py</code> 统一导入。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>_GroupedHelpFormatter</code> 拦截了 <code>argparse</code> 的子命令列表渲染，按生命周期分组显示。20 个命令挤成一堆没人看得下去，分组后一眼就能找到自己要的。</p>
+</div>
+</div>
+</section>
+<section id="任务脚手架zyme-init" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="任务脚手架zyme-init"><span class="header-section-number">4.2</span> 任务脚手架：zyme init</h3>
+<p><code>cmd_init</code> 做的事情很确定：把模板复制到目录、克隆上游仓库、检测语言、创建目录结构。它不生成任何内容——内容由 init 代理填充。</p>
+<p>我跑 <code>zyme init https://github.com/satijalab/seurat NormalizeData</code> 时，它做了这些事：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># commands/init.py (核心逻辑)</span></span>
+<span id="cb10-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> cmd_init(args):</span>
+<span id="cb10-3">    task_dir <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> Path(os.getcwd()).resolve()</span>
+<span id="cb10-4">    task_name <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> task_dir.name  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># seurat_NormalizeData</span></span>
+<span id="cb10-5"></span>
+<span id="cb10-6">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 1. 复制模板文件</span></span>
+<span id="cb10-7">    template <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> FRAMEWORK_ROOT <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"templates"</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"task_template"</span></span>
+<span id="cb10-8">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> item <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> template.iterdir():</span>
+<span id="cb10-9">        shutil.copy2(item, task_dir <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> item.name)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 或 copytree</span></span>
+<span id="cb10-10"></span>
+<span id="cb10-11">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 2. 克隆上游仓库</span></span>
+<span id="cb10-12">    git(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clone"</span>, args.target_repo, <span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">str</span>(task_dir <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"upstream_repo"</span>))</span>
+<span id="cb10-13"></span>
+<span id="cb10-14">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 3. 嗅探语言：DESCRIPTION → R, pyproject.toml → Python</span></span>
+<span id="cb10-15">    language <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> _detect_language(upstream_repo_dir)</span>
+<span id="cb10-16">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># Seurat 有 DESCRIPTION → language = "R"</span></span>
+<span id="cb10-17"></span>
+<span id="cb10-18">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 4. 重命名模板：run.R.template → run.R，删掉 run.py.template</span></span>
+<span id="cb10-19">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 5. 创建 data/、setup/、reference_output_&lt;tier&gt;/、memory/ 目录</span></span>
+<span id="cb10-20">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 6. 初始化 git 仓库</span></span></code></pre></div></div>
+<p>这个设计的关键是<strong>确定性</strong>——所有脚手架工作由 CLI 完成，init 代理只需要关注”选择哪些数据集、写什么参考脚本、怎么评估正确性”这些需要判断的事情。</p>
+</section>
+<section id="优化循环zyme-run-accept-reject" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="优化循环zyme-run-accept-reject"><span class="header-section-number">4.3</span> 优化循环：zyme run → accept / reject</h3>
+<p>这是框架的心脏。用我跑的第 4 轮来举例——代理第一次成功绕过 S3 分派链：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># commands/run.py (简化)</span></span>
+<span id="cb11-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> cmd_run(args):</span>
+<span id="cb11-3">    task_dir <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> task_dir_from_args(args)</span>
+<span id="cb11-4">    _, best_ref, round_counter_file <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> zyme_state(task_dir)</span>
+<span id="cb11-5"></span>
+<span id="cb11-6">    hypothesis <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> args.hypothesis</span>
+<span id="cb11-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># "bypass S3 dispatch + direct LogNorm call + slot assignment"</span></span>
+<span id="cb11-8"></span>
+<span id="cb11-9">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 反作弊：提交前检查 pipeline/run.R 有没有"计时外提升"</span></span>
+<span id="cb11-10">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> _pipe_name <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">in</span> (<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pipeline/run.R"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pipeline/run.py"</span>):</span>
+<span id="cb11-11">        _violations <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> scan_pipeline_hoist(task_dir <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> _pipe_name)</span>
+<span id="cb11-12">        <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> _violations <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> _hoist_exempt_reason:</span>
+<span id="cb11-13">            sys.exit(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 阻断，不会留下幽灵提交</span></span>
+<span id="cb11-14"></span>
+<span id="cb11-15">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 提交 pipeline 改动</span></span>
+<span id="cb11-16">    git(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"add"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pipeline/"</span>, cwd<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>task_dir)</span>
+<span id="cb11-17">    git(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"commit"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"-m"</span>, hypothesis, cwd<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>task_dir)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># commit 99cc40f</span></span>
+<span id="cb11-18"></span>
+<span id="cb11-19">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 执行 pipeline + evaluate</span></span>
+<span id="cb11-20">    log_content <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> run_task(task_dir, dataset_entry<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>tier_entry, thread<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb11-21">    speed_sec, peak_mb, metrics, status <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> parse_log(log_content)</span>
+<span id="cb11-22"></span>
+<span id="cb11-23">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 计算加速比</span></span>
+<span id="cb11-24">    baseline_speed <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> get_baseline_speed(task_dir, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pbmc3k"</span>, thread<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 1.046</span></span>
+<span id="cb11-25">    speedup_pct <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">-</span> speed_sec <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">/</span> baseline_speed) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">*</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100.0</span>            <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 40.4</span></span>
+<span id="cb11-26"></span>
+<span id="cb11-27">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 写入 results.tsv，状态 = pending</span></span>
+<span id="cb11-28">    append_results_row(results_tsv, {</span>
+<span id="cb11-29">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"round"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"4"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"commit"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"99cc40f"</span>,</span>
+<span id="cb11-30">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"speed_sec"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"0.632"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"speedup_pct"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"40.4"</span>,</span>
+<span id="cb11-31">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"status"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pending"</span>,</span>
+<span id="cb11-32">        <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"metrics_json"</span>: <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'{"pearson_data": 1.0, "max_abs_diff_data": 0.0}'</span>,</span>
+<span id="cb11-33">        ...</span>
+<span id="cb11-34">    })</span></code></pre></div></div>
+<p>代理看到结果后决定 <code>zyme accept -m "bypassed S3 dispatch, 1.06s→0.63s"</code>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># commands/run.py</span></span>
+<span id="cb12-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> cmd_accept(args):</span>
+<span id="cb12-3">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 验证 HEAD 匹配 pending 行的提交</span></span>
+<span id="cb12-4">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># （防止共享仓库中其他任务插入提交导致 best.ref 指错）</span></span>
+<span id="cb12-5">    head_full <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> git(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"rev-parse"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"HEAD"</span>, cwd<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>task_dir)</span>
+<span id="cb12-6">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> head_short.startswith(expected):</span>
+<span id="cb12-7">        die(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"HEAD 与 pending 轮次不匹配"</span>)</span>
+<span id="cb12-8"></span>
+<span id="cb12-9">    best_ref.write_text(head_full)          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># .zyme/best.ref → 99cc40f 的完整 SHA</span></span>
+<span id="cb12-10">    update_last_status(results_tsv, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"keep"</span>, args.description)</span>
+<span id="cb12-11"></span>
+<span id="cb12-12">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 额外检查：内存有没有回退、该不该重新 profile</span></span>
+<span id="cb12-13">    _maybe_memory_regression_warning(...)</span>
+<span id="cb12-14">    _maybe_reprofile_hint(...)</span></code></pre></div></div>
+<p>第 6 轮的 <code>future_lapply</code> 并行尝试被 reject 了：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># commands/run.py</span></span>
+<span id="cb13-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> cmd_reject(args):</span>
+<span id="cb13-3">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 脏树安全：有未提交改动就拒绝默认的 --hard reset</span></span>
+<span id="cb13-4">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> has_uncommitted <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> args.keep_tree <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> args.force:</span>
+<span id="cb13-5">        die(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"工作树有未提交改动，选择 --keep-tree 或 --force"</span>)</span>
+<span id="cb13-6"></span>
+<span id="cb13-7">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 共享仓库安全：防止 reset 越过兄弟任务的提交</span></span>
+<span id="cb13-8">    cross_task <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> _cross_task_commits_between(task_dir, best_sha)</span>
+<span id="cb13-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> cross_task <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> args.force:</span>
+<span id="cb13-10">        die(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reject 会越过其他任务的提交..."</span>)</span>
+<span id="cb13-11"></span>
+<span id="cb13-12">    update_last_status(results_tsv, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"discard"</span>, args.description)</span>
+<span id="cb13-13">    git(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"reset"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"--hard"</span>, best_sha, cwd<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>task_dir)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 回到 best.ref</span></span></code></pre></div></div>
+<p><code>reject</code> 做了 <code>git reset --hard</code>，回到 <code>best.ref</code> 指向的提交。被拒绝的代码不会从历史中消失——它保存在 <code>artifacts/006_426fc62_small/run.R</code> 里，描述记录在 <code>results.tsv</code> 的 <code>description</code> 列。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>accept</code> 和 <code>reject</code> 中大量代码在处理共享仓库安全。当多个任务共用一个 git 仓库时，盲目的 <code>git reset --hard</code> 可能越过兄弟任务的提交。框架通过检测 <code>best.ref..HEAD</code> 区间内是否有任务目录之外的文件改动来防护。</p>
+</div>
+</div>
+</section>
+<section id="流水线执行器runner.py" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="流水线执行器runner.py"><span class="header-section-number">4.4</span> 流水线执行器：runner.py</h3>
+<p><code>run_task()</code> 负责实际运行 <code>pipeline/run.R</code> 并测量。以我的任务为例，它做的事情是：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># runner.py (简化)</span></span>
+<span id="cb14-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">def</span> run_task(task_dir, dataset_entry, thread<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>, ...):</span>
+<span id="cb14-3">    lang <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> detect_lang(task_dir)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># "R"</span></span>
+<span id="cb14-4"></span>
+<span id="cb14-5">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 1. 通过环境变量传递执行参数</span></span>
+<span id="cb14-6">    env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ZYME_TIER"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"small"</span></span>
+<span id="cb14-7">    env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ZYME_DATA_PATH"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/path/to/data/pbmc3k.rds"</span></span>
+<span id="cb14-8">    env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ZYME_REFERENCE_DIR"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/path/to/reference_output_small"</span></span>
+<span id="cb14-9">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> thread <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">is</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">not</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">None</span>:</span>
+<span id="cb14-10">        env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"ZYME_THREADS"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span></span>
+<span id="cb14-11">        <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 同步 BLAS/OMP/MKL 线程上限，避免不公平比较</span></span>
+<span id="cb14-12">        env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"OMP_NUM_THREADS"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span></span>
+<span id="cb14-13">        env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"OPENBLAS_NUM_THREADS"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span></span>
+<span id="cb14-14">        env[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"MKL_NUM_THREADS"</span>] <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"1"</span></span>
+<span id="cb14-15"></span>
+<span id="cb14-16">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 2. 执行 pipeline/run.R（带内存 watchdog 和运行时间超时）</span></span>
+<span id="cb14-17">    rc, stdout, stderr, peak_gb, timed_out, ... <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> _run_with_watchdog(</span>
+<span id="cb14-18">        [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Rscript"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"run.R"</span>], cwd<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>pipeline_dir, env<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>env,</span>
+<span id="cb14-19">        mem_cap_gb<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>mem_cap_gb,   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 超内存就 SIGKILL 进程组</span></span>
+<span id="cb14-20">        wall_cap_s<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span>wall_cap_s,   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 按 tier 设置运行时间上限</span></span>
+<span id="cb14-21">    )</span>
+<span id="cb14-22"></span>
+<span id="cb14-23">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 3. 执行 evaluate.R（对比 pipeline 输出和参考输出）</span></span>
+<span id="cb14-24">    rc_eval, stdout_eval, _ <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> _run_evaluate(...)</span>
+<span id="cb14-25"></span>
+<span id="cb14-26">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 4. 汇总日志：提取 speed_sec / peak_mb / pearson_data / max_abs_diff_data</span></span>
+<span id="cb14-27">    <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span><span class="ch" style="color: #20794D;
+background-color: null;
+font-style: inherit;">\n</span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"</span>.join(log_parts) <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">+</span> _summary(speed, peak, status)</span></code></pre></div></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>run_task</code> 通过环境变量而非命令行参数传递执行参数。<code>pipeline/run.R</code> 读 <code>Sys.getenv("ZYME_TIER")</code> 就能知道自己在跑哪个数据层，读 <code>Sys.getenv("ZYME_THREADS")</code> 就知道线程预算。这让 pipeline 代码保持简洁。</p>
+</div>
+</div>
+</section>
+<section id="看看优化后的代码长什么样" class="level3" data-number="4.5">
+<h3 data-number="4.5" class="anchored" data-anchor-id="看看优化后的代码长什么样"><span class="header-section-number">4.5</span> 看看优化后的代码长什么样</h3>
+<p>14 轮迭代后，最终保留的 <code>pipeline/run.R</code> 里的核心逻辑是这样的：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># pipeline/run.R — 最终优化版本</span></span>
+<span id="cb15-2"></span>
+<span id="cb15-3"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 用 sourceCpp 编译一个 OpenMP 并行 + float 精度的 C++ 函数</span></span>
+<span id="cb15-4">Rcpp<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">::</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">sourceCpp</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">code =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span></span>
+<span id="cb15-5"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#include &lt;RcppEigen.h&gt;</span></span>
+<span id="cb15-6"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#include &lt;omp.h&gt;</span></span>
+<span id="cb15-7"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">// [[Rcpp::depends(RcppEigen)]]</span></span>
+<span id="cb15-8"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">// [[Rcpp::plugins(openmp)]]</span></span>
+<span id="cb15-9"></span>
+<span id="cb15-10"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">// float 精度：AVX2 一次处理 8 个 float vs 4 个 double</span></span>
+<span id="cb15-11"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">// [[Rcpp::export]]</span></span>
+<span id="cb15-12"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">SparseMatrix&lt;double&gt; LogNormOMPf(SparseMatrix&lt;double&gt; data,</span></span>
+<span id="cb15-13"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">                                  double scale_factor, int n_threads) {</span></span>
+<span id="cb15-14"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  int n = data.outerSize();</span></span>
+<span id="cb15-15"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  float sf = (float)scale_factor;</span></span>
+<span id="cb15-16"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  #pragma omp parallel for num_threads(n_threads)</span></span>
+<span id="cb15-17"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  for (int k = 0; k &lt; n; ++k) {</span></span>
+<span id="cb15-18"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">    float colSum = 0.0f;</span></span>
+<span id="cb15-19"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">    for (SparseMatrix&lt;double&gt;::InnerIterator it(data, k); it; ++it)</span></span>
+<span id="cb15-20"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">      colSum += (float)it.value();</span></span>
+<span id="cb15-21"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">    float norm = sf / colSum;</span></span>
+<span id="cb15-22"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">    for (SparseMatrix&lt;double&gt;::InnerIterator it(data, k); it; ++it)</span></span>
+<span id="cb15-23"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">      it.valueRef() = (double)log1pf(v * norm);</span></span>
+<span id="cb15-24"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  }</span></span>
+<span id="cb15-25"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  return data;</span></span>
+<span id="cb15-26"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb15-27"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'</span>)</span>
+<span id="cb15-28"></span>
+<span id="cb15-29"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 覆盖 Seurat 的 NormalizeData.Seurat 方法</span></span>
+<span id="cb15-30">NormalizeData.Seurat <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(object, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">assay =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">NULL</span>,</span>
+<span id="cb15-31">    <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">normalization.method =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"LogNormalize"</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">scale.factor =</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1e4</span>, ...) {</span>
+<span id="cb15-32"></span>
+<span id="cb15-33">  a <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> object[[assay]]</span>
+<span id="cb15-34">  counts <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> a<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">@</span>layers[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"counts"</span>]]          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 直接读 slot，跳过 LayerData 分派</span></span>
+<span id="cb15-35">  n_threads <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">get_threads</span>(<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">default =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>L)   <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 从框架获取线程数</span></span>
+<span id="cb15-36"></span>
+<span id="cb15-37">  <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (n_threads <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>L <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&amp;&amp;</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">ncol</span>(counts) <span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">&gt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1000</span>L) {</span>
+<span id="cb15-38">    norm.data <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">LogNormOMPf</span>(counts, scale.factor, n_threads)</span>
+<span id="cb15-39">  } <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">else</span> {</span>
+<span id="cb15-40">    <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 小数据集用原版 LogNorm</span></span>
+<span id="cb15-41">    LogNorm_fn <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">getFromNamespace</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"LogNorm"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Seurat"</span>)</span>
+<span id="cb15-42">    norm.data <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">LogNorm_fn</span>(counts, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">scale_factor =</span> scale.factor, ...)</span>
+<span id="cb15-43">  }</span>
+<span id="cb15-44"></span>
+<span id="cb15-45">  a<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">@</span>layers[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"data"</span>]] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> norm.data          <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 直接写 slot，跳过 SetAssayData</span></span>
+<span id="cb15-46">  object<span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">@</span>assays[[assay]] <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> a</span>
+<span id="cb15-47">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">return</span>(object)</span>
+<span id="cb15-48">}</span>
+<span id="cb15-49"></span>
+<span id="cb15-50"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 注册覆盖</span></span>
+<span id="cb15-51"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">patch_namespace</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"NormalizeData.Seurat"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Seurat"</span>, NormalizeData.Seurat)</span>
+<span id="cb15-52"></span>
+<span id="cb15-53"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 执行（和 reference.R 完全一样的调用方式）</span></span>
+<span id="cb15-54">t0 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">Sys.time</span>()</span>
+<span id="cb15-55">result <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">NormalizeData</span>(obj, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">normalization.method =</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"LogNormalize"</span>,</span>
+<span id="cb15-56">                        <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">scale.factor =</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10000</span>, <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">verbose =</span> <span class="cn" style="color: #8f5902;
+background-color: null;
+font-style: inherit;">FALSE</span>)</span></code></pre></div></div>
+<p>优化做的事情可以概括为：<strong>绕过 5 层 S3 方法分派，直接调 C++ 的 LogNorm，用 slot 赋值替代 Matrix 下标操作，跳过 LogSeuratCommand 命令日志，再叠加 OpenMP 并行和 float 精度 SIMD</strong>。</p>
+</section>
+<section id="状态管理.zyme-目录" class="level3" data-number="4.6">
+<h3 data-number="4.6" class="anchored" data-anchor-id="状态管理.zyme-目录"><span class="header-section-number">4.6</span> 状态管理：.zyme/ 目录</h3>
+<p><code>zyme accept</code> 和 <code>zyme reject</code> 为什么能精确地推进或回退？秘密在 <code>.zyme/</code> 目录。整个优化过程的状态都集中在这里：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>文件</th>
+<th>用途</th>
+<th>我任务里的值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>best.ref</code></td>
+<td>当前最佳提交的完整 SHA，accept 推进、reject 回退就靠它</td>
+<td><code>d89f20d5...</code></td>
+</tr>
+<tr class="even">
+<td><code>round.counter</code></td>
+<td>决策轮次计数，每次 accept/reject 自增</td>
+<td><code>14</code></td>
+</tr>
+<tr class="odd">
+<td><code>audit.jsonl</code></td>
+<td>每条 <code>zyme</code> 调用的审计日志（97KB）</td>
+<td>50+ 条记录</td>
+</tr>
+<tr class="even">
+<td><code>baselines_history.tsv</code></td>
+<td>基准测量史：每次 record/rebench 都追加一行</td>
+<td>22 行</td>
+</tr>
+<tr class="odd">
+<td><code>baseline_noise.json</code></td>
+<td>基准运行时间噪声校准</td>
+<td>small CV=1.78%, medium CV=0.50%</td>
+</tr>
+<tr class="even">
+<td><code>version_check.json</code></td>
+<td>上游包版本校验，确保优化的版本和实际使用的一致</td>
+<td>Seurat 5.5.1.9000</td>
+</tr>
+<tr class="odd">
+<td><code>setup_audit.log</code></td>
+<td>setup 阶段提交审计</td>
+<td>记录线程策略和 OOD 数据集选择</td>
+</tr>
+</tbody>
+</table>
+<p>其中最重要的是 <code>best.ref</code> 和 <code>baseline_noise.json</code>。</p>
+<p><code>best.ref</code> 存的就是一个 git SHA。<code>zyme accept</code> 把当前 HEAD 写进去，<code>zyme reject</code> 读出来做 <code>git reset --hard</code>。一个文件、一个 SHA，就是整个状态机的核心。</p>
+<p><code>baseline_noise.json</code> 记录基准运行的测量噪声——同一段代码跑 5 次，每次时间不会完全一样，这个波动就是噪声：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode numberSource json number-lines code-with-copy"><code class="sourceCode json"><span id="cb16-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb16-2">  <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"tiers"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb16-3">    <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"small"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb16-4">      <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"1"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">{</span></span>
+<span id="cb16-5">        <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"dataset_name"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"pbmc3k"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb16-6">        <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"n_reps"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb16-7">        <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"speed_mean"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.061</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb16-8">        <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"speed_stdev"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.019</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">,</span></span>
+<span id="cb16-9">        <span class="dt" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">"speed_cv"</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">:</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.018</span></span>
+<span id="cb16-10">      <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb16-11">    <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb16-12">  <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span>
+<span id="cb16-13"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">}</span></span></code></pre></div></div>
+<p>5 次基准测试的 CV = 标准差/均值 = 1.8%，即单次测量有约 ±1.8% 的随机波动。差异需超过 3×CV ≈ 5.4% 才可信。第 7 轮 0.328s 反而比第 5 轮 0.325s 慢了 0.9%，在噪声窗口内，无法判断真实变化，故 discard。</p>
+</section>
+<section id="反作弊怎么防止代理作弊" class="level3" data-number="4.7">
+<h3 data-number="4.7" class="anchored" data-anchor-id="反作弊怎么防止代理作弊"><span class="header-section-number">4.7</span> 反作弊：怎么防止代理”作弊”</h3>
+<p>AutoZyme 最大的挑战不是让代理写出更快的代码，而是<strong>防止代理制造不真实的加速</strong>。这次任务里，反作弊系统真的抓到了问题。</p>
+<section id="静态检查三道防线" class="level4" data-number="4.7.1">
+<h4 data-number="4.7.1" class="anchored" data-anchor-id="静态检查三道防线"><span class="header-section-number">4.7.1</span> 静态检查：三道防线</h4>
+<p><strong>第一道</strong>：<code>fingerprint.py</code> 检查 <code>reference.R</code> 有没有合成数据膨胀（比如 <code>[expr] * 10000</code> 把小数据重复放大来制造虚假加速）。用 Python AST 检查列表重复、<code>np.tile</code>、重复循环三种模式。</p>
+<p><strong>第二道</strong>：<code>hoist_audit.py</code> 检查有没有把工作<strong>移出计时器</strong>。比如这种作弊：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># 在 t0 之前预计算上游的内部函数</span></span>
+<span id="cb17-2">.precomputed <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">getFromNamespace</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">".decontxInitializeZ"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"celda"</span>)(counts, ...)</span>
+<span id="cb17-3"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">install_override</span>(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">".decontxInitializeZ"</span>, <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"celda"</span>, <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">function</span>(...) .precomputed)</span>
+<span id="cb17-4">t0 <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">Sys.time</span>()</span>
+<span id="cb17-5">res <span class="ot" style="color: #003B4F;
+background-color: null;
+font-style: inherit;">&lt;-</span> <span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">decontX</span>(counts, ...)  <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;"># init 现在是 O(1)，但真实用户收不到这个加速</span></span></code></pre></div></div>
+<p>这道检查在 <code>zyme run</code> <strong>提交之前</strong>运行，违规直接 exit 2，不留下幽灵提交。我的任务里 pipeline 通过了这道检查。</p>
+<p><strong>第三道</strong>：<code>argdiff.py</code> 检查 pipeline 传给目标函数的参数有没有和基准调用不同（比如偷偷把 <code>.tsv</code> 换成 <code>.pickle</code>）。</p>
+</section>
+<section id="llm-驱动的对抗性审计zyme-validate" class="level4" data-number="4.7.2">
+<h4 data-number="4.7.2" class="anchored" data-anchor-id="llm-驱动的对抗性审计zyme-validate"><span class="header-section-number">4.7.2</span> LLM 驱动的对抗性审计：zyme validate</h4>
+<p>静态检查之外，框架还会在阶段结束时跑一个<strong>独立的 LLM 代理来审查整个任务</strong>。这就是 <code>zyme validate</code>。</p>
+<p>我的任务在 iterate 阶段结束后跑了验证，结果抓出了一个 <code>LIKELY_HACK</code>：</p>
+<pre><code># validate.tsv
+severity     category                                    mechanism_summary
+WEAK         Threshold margin                            max_abs_diff=1e-3 太宽松，bfloat16 降精度可能通过
+WEAK         No OOD tier                                 三个数据集都是 PBMC（后来加了 OOD）
+LIKELY_HACK  Fixture-only behavior                       normalization.method 参数被接受但从不读取
+WEAK         Output contract gap                         跳过了 LogSeuratCommand，但 evaluator 不检查命令日志</code></pre>
+<p><code>LIKELY_HACK</code> 的发现是：我的 <code>NormalizeData.Seurat</code> 覆盖函数在参数列表里接受 <code>normalization.method</code>，但函数体里从来不读这个参数——无论传什么值都走 <code>LogNormalize</code> 路径。如果用户传 <code>normalization.method = "RC"</code>，上游会走完全不同的归一化逻辑，但我的覆盖函数会悄悄忽略这个参数。</p>
+<p>这个发现是合理的。虽然在我的测试场景里不会触发（因为只用 LogNormalize），但对于一个要发布给所有人用的加速补丁来说，忽略参数确实是 hack 行为。</p>
+<p>审计结果按严重程度排序：<code>PASS &lt; WEAK &lt; LIKELY_HACK &lt; FAIL</code>。<code>LIKELY_HACK</code> 和 <code>FAIL</code> 会阻断流程，需要修复后才能继续。</p>
+</section>
+</section>
+<section id="多代理调度dispatch" class="level3" data-number="4.8">
+<h3 data-number="4.8" class="anchored" data-anchor-id="多代理调度dispatch"><span class="header-section-number">4.8</span> 多代理调度：dispatch</h3>
+<p>前面讲的都是单个任务怎么跑。如果你要同时优化多个函数——比如先 NormalizeData，再 FindAllMarkers——<code>zyme dispatch</code> 就是一个队列管理器，按顺序逐个跑完。</p>
+<p>它的工作方式很简单：找到机器上安装的 agent CLI（支持 Claude Code、Codex、Cursor，自动检测），以子进程的方式启动它，把任务目录作为工作目录。然后逐行读 agent 的输出，检测它是不是卡住了（默认 15 分钟没输出就标记停滞），等它跑完再启动下一个任务。</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["构建任务队列"] --&gt; B{"--detach?"}
+    B --&gt;|是| C["双 fork 守护化"]
+    B --&gt;|否| D["前台运行"]
+    C --&gt; D
+    D --&gt; E{"有待处理任务?"}
+    E --&gt;|是| F["等待 RAM + 磁盘释放"]
+    F --&gt; G["启动 agent CLI&lt;br/&gt;cwd=task_dir"]
+    G --&gt; H["逐行读取 stdout&lt;br/&gt;停滞检测"]
+    H --&gt; I{"结果"}
+    I --&gt;|停滞| J["标记停滞"]
+    I --&gt;|完成| K["标记 done/failed"]
+    J --&gt; K
+    K --&gt; L["重算 ETA"]
+    L --&gt; E
+    E --&gt;|否| M["退出"]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>我的任务在 <code>pipeline_runs/</code> 下留了一份调度日志，记录了各阶段的推进：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb19-1"><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">## Log</span></span>
+<span id="cb19-2"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Run created. Starting scaffold via zyme init.</span>
+<span id="cb19-3"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Scaffold completed: tasks/seurat_NormalizeData</span>
+<span id="cb19-4"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Init phase completed: datasets=3, refs_present, pipeline+evaluate real.</span>
+<span id="cb19-5"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Validate init: 2 WEAK findings (non-blocking)</span>
+<span id="cb19-6"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Iterate phase completed: 14 rounds (5 accepts, 9 rejects). Best: 72.5% (pbmc8k).</span>
+<span id="cb19-7"><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">- </span>Validate gate: PASS (no hacks detected). Advancing to scaling.</span></code></pre></div></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>dispatch 的崩溃恢复策略很实用：主控崩溃时，先检查工作 agent 还在不在跑——如果还在跑，直接重新等它；如果已经跑完了，推进到下一阶段；最后才考虑恢复会话。因为工作 agent 跑了几十轮迭代积累的状态是没法重建的，保护它比保护主控重要。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="优化流水线全景" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="优化流水线全景"><span class="header-section-number">5</span> 优化流水线全景</h2>
+<p>把所有阶段拼在一起，完整的流程是这样的：</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    A["1. Scaffold&lt;br/&gt;zyme init"]
+    B["2. Init&lt;br/&gt;基准 + profile"]
+    C["3. Validate&lt;br/&gt;LLM 审计"]
+    D["4. Iterate&lt;br/&gt;14 轮循环"]
+    E["5. Gate&lt;br/&gt;LLM 审计"]
+    F["6. Scaling&lt;br/&gt;OOD + 线程矩阵"]
+    G["7. Package&lt;br/&gt;提取补丁"]
+    A --&gt; B --&gt; C --&gt; D --&gt; E --&gt; F --&gt; G
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>每个阶段做的事情：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 62%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>做了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Scaffold</td>
+<td><code>zyme init</code> 克隆 Seurat、复制模板、检测 R 语言</td>
+</tr>
+<tr class="even">
+<td>2. Init</td>
+<td>选 3 个 PBMC 数据集，写 reference.R / evaluate.R / run.R，跑基准（1.046s），profile 发现 74% 是 R 开销</td>
+</tr>
+<tr class="odd">
+<td>3. Validate Init</td>
+<td>LLM 审计发现 2 个 WEAK：指标阈值太宽、缺 OOD 数据集</td>
+</tr>
+<tr class="even">
+<td>4. Iterate</td>
+<td>14 轮 run → accept/reject 循环，5 轮保留 / 9 轮丢弃，反作弊全程拦截，最终 0.336s、3.16× 加速</td>
+</tr>
+<tr class="odd">
+<td>5. Validate Gate</td>
+<td>LLM 审计抓到 LIKELY_HACK（参数被忽略）和 1 个 WEAK（命令日志缺失）</td>
+</tr>
+<tr class="even">
+<td>6. Scaling</td>
+<td>OOD 数据集 neuron10k/tabula_muris 验证 2-2.4×，线程矩阵 1/4/8 验证稳定性</td>
+</tr>
+<tr class="odd">
+<td>7. Package</td>
+<td>提取补丁到 <code>autozyme_r</code>，跨平台验证</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="设计哲学" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="设计哲学"><span class="header-section-number">6</span> 设计哲学</h2>
+<section id="代理决策-cli-执行" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="代理决策-cli-执行"><span class="header-section-number">6.1</span> 代理决策 + CLI 执行</h3>
+<p>框架的一个核心设计是<strong>把决策和执行分开</strong>。代理负责想：提出假设、写代码、看结果好不好；CLI 负责做：git 提交、跑基准、记数据、做安全检查。这些操作不可逆，不能让代理自己来。“该绕什么、不该绕什么”的判断是代理做的，而 git 提交、跑 pipeline、算加速比、写 <code>results.tsv</code> 这些都由 CLI 确定性地完成，代理不用操心。</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>去掉 S3 分派虽然能加速，但降低了代码可读性。实际代码中需要权衡利弊，而不是一味绕过。</p>
+</div>
+</div>
+</section>
+<section id="防御性编程" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="防御性编程"><span class="header-section-number">6.2</span> 防御性编程</h3>
+<p>代码库里有大量防御性编程。以 <code>reject</code> 为例：</p>
+<ul>
+<li><strong>脏树安全</strong>：<code>git reset --hard</code> 前检查工作树有没有未提交改动</li>
+<li><strong>共享仓库安全</strong>：检测 reset 会不会越过兄弟任务的提交</li>
+<li><strong>崩溃行安全</strong>：崩溃行不携带 speed/metrics 数据，防止 <code>speed_sec=0</code> 被误算成 100% 加速</li>
+</ul>
+<p>这些边界情况看似琐碎，但它们防止的是”加速看起来很好、实际是 bug”这类最难发现的问题。</p>
+</section>
+<section id="记忆系统" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="记忆系统"><span class="header-section-number">6.3</span> 记忆系统</h3>
+<p>这次任务让我印象深刻的是 <code>memory/</code> 目录的设计。代理在迭代过程中把发现写到 <code>discoveries.md</code>，下次会话开始时先读这个文件，跳过重复的探索成本。</p>
+<p>比如代理发现”<code>LogNorm</code> 没有从 Seurat 命名空间导出，需要 <code>getFromNamespace</code>“这个坑后，把它记在 <code>discoveries.md</code> 里。如果会话中断重开，新的代理不需要重新踩这个坑。</p>
+<p><code>dead_ends.md</code> 记录被证伪的方向（“future_lapply 并行在 2700 个细胞上因 fork 开销而更慢”），防止后续轮次重复尝试。</p>
+
+
+</section>
+</section>
+
+ ]]></description>
+  <category>python</category>
+  <category>bioinformatics</category>
+  <guid>https://liripo.github.io/posts/autozyme-cli/</guid>
+  <pubDate>Sat, 27 Jun 2026 16:00:00 GMT</pubDate>
+  <media:content url="https://liripo.github.io/posts/autozyme-cli/autozyme-cli.png" medium="image" type="image/png" height="80" width="144"/>
+</item>
 <item>
   <title>用 cutadapt 框架并行处理 FASTQ</title>
   <dc:creator>Liripo </dc:creator>

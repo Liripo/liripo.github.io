@@ -58,5 +58,11 @@
   },
   "posts/fastq-parallel/index.qmd": {
     "index.html": "860f4db8"
+  },
+  "posts/dnbc4-v1/index.qmd": {
+    "index.html": "d5f113c0"
+  },
+  "posts/autozyme-cli/index.qmd": {
+    "index.html": "7311396b"
   }
 }
